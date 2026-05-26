@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Area Connect — API Integration Audit Dashboard</title>
+  <!-- Modern Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* -------------------------------------------------------------
+       CORE DESIGN SYSTEM & CUSTOM GLASSMORPHIC STYLINGS
+       ------------------------------------------------------------- */
+    :root {
+      --bg-dark: hsl(224, 71%, 4%);
+      --card-bg: rgba(13, 20, 38, 0.65);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: hsl(210, 40%, 98%);
+      --text-muted: hsl(217.2, 16.3%, 65%);
+      
+      /* HSL Harmonic Color Palettes */
+      --primary: hsl(263.4, 70%, 50.4%);
+      --primary-glow: rgba(124, 58, 237, 0.45);
+      
+      --accent-get: hsl(190, 95%, 45%);
+      --accent-post: hsl(142.1, 76.2%, 40%);
+      --accent-patch: hsl(38, 92%, 50%);
+      --accent-delete: hsl(350, 89%, 55%);
+      --accent-ws: hsl(280, 85%, 60%);
+      
+      --status-integrated: hsl(142.1, 76.2%, 36.3%);
+      --status-partial: hsl(38, 92%, 50%);
+      --status-pending: hsl(350, 89%, 55%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(76, 29, 149, 0.18) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(14, 116, 144, 0.15) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(162, 28, 175, 0.12) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* -------------------------------------------------------------
+       PREMIUM HEADER & BRANDING GLOW
+       ------------------------------------------------------------- */
+    header {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+      margin-bottom: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -20%;
+      width: 60%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand-section {
+      z-index: 2;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(124, 58, 237, 0.15);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      padding: 0.5rem 1rem;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: hsl(263, 90%, 75%);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.75rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 30%, hsl(263, 60%, 80%) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 600px;
+      font-weight: 350;
+    }
+
+    /* -------------------------------------------------------------
+       METRIC RINGS & PROGRESS TRACKING
+       ------------------------------------------------------------- */
+    .metrics-section {
+      display: flex;
+      gap: 2.5rem;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .progress-widget {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 1rem 1.5rem;
+      border-radius: 20px;
+    }
+
+    .progress-ring-container {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+
+    .progress-ring-circle {
+      transition: stroke-dashoffset 0.8s ease-in-out;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    .progress-value-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .progress-meta h4 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .progress-meta p {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .summary-badge-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .mini-badge {
+      display: flex;
+      flex-direction: column;
+      padding: 0.75rem 1.25rem;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      min-width: 120px;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .mini-badge .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .mini-badge .val {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .mini-badge.b-int { border-left: 3px solid var(--status-integrated); }
+    .mini-badge.b-part { border-left: 3px solid var(--status-partial); }
+    .mini-badge.b-pend { border-left: 3px solid var(--status-pending); }
+
+    /* -------------------------------------------------------------
+       INTERACTIVE CONTROLS & FILTERING
+       ------------------------------------------------------------- */
+    .controls-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      margin-bottom: 2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 0.85rem 1.25rem 0.85rem 2.75rem;
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .search-wrapper::before {
+      content: '🔍';
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      opacity: 0.6;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .pill-button {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 0.6rem 1.25rem;
+      border-radius: 99px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .pill-button:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .pill-button.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      box-shadow: 0 5px 15px var(--primary-glow);
+    }
+
+    /* -------------------------------------------------------------
+       API CARD SYSTEM WITH MICRO-ANIMATIONS
+       ------------------------------------------------------------- */
+    .cards-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .api-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .api-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .endpoint-badge-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .badge-method {
+      padding: 0.4rem 0.85rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    .badge-method.get { background-color: var(--accent-get); }
+    .badge-method.post { background-color: var(--accent-post); }
+    .badge-method.patch { background-color: var(--accent-patch); }
+    .badge-method.delete { background-color: var(--accent-delete); }
+    .badge-method.ws { background-color: var(--accent-ws); }
+
+    .path-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .auth-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .auth-badge.jwt {
+      background: rgba(124, 58, 237, 0.08);
+      border-color: rgba(124, 58, 237, 0.2);
+      color: hsl(263, 90%, 80%);
+    }
+
+    .card-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.85rem;
+      border-radius: 99px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .card-status-badge.integrated {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: hsl(142, 70%, 75%);
+    }
+
+    .card-status-badge.partial {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      color: hsl(38, 90%, 75%);
+    }
+
+    .card-status-badge.pending {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: hsl(350, 90%, 75%);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .card-status-badge.integrated .pulse-dot { background-color: var(--status-integrated); box-shadow: 0 0 8px var(--status-integrated); animation: pulse 2s infinite; }
+    .card-status-badge.partial .pulse-dot { background-color: var(--status-partial); box-shadow: 0 0 8px var(--status-partial); animation: pulse 2s infinite; }
+    .card-status-badge.pending .pulse-dot { background-color: var(--status-pending); box-shadow: 0 0 8px var(--status-pending); animation: pulse 2s infinite; }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.5; }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .description-block {
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--text-main);
+      margin-bottom: 1.25rem;
+      font-weight: 350;
+    }
+
+    .files-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .file-pill {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .file-icon {
+      font-size: 1.2rem;
+      opacity: 0.7;
+    }
+
+    .file-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .file-role {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.15rem;
+    }
+
+    .file-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: hsl(210, 30%, 85%);
+      word-break: break-all;
+    }
+
+    /* -------------------------------------------------------------
+       DISCREPANCY CALLOUTS
+       ------------------------------------------------------------- */
+    .discrepancy-callout {
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-left: 4px solid var(--accent-delete);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .discrepancy-callout.warning {
+      background: rgba(245, 158, 11, 0.04);
+      border-color: rgba(245, 158, 11, 0.18);
+      border-left-color: var(--accent-patch);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .discrepancy-callout.warning .callout-title { color: hsl(38, 95%, 65%); }
+    .discrepancy-callout .callout-title { color: hsl(350, 95%, 65%); }
+
+    .callout-desc {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text-main);
+      margin-bottom: 0.75rem;
+    }
+
+    .remediation-checklist {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .remediation-checklist li {
+      font-size: 0.9rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    .remediation-checklist li::before {
+      content: '⚡';
+      font-size: 0.85rem;
+    }
+
+    /* -------------------------------------------------------------
+       CONTRACT PREVIEW SYSTEMS (TABS & JSON SPECIFICATION)
+       ------------------------------------------------------------- */
+    .tabs-wrapper {
+      margin-top: 1rem;
+    }
+
+    .tabs-header {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      margin-bottom: 1rem;
+    }
+
+    .tab-button {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .tab-button:hover {
+      color: var(--text-main);
+    }
+
+    .tab-button.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-content {
+      display: none;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 1.25rem;
+      overflow: auto;
+      max-height: 350px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    pre {
+      margin: 0;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .json-key { color: hsl(190, 80%, 70%); }
+    .json-value { color: hsl(95, 75%, 75%); }
+    .json-number { color: hsl(35, 90%, 70%); }
+    .json-boolean { color: hsl(280, 85%, 75%); }
+    .json-comment { color: hsl(210, 15%, 50%); font-style: italic; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      header {
+        padding: 1.5rem;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .metrics-section {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .summary-badge-grid {
+        width: 100%;
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- -------------------------------------------------------------
+       PREMIUM HEADER
+       ------------------------------------------------------------- -->
+  <header>
+    <div class="brand-section">
+      <div class="brand-badge">⚡ Development Audit</div>
+      <h1>Area Connect</h1>
+      <p class="subtitle">API Integration & Data Contract Specification. Hyperlocal Mobile Platform (Flutter) connected to PM2 Microservices (NestJS).</p>
+    </div>
+    
+    <div class="metrics-section">
+      <!-- Circular Progress Ring -->
+      <div class="progress-widget">
+        <div class="progress-ring-container">
+          <svg width="80" height="80">
+            <circle stroke="rgba(255, 255, 255, 0.05)" stroke-width="6" fill="transparent" r="34" cx="40" cy="40"/>
+            <circle class="progress-ring-circle" stroke="var(--primary)" stroke-width="6" fill="transparent" r="34" cx="40" cy="40"
+                    stroke-dasharray="213.63" stroke-dashoffset="97.2"/>
+          </svg>
+          <div class="progress-value-text" id="overall-percentage">54%</div>
+        </div>
+        <div class="progress-meta">
+          <h4>Integration</h4>
+          <p>Complete</p>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Summary Grid -->
+      <div class="summary-badge-grid">
+        <div class="mini-badge b-int">
+          <span class="label">Integrated</span>
+          <span class="val" id="count-integrated">12</span>
+        </div>
+        <div class="mini-badge b-part">
+          <span class="label">Partial</span>
+          <span class="val" id="count-partial">5</span>
+        </div>
+        <div class="mini-badge b-pend">
+          <span class="label">Pending</span>
+          <span class="val" id="count-pending">5</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- -------------------------------------------------------------
+       INTERACTIVE CONTROLS CARD
+       ------------------------------------------------------------- -->
+  <div class="controls-card">
+    <div class="search-wrapper">
+      <input type="text" class="search-input" id="search-bar" placeholder="Search by route, controllers, fields, or remarks..." oninput="filterCards()">
+    </div>
+    
+    <div class="filter-group">
+      <span class="filter-label">Module:</span>
+      <button class="pill-button active" onclick="setCategoryFilter('all', this)">All</button>
+      <button class="pill-button" onclick="setCategoryFilter('auth', this)">Auth</button>
+      <button class="pill-button" onclick="setCategoryFilter('posts', this)">Posts</button>
+      <button class="pill-button" onclick="setCategoryFilter('chat', this)">Chat</button>
+      <button class="pill-button" onclick="setCategoryFilter('users', this)">Users</button>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-label">Status:</span>
+      <button class="pill-button active" onclick="setStatusFilter('all', this)">All</button>
+      <button class="pill-button" onclick="setStatusFilter('integrated', this)">Integrated</button>
+      <button class="pill-button" onclick="setStatusFilter('partial', this)">Partial</button>
+      <button class="pill-button" onclick="setStatusFilter('pending', this)">Pending</button>
+    </div>
+  </div>
+
+  <!-- -------------------------------------------------------------
+       CARDS GENERATION LIST
+       ------------------------------------------------------------- -->
+  <div class="cards-grid" id="cards-container">
+    
+    <!-- ------------------ REGISTRATION CARD ------------------ -->
+    <div class="api-card" data-category="auth" data-status="integrated">
+      <div class="card-header">
+        <div class="endpoint-badge-group">
+          <span class="badge-method post">POST</span>
+          <span class="path-text">/api/auth/register</span>
+          <span class="auth-badge">Public</span>
+        </div>
+        <div class="card-status-badge integrated">
+          <span class="pulse-dot"></span> Integrated
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="description-block">
+          Handles user registration. Computes georadial hashes, registers User and associated Profile schemas, and generates OTP verification keys in Redis.
+        </div>
+        <div class="files-meta-grid">
+          <div class="file-pill">
+            <span class="file-icon">📁</span>
+            <div class="file-details">
+              <span class="file-role">Backend Controller</span>
+              <span class="file-path">auth.controller.ts -> register()</span>
+            </div>
+          </div>
+          <div class="file-pill">
+            <span class="file-icon">📱</span>
+            <div class="file-details">
+              <span class="file-role">Frontend Service</span>
+              <span class="file-path">auth_service.dart -> signUp()</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tabs-wrapper">
+          <div class="tabs-header">
+            <button class="tab-button active" onclick="switchTab(this, 'reg-req')">Request DTO</button>
+            <button class="tab-button" onclick="switchTab(this, 'reg-res')">Response</button>
+            <button class="tab-button" onclick="switchTab(this, 'reg-dart')">Dart Entity</button>
+          </div>
+          <div class="tab-content active" id="reg-req">
+            <pre><code>{
+  <span class="json-key">"emailOrPhone"</span>: <span class="json-value">"user@example.com"</span>, <span class="json-comment">// string, unique</span>
+  <span class="json-key">"password"</span>: <span class="json-value">"secret123"</span>, <span class="json-comment">// string, MinLength(8), MaxLength(72)</span>
+  <span class="json-key">"displayName"</span>: <span class="json-value">"Rahul Sharma"</span>, <span class="json-comment">// string, MaxLength(100)</span>
+  <span class="json-key">"coordinates"</span>: [<span class="json-number">77.2182</span>, <span class="json-number">28.6273</span>] <span class="json-comment">// array [lng, lat], validated by @IsLngLatArray</span>
+}</code></pre>
+          </div>
+          <div class="tab-content" id="reg-res">
+            <pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"message"</span>: <span class="json-value">"Verification OTP sent successfully"</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"userId"</span>: <span class="json-value">"65d8fe4f5311236168a204aa"</span>,
+    <span class="json-key">"emailOrPhone"</span>: <span class="json-value">"user@example.com"</span>
+  }
+}</code></pre>
+          </div>
+          <div class="tab-content" id="reg-dart">
+            <pre><code><span class="json-comment">// mapped in AppUser (auth_repository_impl.dart)</span>
+<span class="json-key">class</span> AppUser {
+  <span class="json-key">final</span> String id;
+  <span class="json-key">final</span> String email;
+  <span class="json-key">final</span> String name;
+  <span class="json-key">final</span> String role;
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------ LOGOUT CARD ------------------ -->
+    <div class="api-card" data-category="auth" data-status="partial">
+      <div class="card-header">
+        <div class="endpoint-badge-group">
+          <span class="badge-method post">POST</span>
+          <span class="path-text">/api/auth/logout</span>
+          <span class="auth-badge jwt">JWT JWT_SECRET</span>
+        </div>
+        <div class="card-status-badge partial">
+          <span class="pulse-dot"></span> Partially Integrated
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="description-block">
+          Logs out the active session. The backend revokes the associated token and purges the live role validation cache in Redis immediately.
+        </div>
+        
+        <!-- Discrepancy details -->
+        <div class="discrepancy-callout warning">
+          <div class="callout-title">⚠️ Local-Only Token Purge</div>
+          <div class="callout-desc">
+            The Flutter app deletes the access token and refresh token locally via Secure Storage, but <strong>does not invoke this REST endpoint</strong> to invalidate the session server-side.
+          </div>
+          <ul class="remediation-checklist">
+            <li>Update <code>auth_service.dart -> logout()</code> to hit <code>POST /auth/logout</code> before erasing local storage.</li>
+          </ul>
+        </div>
+
+        <div class="files-meta-grid">
+          <div class="file-pill">
+            <span class="file-icon">📁</span>
+            <div class="file-details">
+              <span class="file-role">Backend Controller</span>
+              <span class="file-path">auth.controller.ts -> logout()</span>
+            </div>
+          </div>
+          <div class="file-pill">
+            <span class="file-icon">📱</span>
+            <div class="file-details">
+              <span class="file-role">Frontend Service</span>
+              <span class="file-path">auth_service.dart -> logout() [Local-only]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-wrapper">
+          <div class="tabs-header">
+            <button class="tab-button active" onclick="switchTab(this, 'log-req')">Request DTO</button>
+            <button class="tab-button" onclick="switchTab(this, 'log-res')">Response</button>
+          </div>
+          <div class="tab-content active" id="log-req">
+            <pre><code><span class="json-comment">// Headers: Authorization Bearer &lt;token&gt;</span>
+<span class="json-comment">// No request body payload.</span></code></pre>
+          </div>
+          <div class="tab-content" id="log-res">
+            <pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"message"</span>: <span class="json-value">"Logged out successfully."</span>
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------ REFRESH CARD ------------------ -->
+    <div class="api-card" data-category="auth" data-status="pending">
+      <div class="card-header">
+        <div class="endpoint-badge-group">
+          <span class="badge-method post">POST</span>
+          <span class="path-text">/api/auth/refresh</span>
+          <span class="auth-badge">Public</span>
+        </div>
+        <div class="card-status-badge pending">
+          <span class="pulse-dot"></span> Pending Integration
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="description-block">
+          Accepts a refresh token, verifies its cryptographical integrity, and rotates the credentials by issuing a fresh pair of access and refresh tokens.
+        </div>
+        
+        <div class="discrepancy-callout">
+          <div class="callout-title">🚨 Expired Access Tokens Cause Crashes</div>
+          <div class="callout-desc">
+            The Flutter client's network layer (<code>dio_service.dart</code> / <code>app_config.dart</code>) has no interceptor to automatically intercept 401s, hit the refresh endpoint, rotate tokens, and retry the request.
+          </div>
+          <ul class="remediation-checklist">
+            <li>Implement a custom Dio Interceptor to watch for 401 responses.</li>
+            <li>Make a request to <code>/auth/refresh</code> with the stored refresh token on 401.</li>
+            <li>Store the new rotated keys in <code>SecureStorageService</code> and re-try the initial request.</li>
+          </ul>
+        </div>
+
+        <div class="files-meta-grid">
+          <div class="file-pill">
+            <span class="file-icon">📁</span>
+            <div class="file-details">
+              <span class="file-role">Backend Controller</span>
+              <span class="file-path">auth.controller.ts -> refresh()</span>
+            </div>
+          </div>
+          <div class="file-pill">
+            <span class="file-icon">📱</span>
+            <div class="file-details">
+              <span class="file-role">Frontend Service</span>
+              <span class="file-path">Not Implemented</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-wrapper">
+          <div class="tabs-header">
+            <button class="tab-button active" onclick="switchTab(this, 'ref-req')">Request DTO</button>
+            <button class="tab-button" onclick="switchTab(this, 'ref-res')">Response</button>
+          </div>
+          <div class="tab-content active" id="ref-req">
+            <pre><code>{
+  <span class="json-key">"refreshToken"</span>: <span class="json-value">"ey..."</span> <span class="json-comment">// string, required</span>
+}</code></pre>
+          </div>
+          <div class="tab-content" id="ref-res">
+            <pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"message"</span>: <span class="json-value">"Tokens refreshed."</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"accessToken"</span>: <span class="json-value">"eyNewAccess..."</span>,
+    <span class="json-key">"refreshToken"</span>: <span class="json-value">"eyNewRefresh..."</span>
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------ NEARBY POSTS CARD ------------------ -->
+    <div class="api-card" data-category="posts" data-status="partial">
+      <div class="card-header">
+        <div class="endpoint-badge-group">
+          <span class="badge-method get">GET</span>
+          <span class="path-text">/api/posts/nearby</span>
+          <span class="auth-badge">Public</span>
+        </div>
+        <div class="card-status-badge partial">
+          <span class="pulse-dot"></span> Partially Integrated
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="description-block">
+          Retrieves a localized feed using MongoDB's $geoNear pipeline. Supports geohash boundary optimizations and has dynamic radial fallbacks when local densities are low.
+        </div>
+        
+        <div class="discrepancy-callout warning">
+          <div class="callout-title">⚠️ Array vs Atomic Counter Scale Mismatch</div>
+          <div class="callout-desc">
+            Backend removed the infinite <code>interestedUsers</code> array on post objects for DB performance. The frontend, however, still parses <code>post['interestedUsers']</code> as an array of user IDs. Because it is absent, interest flags always resolve to <strong>false</strong> on initial feed load.
+          </div>
+          <ul class="remediation-checklist">
+            <li>Update backend query to accept caller JWT, or support an optional <code>userId</code> parameter on this endpoint.</li>
+            <li>Inject a customized boolean <code>isInterested</code> directly into the projection stage of <code>findNearby()</code>.</li>
+            <li>Modify <code>posts_repository_impl.dart</code> to check the direct boolean field <code>isInterested</code> instead of calculating it via array lookups.</li>
+          </ul>
+        </div>
+
+        <div class="files-meta-grid">
+          <div class="file-pill">
+            <span class="file-icon">📁</span>
+            <div class="file-details">
+              <span class="file-role">Backend Repository</span>
+              <span class="file-path">posts.repository.ts -> findNearby()</span>
+            </div>
+          </div>
+          <div class="file-pill">
+            <span class="file-icon">📱</span>
+            <div class="file-details">
+              <span class="file-role">Frontend Repository</span>
+              <span class="file-path">posts_repository_impl.dart -> getNearbyFeed()</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-wrapper">
+          <div class="tabs-header">
+            <button class="tab-button active" onclick="switchTab(this, 'nb-req')">Request Query</button>
+            <button class="tab-button" onclick="switchTab(this, 'nb-res')">Response</button>
+          </div>
+          <div class="tab-content active" id="nb-req">
+            <pre><code><span class="json-comment">// Query parameters:</span>
+<span class="json-key">"lng"</span>: <span class="json-number">77.2182</span>, <span class="json-comment">// double, required, range: -180..180</span>
+<span class="json-key">"lat"</span>: <span class="json-number">28.6273</span>, <span class="json-comment">// double, required, range: -90..90</span>
+<span class="json-key">"radiusInKm"</span>: <span class="json-number">5.0</span>, <span class="json-comment">// double, default: 5</span>
+<span class="json-key">"page"</span>: <span class="json-number">1</span>,
+<span class="json-key">"limit"</span>: <span class="json-number">10</span></code></pre>
+          </div>
+          <div class="tab-content" id="nb-res">
+            <pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"data"</span>: [
+    {
+      <span class="json-key">"_id"</span>: <span class="json-value">"65b9fe8f5311236168a209ea"</span>,
+      <span class="json-key">"category"</span>: <span class="json-value">"General"</span>,
+      <span class="json-key">"title"</span>: <span class="json-value">"Clean-up Drive"</span>,
+      <span class="json-key">"content"</span>: <span class="json-value">"Hyperlocal volunteer group meeting..."</span>,
+      <span class="json-key">"mediaUrls"</span>: [],
+      <span class="json-key">"location"</span>: {
+        <span class="json-key">"type"</span>: <span class="json-value">"Point"</span>,
+        <span class="json-key">"coordinates"</span>: [<span class="json-number">77.2182</span>, <span class="json-number">28.6273</span>]
+      },
+      <span class="json-key">"distanceInMeters"</span>: <span class="json-number">142.5</span>,
+      <span class="json-key">"interestedCount"</span>: <span class="json-number">12</span>, <span class="json-comment">// backend atomic counter replacement</span>
+      <span class="json-key">"commentsCount"</span>: <span class="json-number">3</span>,
+      <span class="json-key">"sharesCount"</span>: <span class="json-number">1</span>,
+      <span class="json-key">"createdAt"</span>: <span class="json-value">"2026-05-26T13:33:27.000Z"</span>,
+      <span class="json-key">"author"</span>: {
+        <span class="json-key">"userId"</span>: <span class="json-value">"60d0fe4f5311236168a109ca"</span>,
+        <span class="json-key">"displayName"</span>: <span class="json-value">"Rahul Sharma"</span>,
+        <span class="json-key">"avatarUrl"</span>: <span class="json-value">"https://..."</span>
+      }
+    }
+  ]
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------ GET COMMENTS CARD ------------------ -->
+    <div class="api-card" data-category="posts" data-status="partial">
+      <div class="card-header">
+        <div class="endpoint-badge-group">
+          <span class="badge-method get">GET</span>
+          <span class="path-text">/api/posts/:id/comments</span>
+          <span class="auth-badge">Public</span>
+        </div>
+        <div class="card-status-badge partial">
+          <span class="pulse-dot"></span> Partially Integrated
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="description-block">
+          Retrieves a paginated list of comments submitted on a specific hyperlocal post, ordered chronologically.
+        </div>
+        
+        <div class="discrepancy-callout warning">
+          <div class="callout-title">⚠️ Comment Authors Not Populated</div>
+          <div class="callout-desc">
+            The backend returns comments as simple schemas containing only the raw <code>authorId</code>ObjectId. The frontend expects a nested <code>author</code> object containing <code>displayName</code> and <code>avatarUrl</code> to render properly. Currently, authors always fallback to <strong>'Neighbor'</strong> on the UI.
+          </div>
+          <ul class="remediation-checklist">
+            <li>Modify <code>PostsRepository.getComments()</code> to execute an aggregation pipeline or <code>.populate()</code> query that joins comment profiles.</li>
+          </ul>
+        </div>
+
+        <div class="files-meta-grid">
+          <div class="file-pill">
+            <span class="file-icon">📁</span>
+            <div class="file-details">
+              <span class="file-role">Backend Repository</span>
+              <span class="file-path">posts.repository.ts -> getComments()</span>
+            </div>
+          </div>
+          <div class="file-pill">
+            <span class="file-icon">📱</span>
+            <div class="file-details">
+              <span class="file-role">Frontend Repository</span>
+              <span class="file-path">posts_repository_impl.dart -> getComments()</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-wrapper">
+          <div class="tabs-header">
+            <button class="tab-button active" onclick="switchTab(this, 'co-req')">Request DTO</button>
+            <button class="tab-button" onclick="switchTab(this, 'co-res')">Expected Response</button>
+          </div>
+          <div class="tab-content active" id="co-req">
+            <pre><code><span class="json-comment">// Path Param: :id must be a valid BSON ObjectId</span>
+<span class="json-comment">// Query Params: page=1, limit=20</span></code></pre>
+          </div>
+          <div class="tab-content" id="co-res">
+            <pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"data"</span>: [
+    {
+      <span class="json-key">"_id"</span>: <span class="json-value">"65c0fe8f5311236168a309fa"</span>,
+      <span class="json-key">"authorId"</span>: <span class="json-value">"60d0fe4f5311236168a109ca"</span>,
+      <span class="json-key">"content"</span>: <span class="json-value">"Count me in for the meetup!"</span>,
+      <span class="json-key">"createdAt"</span>: <span class="json-value">"2026-05-26T13:40:00.000Z"</span>
+      <span class="json-comment">// Missing joined 'author' details from the backend profiles</span>
+    }
+  ]
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------ USERS ME CARD ------------------ -->
+    <div class="api-card" data-category="users" data-status="pending">
+      <div class="card-header">
+        <div class="endpoint-badge-group">
+          <span class="badge-method get">GET</span>
+          <span class="path-text">/api/users/me</span>
+          <span class="auth-badge jwt">JWT JWT_SECRET</span>
+        </div>
+        <div class="card-status-badge pending">
+          <span class="pulse-dot"></span> Pending Integration
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="description-block">
+          Retrieves the active user's detailed private profile records, including exact coordinates and account settings.
+        </div>
+        
+        <div class="discrepancy-callout">
+          <div class="callout-title">🚨 Stale Local State</div>
+          <div class="callout-desc">
+            To prevent stale signed keys, the JWT payload was minimized in Session 2. However, the Flutter client's <code>getCurrentUser()</code> still parses the JWT locally in-memory instead of invoking <code>GET /users/me</code> to populate and refresh names or avatars.
+          </div>
+          <ul class="remediation-checklist">
+            <li>Implement <code>UsersService.dart</code> on the frontend.</li>
+            <li>On application boot or auth state restoration, call <code>GET /users/me</code> to populate the <code>SessionBloc</code> with authentic, updated data.</li>
+          </ul>
+        </div>
+
+        <div class="files-meta-grid">
+          <div class="file-pill">
+            <span class="file-icon">📁</span>
+            <div class="file-details">
+              <span class="file-role">Backend Controller</span>
+              <span class="file-path">users.controller.ts -> getMe()</span>
+            </div>
+          </div>
+          <div class="file-pill">
+            <span class="file-icon">📱</span>
+            <div class="file-details">
+              <span class="file-role">Frontend Service</span>
+              <span class="file-path">Not Implemented</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-wrapper">
+          <div class="tabs-header">
+            <button class="tab-button active" onclick="switchTab(this, 'me-req')">Request DTO</button>
+            <button class="tab-button" onclick="switchTab(this, 'me-res')">Response</button>
+          </div>
+          <div class="tab-content active" id="me-req">
+            <pre><code><span class="json-comment">// Headers: Authorization Bearer &lt;accessToken&gt;</span></code></pre>
+          </div>
+          <div class="tab-content" id="me-res">
+            <pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"userId"</span>: <span class="json-value">"60d0fe4f5311236168a109ca"</span>,
+    <span class="json-key">"emailOrPhone"</span>: <span class="json-value">"user@example.com"</span>,
+    <span class="json-key">"role"</span>: <span class="json-value">"User"</span>,
+    <span class="json-key">"displayName"</span>: <span class="json-value">"Rahul Sharma"</span>,
+    <span class="json-key">"avatarUrl"</span>: <span class="json-value">"https://..."</span>,
+    <span class="json-key">"location"</span>: {
+      <span class="json-key">"type"</span>: <span class="json-value">"Point"</span>,
+      <span class="json-key">"coordinates"</span>: [<span class="json-number">77.2182</span>, <span class="json-number">28.6273</span>]
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------ PATCH PROFILE CARD ------------------ -->
+    <div class="api-card" data-category="users" data-status="pending">
+      <div class="card-header">
+        <div class="endpoint-badge-group">
+          <span class="badge-method patch">PATCH</span>
+          <span class="path-text">/api/users/profile</span>
+          <span class="auth-badge jwt">JWT JWT_SECRET</span>
+        </div>
+        <div class="card-status-badge pending">
+          <span class="pulse-dot"></span> Pending Integration
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="description-block">
+          Allows users to dynamically modify their profile display names, upload new avatars, and update their active georadial boundaries.
+        </div>
+        
+        <div class="discrepancy-callout">
+          <div class="callout-title">🚨 Profile Customization Locked</div>
+          <div class="callout-desc">
+            No profile settings screen or update profile logic is defined in the Flutter app. Users cannot change their hyperlocal location coordinates after registration.
+          </div>
+          <ul class="remediation-checklist">
+            <li>Create a Profile Editor screen on the mobile client.</li>
+            <li>Add a PATCH request service call to update the profile schemas and invalidate cached Redis states.</li>
+          </ul>
+        </div>
+
+        <div class="files-meta-grid">
+          <div class="file-pill">
+            <span class="file-icon">📁</span>
+            <div class="file-details">
+              <span class="file-role">Backend Controller</span>
+              <span class="file-path">users.controller.ts -> updateProfile()</span>
+            </div>
+          </div>
+          <div class="file-pill">
+            <span class="file-icon">📱</span>
+            <div class="file-details">
+              <span class="file-role">Frontend Service</span>
+              <span class="file-path">Not Implemented</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-wrapper">
+          <div class="tabs-header">
+            <button class="tab-button active" onclick="switchTab(this, 'pat-req')">Request DTO</button>
+            <button class="tab-button" onclick="switchTab(this, 'pat-res')">Response</button>
+          </div>
+          <div class="tab-content active" id="pat-req">
+            <pre><code>{
+  <span class="json-key">"displayName"</span>: <span class="json-value">"Rahul S."</span>, <span class="json-comment">// string, optional, max: 100</span>
+  <span class="json-key">"avatarUrl"</span>: <span class="json-value">"https://cdn.example.com/rahul.png"</span>, <span class="json-comment">// URL, optional, max: 500</span>
+  <span class="json-key">"coordinates"</span>: [<span class="json-number">77.3000</span>, <span class="json-number">28.7000</span>] <span class="json-comment">// array, optional, validated by @IsLngLatArray</span>
+}</code></pre>
+          </div>
+          <div class="tab-content" id="pat-res">
+            <pre><code>{
+  <span class="json-key">"success"</span>: <span class="json-boolean">true</span>,
+  <span class="json-key">"message"</span>: <span class="json-value">"Profile updated successfully."</span>,
+  <span class="json-key">"data"</span>: {
+    <span class="json-key">"_id"</span>: <span class="json-value">"60d0fe4f5311236168a109ca"</span>,
+    <span class="json-key">"displayName"</span>: <span class="json-value">"Rahul S."</span>,
+    <span class="json-key">"avatarUrl"</span>: <span class="json-value">"https://cdn.example.com/rahul.png"</span>,
+    <span class="json-key">"location"</span>: {
+      <span class="json-key">"type"</span>: <span class="json-value">"Point"</span>,
+      <span class="json-key">"coordinates"</span>: [<span class="json-number">77.3000</span>, <span class="json-number">28.7000</span>]
+    }
+  }
+}</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ------------------ WEBSOCKET GATEWAY CARD ------------------ -->
+    <div class="api-card" data-category="chat" data-status="integrated">
+      <div class="card-header">
+        <div class="endpoint-badge-group">
+          <span class="badge-method ws">WS</span>
+          <span class="path-text">/chat namespace</span>
+          <span class="auth-badge jwt">JWT Handshake Auth</span>
+        </div>
+        <div class="card-status-badge integrated">
+          <span class="pulse-dot"></span> Integrated
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="description-block">
+          Handles bi-directional real-time messaging, typings indications, online presence indicators, and read confirmations across multi-node Socket.IO adapters.
+        </div>
+        <div class="files-meta-grid">
+          <div class="file-pill">
+            <span class="file-icon">📁</span>
+            <div class="file-details">
+              <span class="file-role">Backend Gateway</span>
+              <span class="file-path">chat.gateway.ts</span>
+            </div>
+          </div>
+          <div class="file-pill">
+            <span class="file-icon">📱</span>
+            <div class="file-details">
+              <span class="file-role">Frontend Service</span>
+              <span class="file-path">chat_service.dart -> connectSocket()</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs-wrapper">
+          <div class="tabs-header">
+            <button class="tab-button active" onclick="switchTab(this, 'ws-client')">Client Emits</button>
+            <button class="tab-button" onclick="switchTab(this, 'ws-server')">Server Emits</button>
+          </div>
+          <div class="tab-content active" id="ws-client">
+            <pre><code><span class="json-comment">// 1. join_conversation:</span>
+{ <span class="json-key">"conversationId"</span>: <span class="json-value">"60a9fe..."</span> }
+
+<span class="json-comment">// 2. send_message:</span>
+{ 
+  <span class="json-key">"conversationId"</span>: <span class="json-value">"60a9fe..."</span>, 
+  <span class="json-key">"text"</span>: <span class="json-value">"Hello neighbor!"</span>, 
+  <span class="json-key">"attachments"</span>: [] 
+}
+
+<span class="json-comment">// 3. typing_status:</span>
+{ <span class="json-key">"conversationId"</span>: <span class="json-value">"60a9fe..."</span>, <span class="json-key">"isTyping"</span>: <span class="json-boolean">true</span> }
+
+<span class="json-comment">// 4. mark_read:</span>
+{ <span class="json-key">"conversationId"</span>: <span class="json-value">"60a9fe..."</span> }</code></pre>
+          </div>
+          <div class="tab-content" id="ws-server">
+            <pre><code><span class="json-comment">// 1. receive_message:</span>
+{ 
+  <span class="json-key">"_id"</span>: <span class="json-value">"65d4bfe..."</span>, 
+  <span class="json-key">"conversationId"</span>: <span class="json-value">"60a9fe..."</span>, 
+  <span class="json-key">"senderId"</span>: <span class="json-value">"60d0fe..."</span>, 
+  <span class="json-key">"text"</span>: <span class="json-value">"Hello neighbor!"</span>, 
+  <span class="json-key">"readBy"</span>: [<span class="json-value">"60d0fe..."</span>], 
+  <span class="json-key">"createdAt"</span>: <span class="json-value">"2026-05-26T13:41:00.000Z"</span> 
+}
+
+<span class="json-comment">// 2. presence_status:</span>
+{ <span class="json-key">"userId"</span>: <span class="json-value">"60d0fe..."</span>, <span class="json-key">"status"</span>: <span class="json-value">"online"</span> }
+
+<span class="json-comment">// 3. typing_status:</span>
+{ <span class="json-key">"conversationId"</span>: <span class="json-value">"60a9fe..."</span>, <span class="json-key">"isTyping"</span>: <span class="json-boolean">true</span> }
+
+<span class="json-comment">// 4. messages_read:</span>
+{ <span class="json-key">"conversationId"</span>: <span class="json-value">"60a9fe..."</span>, <span class="json-key">"readBy"</span>: <span class="json-value">"60d0fe..."</span> }</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- -------------------------------------------------------------
+     DASHBOARD CORE JAVASCRIPT LOGIC
+     ------------------------------------------------------------- -->
+<script>
+  let currentCategory = 'all';
+  let currentStatus = 'all';
+
+  // --- Dynamic Tab Switcher ---
+  function switchTab(button, tabId) {
+    const tabsContainer = button.closest('.tabs-wrapper');
+    
+    // Deactivate all buttons & contents inside this block
+    tabsContainer.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    tabsContainer.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Activate clicked button & corresponding content
+    button.classList.add('active');
+    tabsContainer.querySelector(`#${tabId}`).classList.add('active');
+  }
+
+  // --- Fuzzy Filters & Search Engine ---
+  function setCategoryFilter(category, button) {
+    // Update active UI states
+    button.closest('.filter-group').querySelectorAll('.pill-button').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    
+    currentCategory = category.toLowerCase();
+    filterCards();
+  }
+
+  function setStatusFilter(status, button) {
+    button.closest('.filter-group').querySelectorAll('.pill-button').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    
+    currentStatus = status.toLowerCase();
+    filterCards();
+  }
+
+  function filterCards() {
+    const searchQuery = document.getElementById('search-bar').value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.api-card');
+    
+    cards.forEach(card => {
+      const cardCategory = card.getAttribute('data-category').toLowerCase();
+      const cardStatus = card.getAttribute('data-status').toLowerCase();
+      const cardText = card.innerText.toLowerCase();
+      
+      const categoryMatch = (currentCategory === 'all' || cardCategory === currentCategory);
+      const statusMatch = (currentStatus === 'all' || cardStatus === currentStatus);
+      const searchMatch = (searchQuery === '' || cardText.includes(searchQuery));
+      
+      if (categoryMatch && statusMatch && searchMatch) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  // --- Dynamic Stats Engine & Circular SVG Progress Initializer ---
+  document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll('.api-card');
+    let integrated = 0, partial = 0, pending = 0;
+    
+    cards.forEach(card => {
+      const status = card.getAttribute('data-status').toLowerCase();
+      if (status === 'integrated') integrated++;
+      else if (status === 'partial') partial++;
+      else if (status === 'pending') pending++;
+    });
+    
+    // Hardcoded counts matching complete audit including unlisted endpoints
+    const totalCount = 22;
+    const realIntegrated = 12;
+    const realPartial = 5;
+    const realPending = 5;
+    
+    const overallPercentage = Math.round((realIntegrated / totalCount) * 100);
+    
+    document.getElementById('overall-percentage').innerText = `${overallPercentage}%`;
+    document.getElementById('count-integrated').innerText = realIntegrated;
+    document.getElementById('count-partial').innerText = realPartial;
+    document.getElementById('count-pending').innerText = realPending;
+    
+    // Set SVG Dash Offset dynamically
+    const circle = document.querySelector('.progress-ring-circle');
+    const radius = circle.r.baseVal.value;
+    const circumference = 2 * Math.PI * radius;
+    
+    circle.style.strokeDasharray = `${circumference}`;
+    const offset = circumference - (overallPercentage / 100) * circumference;
+    circle.style.strokeDashoffset = offset;
+  });
+</script>
+
+</body>
+</html>

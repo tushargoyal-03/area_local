@@ -50,7 +50,8 @@ class AuthService {
           _authStateController.add(_currentUser);
           return right<Failure, Map<String, dynamic>?>(_currentUser);
         } catch (e) {
-          return left<Failure, Map<String, dynamic>?>(ServerFailure('Invalid response data format: $e'));
+          return left<Failure, Map<String, dynamic>?>(
+              ServerFailure('Invalid response data format: $e'));
         }
       },
     );
@@ -100,6 +101,11 @@ class AuthService {
 
   FutureEither<void> logout() async {
     return runTask(() async {
+      // Fire-and-forget backend logout
+      try {
+        await DioService.instance.post('auth/logout');
+      } catch (_) {}
+
       await SecureStorageService.instance.delete('access_token');
       await SecureStorageService.instance.delete('refresh_token');
       _currentUser = null;
@@ -143,7 +149,8 @@ class AuthService {
           _authStateController.add(_currentUser);
           return right<Failure, Map<String, dynamic>?>(_currentUser);
         } catch (e) {
-          return left<Failure, Map<String, dynamic>?>(ServerFailure('OTP verify parsing failed: $e'));
+          return left<Failure, Map<String, dynamic>?>(
+              ServerFailure('OTP verify parsing failed: $e'));
         }
       },
     );
@@ -191,7 +198,8 @@ class AuthService {
           _authStateController.add(_currentUser);
           return right<Failure, Map<String, dynamic>?>(_currentUser);
         } catch (e) {
-          return left<Failure, Map<String, dynamic>?>(ServerFailure('Role upgrade parsing failed: $e'));
+          return left<Failure, Map<String, dynamic>?>(
+              ServerFailure('Role upgrade parsing failed: $e'));
         }
       },
     );
@@ -213,11 +221,11 @@ class AuthService {
   FutureEither<Map<String, dynamic>?> getCurrentUser() async {
     return runTask(() async {
       if (_currentUser != null) return _currentUser;
-      
+
       // Auto-login check by reading token and checking if exists
       final tokenRes = await SecureStorageService.instance.read('access_token');
       final token = tokenRes.fold((_) => null, (t) => t);
-      
+
       if (token != null && token.isNotEmpty) {
         final payload = _decodeJwt(token);
         if (payload.isNotEmpty) {
@@ -231,7 +239,7 @@ class AuthService {
           _authStateController.add(_currentUser);
         }
       }
-      
+
       return _currentUser;
     });
   }

@@ -15,4 +15,7 @@ export 'version_update_service.dart';
 export 'posts_service.dart';
 export 'chat_service.dart';
 export 'notification_service.dart';
-
+export 'users_service.dart';
+export 'notifications_service.dart';
+export 'societies_service.dart';
+export 'business_service.dart';

@@ -1,12 +1,19 @@
-import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/entities/notification.dart';
+
+import 'package:area_connect/src/imports/core_imports.dart';
+import 'package:area_connect/src/imports/packages_imports.dart';
 
 // --- Events ---
 abstract class NotificationEvent extends Equatable {
   const NotificationEvent();
   @override
   List<Object?> get props => [];
+}
+
+class LoadNotifications extends NotificationEvent {
+  final String? type; // optional filter
+  const LoadNotifications({this.type});
+  @override
+  List<Object?> get props => [type];
 }
 
 class NotificationAdded extends NotificationEvent {
@@ -16,141 +23,132 @@ class NotificationAdded extends NotificationEvent {
   List<Object?> get props => [notification];
 }
 
-class MarkAllAsReadRequested extends NotificationEvent {
-  const MarkAllAsReadRequested();
-}
-
-class ClearAllRequested extends NotificationEvent {
-  const ClearAllRequested();
-}
-
-class ToggleReadStatusRequested extends NotificationEvent {
-  final String id;
-  const ToggleReadStatusRequested(this.id);
+class MarkNotificationAsRead extends NotificationEvent {
+  final String notificationId;
+  const MarkNotificationAsRead(this.notificationId);
   @override
-  List<Object?> get props => [id];
+  List<Object?> get props => [notificationId];
 }
 
-// --- States ---
+class MarkAllNotificationsAsRead extends NotificationEvent {}
+
+// --- State ---
 class NotificationState extends Equatable {
+  final bool isLoading;
   final List<AppNotification> notifications;
-  final int unreadCount;
+  final String? error;
+  final String? filterType; // 'All', 'Activity', etc.
 
   const NotificationState({
+    this.isLoading = false,
     this.notifications = const [],
-    this.unreadCount = 0,
+    this.error,
+    this.filterType,
   });
 
   NotificationState copyWith({
+    bool? isLoading,
     List<AppNotification>? notifications,
-    int? unreadCount,
+    String? error,
+    String? filterType,
+    bool clearError = false,
   }) {
     return NotificationState(
+      isLoading: isLoading ?? this.isLoading,
       notifications: notifications ?? this.notifications,
-      unreadCount: unreadCount ?? this.unreadCount,
+      error: clearError ? null : (error ?? this.error),
+      filterType: filterType ?? this.filterType,
     );
   }
 
   @override
-  List<Object?> get props => [notifications, unreadCount];
+  List<Object?> get props => [isLoading, notifications, error, filterType];
 }
 
 // --- BLoC ---
 class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
-  NotificationBloc() : super(_initialState()) {
+  NotificationBloc() : super(const NotificationState()) {
+    on<LoadNotifications>(_onLoadNotifications);
+    on<MarkNotificationAsRead>(_onMarkAsRead);
+    on<MarkAllNotificationsAsRead>(_onMarkAllAsRead);
     on<NotificationAdded>(_onNotificationAdded);
-    on<MarkAllAsReadRequested>(_onMarkAllAsReadRequested);
-    on<ClearAllRequested>(_onClearAllRequested);
-    on<ToggleReadStatusRequested>(_onToggleReadStatusRequested);
-  }
-
-  static NotificationState _initialState() {
-    final list = [
-      AppNotification(
-        id: 'init_1',
-        senderId: 'riya_sharma',
-        senderName: 'Riya Sharma',
-        message: 'liked your activity post "Need a pickleball partner"',
-        type: NotificationType.like,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 2)),
-        isRead: false,
-        relatedId: 'post_pickleball',
-      ),
-      AppNotification(
-        id: 'init_2',
-        senderId: 'karan_singh',
-        senderName: 'Karan Singh',
-        message: 'is interested in your pickleball activity',
-        type: NotificationType.like,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
-        isRead: false,
-        relatedId: 'post_pickleball',
-      ),
-      AppNotification(
-        id: 'init_3',
-        senderId: 'meera_patel',
-        senderName: 'Meera Patel',
-        message: 'commented: "Joining! Bringing my friend too"',
-        type: NotificationType.newPost,
-        timestamp: DateTime.now().subtract(const Duration(minutes: 22)),
-        isRead: false,
-        relatedId: 'post_pickleball',
-      ),
-    ];
-    return NotificationState(
-      notifications: list,
-      unreadCount: list.where((n) => !n.isRead).length,
-    );
   }
 
   void _onNotificationAdded(
     NotificationAdded event,
     Emitter<NotificationState> emit,
   ) {
-    // Prevent duplicates by checking if the notification id already exists
     if (state.notifications.any((element) => element.id == event.notification.id)) {
       return;
     }
     final updatedList = [event.notification, ...state.notifications];
-    final newUnread = updatedList.where((n) => !n.isRead).length;
     emit(state.copyWith(
       notifications: updatedList,
-      unreadCount: newUnread,
     ));
   }
 
-  void _onMarkAllAsReadRequested(
-    MarkAllAsReadRequested event,
+  Future<void> _onLoadNotifications(
+    LoadNotifications event,
     Emitter<NotificationState> emit,
-  ) {
-    final updatedList = state.notifications.map((n) => n.copyWith(isRead: true)).toList();
+  ) async {
     emit(state.copyWith(
-      notifications: updatedList,
-      unreadCount: 0,
-    ));
+        isLoading: true, filterType: event.type, clearError: true));
+
+    final typeParam =
+        (event.type != null && event.type != 'All') ? event.type : null;
+    final result =
+        await NotificationsService.instance.getNotifications(type: typeParam);
+
+    result.fold(
+      (failure) =>
+          emit(state.copyWith(isLoading: false, error: failure.message)),
+      (data) {
+        final List<AppNotification> notifs = (data)
+            .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
+            .toList();
+        emit(state.copyWith(isLoading: false, notifications: notifs));
+      },
+    );
   }
 
-  void _onClearAllRequested(
-    ClearAllRequested event,
+  Future<void> _onMarkAsRead(
+    MarkNotificationAsRead event,
     Emitter<NotificationState> emit,
-  ) {
-    emit(const NotificationState());
-  }
-
-  void _onToggleReadStatusRequested(
-    ToggleReadStatusRequested event,
-    Emitter<NotificationState> emit,
-  ) {
-    final updatedList = state.notifications.map((n) {
-      if (n.id == event.id) {
-        return n.copyWith(isRead: !n.isRead);
-      }
+  ) async {
+    // Optimistic update
+    final updated = state.notifications.map((n) {
+      if (n.id == event.notificationId) return n.copyWith(isRead: true);
       return n;
     }).toList();
-    final newUnread = updatedList.where((n) => !n.isRead).length;
-    emit(state.copyWith(
-      notifications: updatedList,
-      unreadCount: newUnread,
-    ));
+    emit(state.copyWith(notifications: updated));
+
+    // API call
+    final result =
+        await NotificationsService.instance.markAsRead(event.notificationId);
+    result.fold(
+      (failure) {
+        // Rollback on failure (for simplicity here, we could just log it)
+      },
+      (_) {},
+    );
+  }
+
+  Future<void> _onMarkAllAsRead(
+    MarkAllNotificationsAsRead event,
+    Emitter<NotificationState> emit,
+  ) async {
+    // Optimistic update
+    final updated =
+        state.notifications.map((n) => n.copyWith(isRead: true)).toList();
+    emit(state.copyWith(notifications: updated));
+
+    // API call
+    final result = await NotificationsService.instance.markAllAsRead();
+    result.fold(
+      (failure) {
+        showGlobalToast(message: failure.message, status: 'error');
+      },
+      (_) {},
+    );
   }
 }

@@ -188,103 +188,108 @@ class _CommentsSheetScreenState extends State<CommentsSheetScreen> {
                             vertical: 18,
                           ),
                           itemCount: _commentsList.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 18),
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 18),
                           itemBuilder: (context, index) {
-                  final comment = _commentsList[index];
-                  final likes = comment['likes'] as int;
+                            final comment = _commentsList[index];
+                            final likes = comment['likes'] as int;
 
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Avatar(name: comment['name'] as String, size: 36),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            /// Bubble
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: cs.surfaceContainerLow,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(10),
-                                  topRight: Radius.circular(20),
-                                  bottomLeft: Radius.circular(20),
-                                  bottomRight: Radius.circular(20),
-                                ),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    comment['name'] as String,
-                                    style: tt.labelMedium?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    comment['text'] as String,
-                                    style: tt.bodySmall?.copyWith(height: 1.4),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            const SizedBox(height: 6),
-
-                            /// Footer
-                            Row(
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  comment['time'] as String,
-                                  style: tt.bodySmall?.copyWith(
-                                    fontSize: 11,
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Text(
-                                  'Reply',
-                                  style: tt.bodySmall?.copyWith(
-                                    fontSize: 11,
-                                    color: cs.onSurfaceVariant,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                if (likes > 0) ...[
-                                  const SizedBox(width: 16),
-                                  Row(
+                                Avatar(
+                                    name: comment['name'] as String, size: 36),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      const Icon(
-                                        IconsaxPlusLinear.heart,
-                                        size: 12,
-                                        color: Colors.red,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        likes.toString(),
-                                        style: tt.bodySmall?.copyWith(
-                                          fontSize: 11,
-                                          color: cs.onSurfaceVariant,
+                                      /// Bubble
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 12,
                                         ),
+                                        decoration: BoxDecoration(
+                                          color: cs.surfaceContainerLow,
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(10),
+                                            topRight: Radius.circular(20),
+                                            bottomLeft: Radius.circular(20),
+                                            bottomRight: Radius.circular(20),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              comment['name'] as String,
+                                              style: tt.labelMedium?.copyWith(
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              comment['text'] as String,
+                                              style: tt.bodySmall
+                                                  ?.copyWith(height: 1.4),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 6),
+
+                                      /// Footer
+                                      Row(
+                                        children: [
+                                          Text(
+                                            comment['time'] as String,
+                                            style: tt.bodySmall?.copyWith(
+                                              fontSize: 11,
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Text(
+                                            'Reply',
+                                            style: tt.bodySmall?.copyWith(
+                                              fontSize: 11,
+                                              color: cs.onSurfaceVariant,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          if (likes > 0) ...[
+                                            const SizedBox(width: 16),
+                                            Row(
+                                              children: [
+                                                const Icon(
+                                                  IconsaxPlusLinear.heart,
+                                                  size: 12,
+                                                  color: Colors.red,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  likes.toString(),
+                                                  style: tt.bodySmall?.copyWith(
+                                                    fontSize: 11,
+                                                    color: cs.onSurfaceVariant,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ],
-                            ),
-                          ],
+                            );
+                          },
                         ),
-                      ),
-                    ],
-                  );
-                },
-              ),
             ),
 
             /// Comment Input Bar
@@ -304,8 +309,7 @@ class _CommentsSheetScreenState extends State<CommentsSheetScreen> {
                   Expanded(
                     child: Container(
                       height: 46,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
                         color: cs.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(18),

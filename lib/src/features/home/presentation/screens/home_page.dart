@@ -277,6 +277,7 @@ class _TopBar extends StatelessWidget {
           ),
           BlocBuilder<NotificationBloc, NotificationState>(
             builder: (context, state) {
+              final unreadCount = state.notifications.where((n) => !n.isRead).length;
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -284,7 +285,7 @@ class _TopBar extends StatelessWidget {
                     onPressed: onBellTap,
                     icon: const Icon(IconsaxPlusLinear.notification),
                   ),
-                  if (state.unreadCount > 0)
+                  if (unreadCount > 0)
                     Positioned(
                       top: 4.h,
                       right: 4.w,
@@ -299,7 +300,7 @@ class _TopBar extends StatelessWidget {
                           minHeight: 16.w,
                         ),
                         child: Text(
-                          '${state.unreadCount}',
+                          '$unreadCount',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 7.5.sp,

@@ -26,7 +26,8 @@ class AppConfig {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          final tokenResult = await SecureStorageService.instance.read('access_token');
+          final tokenResult =
+              await SecureStorageService.instance.read('access_token');
           tokenResult.fold(
             (_) => null,
             (token) {
@@ -36,6 +37,59 @@ class AppConfig {
             },
           );
           return handler.next(options);
+        },
+        onError: (DioException e, handler) async {
+          if (e.response?.statusCode == 401) {
+            // Attempt token refresh
+            final refreshResult =
+                await SecureStorageService.instance.read('refresh_token');
+            String? refreshToken;
+            refreshResult.fold((_) => null, (token) => refreshToken = token);
+
+            if (refreshToken != null && refreshToken!.trim().isNotEmpty) {
+              try {
+                // Use a secondary dio instance to avoid infinite interceptor loops
+                final refreshDio = Dio(BaseOptions(baseUrl: _getBaseUrl()));
+                final response = await refreshDio.post<Map<String, dynamic>>(
+                  'auth/refresh',
+                  data: {'refreshToken': refreshToken},
+                );
+
+                if (response.statusCode == 200 || response.statusCode == 201) {
+                  final data = response.data?['data'];
+                  final newAccessToken = data['accessToken'];
+                  final newRefreshToken = data['refreshToken'];
+
+                  await SecureStorageService.instance
+                      .write('access_token', newAccessToken);
+                  await SecureStorageService.instance
+                      .write('refresh_token', newRefreshToken);
+
+                  // Retry original request with new token
+                  e.requestOptions.headers['Authorization'] =
+                      'Bearer $newAccessToken';
+
+                  // Need to resolve using the original request options
+                  final opts = Options(
+                    method: e.requestOptions.method,
+                    headers: e.requestOptions.headers,
+                  );
+                  final cloneReq = await dio.request<void>(
+                    e.requestOptions.path,
+                    options: opts,
+                    data: e.requestOptions.data,
+                    queryParameters: e.requestOptions.queryParameters,
+                  );
+                  return handler.resolve(cloneReq);
+                }
+              } catch (_) {
+                // Refresh failed, clear storage to force login state
+                await SecureStorageService.instance.delete('access_token');
+                await SecureStorageService.instance.delete('refresh_token');
+              }
+            }
+          }
+          return handler.next(e);
         },
       ),
     );
