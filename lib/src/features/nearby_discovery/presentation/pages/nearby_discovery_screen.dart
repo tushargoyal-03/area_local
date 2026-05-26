@@ -22,10 +22,28 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
   @override
   void initState() {
     super.initState();
-    // Assuming location is known. Using mock coords for New Delhi for demo.
-    context.read<NearbyDiscoveryBloc>().add(
-          const LoadNearbyNeighbors(lng: 77.2090, lat: 28.6139),
-        );
+    _loadNeighbors();
+  }
+
+  Future<void> _loadNeighbors() async {
+    final locationRes = await LocationService.instance.getCurrentPosition();
+    if (!mounted) return;
+    locationRes.fold(
+      (failure) {
+        // Fallback to New Delhi coordinates if Geolocator fails/permission denied
+        context.read<NearbyDiscoveryBloc>().add(
+              const LoadNearbyNeighbors(lng: 77.2090, lat: 28.6139),
+            );
+      },
+      (position) {
+        context.read<NearbyDiscoveryBloc>().add(
+              LoadNearbyNeighbors(
+                lng: position.longitude,
+                lat: position.latitude,
+              ),
+            );
+      },
+    );
   }
 
   @override

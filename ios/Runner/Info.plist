@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Area Connect needs your location to show activities, events, and neighbors nearby.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Area Connect needs your location to show activities, events, and neighbors nearby.</string>
 </dict>
 </plist>

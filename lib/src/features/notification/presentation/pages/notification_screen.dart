@@ -1,7 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
-
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
@@ -66,10 +65,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         children: [
           /// Tabs
           SizedBox(
-            height: 44.h,
+            height: 38.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 0),
               itemCount: _tabs.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
@@ -241,13 +240,13 @@ class _TabChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(right: 8.w),
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
+      margin: EdgeInsets.symmetric(vertical: 2.h).copyWith(right: 8.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       decoration: BoxDecoration(
         color: active
             ? cs.primary.withValues(alpha: 0.12)
             : cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20.r),
+        borderRadius: BorderRadius.circular(100.r),
       ),
       child: Text(
         label,
@@ -256,7 +255,7 @@ class _TabChip extends StatelessWidget {
           fontWeight: active ? FontWeight.w600 : FontWeight.w500,
           color: active ? cs.primary : cs.onSurfaceVariant,
         ),
-      ),
+      ).center,
     );
   }
 }

@@ -41,15 +41,24 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
-      context.read<AuthBloc>().add(
-            SignUpRequested(
-              context: context,
-              name: _nameController.text.trim(),
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-              coordinates: const [77.5946, 12.9716],
-            ),
-          );
+      // Fetch dynamic coordinates from Geolocator via LocationService
+      final locationRes = await LocationService.instance.getCurrentPosition();
+      final coordinates = locationRes.fold(
+        (failure) => const [77.5946, 12.9716], // Fallback if failed
+        (position) => [position.longitude, position.latitude],
+      );
+
+      if (context.mounted) {
+        context.read<AuthBloc>().add(
+              SignUpRequested(
+                context: context,
+                name: _nameController.text.trim(),
+                email: _emailController.text.trim(),
+                password: _passwordController.text,
+                coordinates: coordinates,
+              ),
+            );
+      }
     }
 
     return _SignupView(

@@ -13,6 +13,34 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
     with WidgetsBindingObserver {
   int _currentTab = 0;
 
+  Future<void> _fetchAndSyncLocation() async {
+    // Request location permission, fetch coordinates, and sync to backend user profile
+    final locationRes = await LocationService.instance.getCurrentPosition();
+    locationRes.fold(
+      (failure) {
+        showGlobalToast(
+          message: 'Location issue: ${failure.message}. Using default location.',
+          status: 'warning',
+        );
+        debugPrint('Failed to fetch location on login: ${failure.message}');
+      },
+      (position) async {
+        showGlobalToast(
+          message: 'Live location synchronized successfully!',
+          status: 'success',
+        );
+        debugPrint('Fetched dynamic login coordinates: [${position.longitude}, ${position.latitude}]');
+        final updateRes = await UsersService.instance.updateProfile(
+          coordinates: [position.longitude, position.latitude],
+        );
+        updateRes.fold(
+          (failure) => debugPrint('Failed to sync location to backend: ${failure.message}'),
+          (successData) => debugPrint('Successfully synced location to backend!'),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -27,6 +55,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
       if (sessionState.status == SessionStatus.authenticated &&
           sessionState.user != null) {
         final user = sessionState.user!;
+        _fetchAndSyncLocation(); // Dynamically fetch geolocator coordinates and update backend
         context
             .read<ChatBloc>()
             .add(LoadConversationsRequested(currentUserId: user.id));
@@ -87,6 +116,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
         if (sessionState.status == SessionStatus.authenticated &&
             sessionState.user != null) {
           final user = sessionState.user!;
+          _fetchAndSyncLocation(); // Dynamically fetch geolocator coordinates and update backend
           // Wait for Socket to establish connect before binding listeners
           Future.delayed(const Duration(seconds: 2), () {
             final socket = ChatService.instance.socket;
@@ -621,7 +651,7 @@ class _ProfileSettingsTab extends StatelessWidget {
                     icon: IconsaxPlusLinear.notification,
                     title: 'Notification Settings',
                     cs: cs,
-                    onTap: () {},
+                    onTap: () => context.push(AppRoutes.notification),
                   ),
                 ],
               ),
