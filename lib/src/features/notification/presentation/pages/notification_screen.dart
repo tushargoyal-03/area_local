@@ -116,9 +116,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         }
                       },
                       child: _NotificationItem(
-                        who: it
-                            .type, // Could be system, user name etc. Using type as fallback if sender name not available in model
+                        title: it.title.isNotEmpty ? it.title : it.type,
                         text: it.message,
+                        type: it.type,
                         time: _formatTime(it.createdAt),
                         isNew: !it.isRead,
                         cs: cs,
@@ -150,52 +150,90 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 }
 
 class _NotificationItem extends StatelessWidget {
-  final String who;
+  final String title;
   final String text;
+  final String type;
   final String time;
   final bool isNew;
   final ColorScheme cs;
   final TextTheme tt;
 
   const _NotificationItem({
-    required this.who,
+    required this.title,
     required this.text,
+    required this.type,
     required this.time,
     required this.isNew,
     required this.cs,
     required this.tt,
   });
 
+  IconData _getIconForType() {
+    switch (type) {
+      case 'POST_INTEREST':
+        return IconsaxPlusBold.heart;
+      case 'COMMENT':
+        return IconsaxPlusBold.message;
+      default:
+        return IconsaxPlusBold.notification;
+    }
+  }
+
+  Color _getColorForType(ColorScheme cs) {
+    switch (type) {
+      case 'POST_INTEREST':
+        return Colors.pink;
+      case 'COMMENT':
+        return Colors.blue;
+      default:
+        return cs.primary;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final iconColor = _getColorForType(cs);
+
     return Container(
       color: isNew ? cs.primary.withValues(alpha: 0.06) : Colors.transparent,
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Avatar(name: who, size: 42),
+          Container(
+            width: 42.w,
+            height: 42.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: iconColor.withValues(alpha: 0.15),
+            ),
+            child: Icon(
+              _getIconForType(),
+              color: iconColor,
+              size: 20.sp,
+            ),
+          ),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                RichText(
-                  text: TextSpan(
-                    style: tt.bodyMedium?.copyWith(
-                      color: cs.onSurface,
-                      height: 1.3,
-                    ),
-                    children: [
-                      TextSpan(
-                        text: '$who ',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      TextSpan(text: text),
-                    ],
+                Text(
+                  title,
+                  style: tt.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
                   ),
                 ),
-                SizedBox(height: 4.h),
+                SizedBox(height: 3.h),
+                Text(
+                  text,
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    height: 1.3,
+                  ),
+                ),
+                SizedBox(height: 6.h),
                 Text(
                   time,
                   style: tt.bodySmall?.copyWith(

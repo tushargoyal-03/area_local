@@ -23,14 +23,14 @@ class AppNotification extends Equatable {
 
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     return AppNotification(
-      id: json['_id'] ?? '',
-      recipientId: json['recipientId'] ?? '',
-      type: json['type'] ?? 'System',
-      title: json['title'] ?? '',
-      message: json['message'] ?? '',
-      isRead: json['isRead'] ?? false,
-      relatedId: json['relatedId'],
-      createdAt: json['createdAt'] ?? DateTime.now().toIso8601String(),
+      id: json['_id']?.toString() ?? '',
+      recipientId: json['recipientId']?.toString() ?? '',
+      type: json['type']?.toString() ?? 'System',
+      title: json['title']?.toString() ?? '',
+      message: json['body']?.toString() ?? json['message']?.toString() ?? '',
+      isRead: json['readAt'] != null || json['isRead'] == true,
+      relatedId: (json['data'] is Map ? json['data']['postId']?.toString() : null) ?? json['relatedId']?.toString(),
+      createdAt: json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
     );
   }
 

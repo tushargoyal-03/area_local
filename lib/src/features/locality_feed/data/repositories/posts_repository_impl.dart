@@ -28,8 +28,13 @@ class PostsRepositoryImpl implements PostsRepository {
         final post = item as Map<String, dynamic>;
         final author = post['author'] as Map<String, dynamic>?;
         
-        final interested = List<String>.from(
-          (post['interestedUsers'] as List<dynamic>?)?.map((e) => e.toString()) ?? [],
+        final interestedCount = post['interestedCount'] as int? ?? 0;
+        final isInterested = post['isInterested'] as bool? ?? false;
+        
+        // Mock interested array to satisfy legacy count UI if needed.
+        final interested = List<String>.generate(
+          interestedCount,
+          (i) => (i == 0 && isInterested && currentUserId != null) ? currentUserId : 'other_$i',
         );
 
         return AppPost(
@@ -46,7 +51,8 @@ class PostsRepositoryImpl implements PostsRepository {
           commentsCount: post['commentsCount'] ?? 0,
           sharesCount: post['sharesCount'] ?? 0,
           createdAt: DateTime.tryParse(post['createdAt']?.toString() ?? '') ?? DateTime.now(),
-          isInterested: currentUserId != null && interested.contains(currentUserId),
+          isInterested: isInterested,
+          distanceInMeters: (post['distanceInMeters'] as num?)?.toDouble(),
         );
       }).toList();
     });

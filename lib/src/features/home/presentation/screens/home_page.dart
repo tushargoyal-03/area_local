@@ -1,3 +1,4 @@
+import 'package:area_connect/src/features/nearby_discovery/presentation/providers/nearby_discovery_bloc.dart';
 import 'package:area_connect/src/imports/imports.dart';
 import 'package:area_connect/src/features/locality_feed/presentation/pages/locality_feed_page.dart';
 import 'package:area_connect/src/features/home/presentation/screens/conversations_screen.dart';
@@ -50,7 +51,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
     NotificationService.instance.requestPermissions();
 
     // Trigger initial WebSocket binding if already logged in on boot
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sessionState = context.read<SessionBloc>().state;
       if (sessionState.status == SessionStatus.authenticated &&
           sessionState.user != null) {
@@ -68,6 +69,31 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
           }
         });
       }
+
+      // Pre-fetch nearby posts and neighbors for dashboard widgets
+      final locationRes = await LocationService.instance.getCurrentPosition();
+      locationRes.fold(
+        (failure) {
+          context.read<PostsBloc>().add(const LoadNearbyPostsRequested(
+                lng: 77.5946,
+                lat: 12.9716,
+              ));
+          context.read<NearbyDiscoveryBloc>().add(const LoadNearbyNeighbors(
+                lng: 77.5946,
+                lat: 12.9716,
+              ));
+        },
+        (position) {
+          context.read<PostsBloc>().add(LoadNearbyPostsRequested(
+                lng: position.longitude,
+                lat: position.latitude,
+              ));
+          context.read<NearbyDiscoveryBloc>().add(LoadNearbyNeighbors(
+                lng: position.longitude,
+                lat: position.latitude,
+              ));
+        },
+      );
     });
   }
 
@@ -423,32 +449,44 @@ class _HeroCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              const Avatar(name: 'Riya', size: 28),
-              const Avatar(name: 'Karan', size: 28),
-              const Avatar(name: 'Meera', size: 28),
-              const Spacer(),
-              FilledButton(
-                onPressed: onExploreTap,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: cs.primary,
-                  shape: const StadiumBorder(),
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'Explore Feed',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12.sp,
+          BlocBuilder<NearbyDiscoveryBloc, NearbyDiscoveryState>(
+            builder: (context, state) {
+              final avatars = state.neighbors.take(3).toList();
+
+              return Row(
+                children: [
+                  ...avatars.map((n) {
+                    final profile = n['profile'] ?? <String, dynamic>{};
+                    final name = profile['displayName'] ?? 'Neighbor';
+                    final avatarUrl = profile['avatarUrl'];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Avatar(name: name, size: 28, imageUrl: avatarUrl),
+                    );
+                  }),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: onExploreTap,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: cs.primary,
+                      shape: const StadiumBorder(),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'Explore Feed',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.sp,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              );
+            },
           )
         ],
       ),
@@ -549,16 +587,31 @@ class _TrendingSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        const ActivityCard(
-          who: 'Riya Sharma',
-          title: 'Need a pickleball partner 6PM - 8PM in Vaishali Nagar',
-          tag: 'Sports',
-        ),
-        const SizedBox(height: 10),
-        const ActivityCard(
-          who: 'Meera',
-          title: 'Morning yoga in Central Park, 6:30 AM',
-          tag: 'Wellness',
+        BlocBuilder<PostsBloc, PostsState>(
+          builder: (context, state) {
+            if (state.isLoading && state.posts.isEmpty) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.posts.isEmpty) {
+              return Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: Text(
+                  'No activities nearby. Be the first to post!',
+                  style: TextStyle(color: cs.onSurfaceVariant),
+                ),
+              );
+            }
+
+            final trendingPosts = state.posts.take(2).toList();
+            return Column(
+              children: trendingPosts.map((post) {
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 10.h),
+                  child: ActivityCard(post: post),
+                );
+              }).toList(),
+            );
+          },
         ),
       ],
     );

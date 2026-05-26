@@ -21,7 +21,7 @@ class ChatRoomScreen extends StatefulWidget {
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
   final TextEditingController _msgController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
+
   Timer? _typingTimer;
   bool _isTyping = false;
 
@@ -29,11 +29,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   void initState() {
     super.initState();
     final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
-    
+
     // Load chat room messages
     context.read<ChatBloc>().add(
-      LoadMessagesRequested(chatId: widget.chatId, currentUserId: currentUserId),
-    );
+          LoadMessagesRequested(
+              chatId: widget.chatId, currentUserId: currentUserId),
+        );
   }
 
   @override
@@ -57,14 +58,16 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   void _onTextChanged(String text) {
     if (!_isTyping && text.trim().isNotEmpty) {
       _isTyping = true;
-      context.read<ChatBloc>().add(SendTypingStatusRequested(chatId: widget.chatId, isTyping: true));
+      context.read<ChatBloc>().add(
+          SendTypingStatusRequested(chatId: widget.chatId, isTyping: true));
     }
 
     _typingTimer?.cancel();
     _typingTimer = Timer(const Duration(milliseconds: 1500), () {
       if (_isTyping) {
         _isTyping = false;
-        context.read<ChatBloc>().add(SendTypingStatusRequested(chatId: widget.chatId, isTyping: false));
+        context.read<ChatBloc>().add(
+            SendTypingStatusRequested(chatId: widget.chatId, isTyping: false));
       }
     });
   }
@@ -79,15 +82,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     _typingTimer?.cancel();
     if (_isTyping) {
       _isTyping = false;
-      context.read<ChatBloc>().add(SendTypingStatusRequested(chatId: widget.chatId, isTyping: false));
+      context.read<ChatBloc>().add(
+          SendTypingStatusRequested(chatId: widget.chatId, isTyping: false));
     }
 
     context.read<ChatBloc>().add(
-      SendMessageRequested(chatId: widget.chatId, text: text, currentUserId: currentUserId),
-    );
+          SendMessageRequested(
+              chatId: widget.chatId, text: text, currentUserId: currentUserId),
+        );
 
     _msgController.clear();
-    
+
     // Scroll down shortly after emit
     Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
   }
@@ -120,19 +125,22 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         return Scaffold(
           backgroundColor: cs.surface,
           appBar: AppBar(
-            backgroundColor: cs.surface,
-            elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
               onPressed: () {
                 // Mark messages read on leave
-                context.read<ChatBloc>().add(MarkMessagesAsReadRequested(chatId: widget.chatId));
+                context
+                    .read<ChatBloc>()
+                    .add(MarkMessagesAsReadRequested(chatId: widget.chatId));
                 Navigator.pop(context);
               },
             ),
             title: Row(
               children: [
-                Avatar(name: widget.recipientName, size: 38.w, imageUrl: conversation.recipientAvatar),
+                Avatar(
+                    name: widget.recipientName,
+                    size: 38.w,
+                    imageUrl: conversation.recipientAvatar),
                 SizedBox(width: 10.w),
                 Expanded(
                   child: Column(
@@ -141,7 +149,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       Text(
                         widget.recipientName,
                         overflow: TextOverflow.ellipsis,
-                        style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+                        style:
+                            tt.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Row(
                         children: [
@@ -156,7 +165,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           SizedBox(width: 4.w),
                           Text(
                             isOnline ? 'Online' : 'Offline',
-                            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 10.sp),
+                            style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant, fontSize: 10.sp),
                           ),
                         ],
                       ),
@@ -168,7 +178,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           ),
           body: Column(
             children: [
-              if (!state.isMessagesLoading && state.activeRoomMessages.isNotEmpty)
+              if (!state.isMessagesLoading &&
+                  state.activeRoomMessages.isNotEmpty)
                 _buildMessageStatsHeader(
                   cs,
                   tt,
@@ -180,30 +191,37 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     ? const Center(child: CircularProgressIndicator())
                     : ListView.builder(
                         controller: _scrollController,
-                        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: 16.w, vertical: 12.h),
                         itemCount: state.activeRoomMessages.length,
                         itemBuilder: (context, index) {
                           final msg = state.activeRoomMessages[index];
                           final isMe = msg.isMe;
 
                           return Align(
-                            alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                            alignment: isMe
+                                ? Alignment.centerRight
+                                : Alignment.centerLeft,
                             child: Container(
                               margin: EdgeInsets.only(
                                 bottom: 8.h,
                                 left: isMe ? 48.w : 0,
                                 right: isMe ? 0 : 48.w,
                               ),
-                              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 10.h),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 14.w, vertical: 10.h),
                               decoration: BoxDecoration(
-                                color: isMe
-                                    ? cs.primary
-                                    : cs.surfaceContainerHigh,
+                                color:
+                                    isMe ? cs.primary : cs.surfaceContainerHigh,
                                 borderRadius: BorderRadius.only(
                                   topLeft: Radius.circular(16.r),
                                   topRight: Radius.circular(16.r),
-                                  bottomLeft: isMe ? Radius.circular(16.r) : Radius.circular(4.r),
-                                  bottomRight: isMe ? Radius.circular(4.r) : Radius.circular(16.r),
+                                  bottomLeft: isMe
+                                      ? Radius.circular(16.r)
+                                      : Radius.circular(4.r),
+                                  bottomRight: isMe
+                                      ? Radius.circular(4.r)
+                                      : Radius.circular(16.r),
                                 ),
                               ),
                               child: Column(
@@ -223,7 +241,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                       Text(
                                         _formatMsgTime(msg.createdAt),
                                         style: TextStyle(
-                                          color: (isMe ? cs.onPrimary : cs.onSurfaceVariant)
+                                          color: (isMe
+                                                  ? cs.onPrimary
+                                                  : cs.onSurfaceVariant)
                                               .withValues(alpha: 0.70),
                                           fontSize: 9.sp,
                                         ),
@@ -235,8 +255,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                               ? Icons.done_rounded
                                               : Icons.done_all_rounded,
                                           size: 14.sp,
-                                          color: msg.readBy.contains(widget.recipientId)
-                                              ? const Color(0xFF34B7F1) // WhatsApp Sky Blue
+                                          color: msg.readBy
+                                                  .contains(widget.recipientId)
+                                              ? const Color(
+                                                  0xFF34B7F1) // WhatsApp Sky Blue
                                               : Colors.white60,
                                         ),
                                       ],
@@ -255,13 +277,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
                     child: Row(
                       spacing: 4.w,
                       children: [
                         Text(
                           '${widget.recipientName} is typing',
-                          style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11.sp, fontStyle: FontStyle.italic),
+                          style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 11.sp,
+                              fontStyle: FontStyle.italic),
                         ),
                         _buildTypingDots(cs),
                       ],
@@ -296,7 +322,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           onSubmitted: (_) => _handleSend(),
                           decoration: InputDecoration(
                             hintText: 'Type a message...',
-                            hintStyle: TextStyle(color: cs.onSurfaceVariant.withValues(alpha: 0.6), fontSize: 13.5.sp),
+                            hintStyle: TextStyle(
+                                color:
+                                    cs.onSurfaceVariant.withValues(alpha: 0.6),
+                                fontSize: 13.5.sp),
                             border: InputBorder.none,
                           ),
                         ),
@@ -343,13 +372,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               color: cs.primary,
               shape: BoxShape.circle,
             ),
-          ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-           .scale(
-             begin: const Offset(1, 1),
-             end: const Offset(1.6, 1.6),
-             duration: const Duration(milliseconds: 300),
-             delay: Duration(milliseconds: index * 100),
-           );
+          )
+              .animate(onPlay: (controller) => controller.repeat(reverse: true))
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.6, 1.6),
+                duration: const Duration(milliseconds: 300),
+                delay: Duration(milliseconds: index * 100),
+              );
         }),
       ),
     );
@@ -399,7 +429,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           ),
           Row(
             children: [
-              Icon(IconsaxPlusLinear.message_2, size: 14.sp, color: Colors.blue),
+              Icon(IconsaxPlusLinear.message_2,
+                  size: 14.sp, color: Colors.blue),
               SizedBox(width: 6.w),
               Text(
                 '${widget.recipientName}: $partnerCount msg',
@@ -417,7 +448,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   String _formatMsgTime(DateTime time) {
-    final hour = time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
+    final hour =
+        time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
     final minute = time.minute.toString().padLeft(2, '0');
     final ampm = time.hour >= 12 ? 'PM' : 'AM';
     return '$hour:$minute $ampm';
