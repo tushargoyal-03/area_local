@@ -1,8 +1,6 @@
-import 'package:area_connect/src/features/auth/presentation/providers/auth_bloc.dart';
-
 import '../../imports/imports.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
-import '../../features/auth/presentation/providers/session_bloc.dart';
+import '../../features/locality_feed/data/repositories/posts_repository_impl.dart';
 
 /// A wrapper to initialize the chosen State Management library.
 class StateWrapper extends StatelessWidget {
@@ -21,6 +19,10 @@ class StateWrapper extends StatelessWidget {
             create: (_) => SessionBloc(repository: AuthRepositoryImpl())),
         BlocProvider<AuthBloc>(
             create: (_) => AuthBloc(repository: AuthRepositoryImpl())),
+        BlocProvider<PostsBloc>(
+            create: (_) => PostsBloc(repository: PostsRepositoryImpl())),
+        BlocProvider<ChatBloc>(
+            create: (_) => ChatBloc()),
       ],
       child: child,
     );

@@ -1,5 +1,4 @@
-import 'package:area_connect/src/imports/core_imports.dart';
-import 'package:area_connect/src/imports/packages_imports.dart';
+import 'package:area_connect/src/imports/imports.dart';
 
 class LocalityFeedPage extends StatefulWidget {
   const LocalityFeedPage({super.key});
@@ -10,6 +9,31 @@ class LocalityFeedPage extends StatefulWidget {
 
 class _LocalityFeedPageState extends State<LocalityFeedPage> {
   @override
+  void initState() {
+    super.initState();
+    _loadFeed();
+  }
+
+  Future<void> _loadFeed() async {
+    final locationRes = await LocationService.instance.getCurrentPosition();
+    locationRes.fold(
+      (failure) {
+        // Safe fallback coordinates for Vaishali Nagar, Jaipur
+        context.read<PostsBloc>().add(const LoadNearbyPostsRequested(
+              lng: 77.5946,
+              lat: 12.9716,
+            ));
+      },
+      (position) {
+        context.read<PostsBloc>().add(LoadNearbyPostsRequested(
+              lng: position.longitude,
+              lat: position.latitude,
+            ));
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
@@ -17,17 +41,23 @@ class _LocalityFeedPageState extends State<LocalityFeedPage> {
     return _LocalityFeedView(
       cs: cs,
       tt: tt,
+      onRefresh: _loadFeed,
     );
   }
 }
 
-/* ================= UI ONLY ================= */
+/* ================= UI INTEGRATION ================= */
 
 class _LocalityFeedView extends StatefulWidget {
   final ColorScheme cs;
   final TextTheme tt;
+  final RefreshCallback onRefresh;
 
-  const _LocalityFeedView({required this.cs, required this.tt});
+  const _LocalityFeedView({
+    required this.cs,
+    required this.tt,
+    required this.onRefresh,
+  });
 
   @override
   State<_LocalityFeedView> createState() => _LocalityFeedViewState();
@@ -35,13 +65,23 @@ class _LocalityFeedView extends StatefulWidget {
 
 class _LocalityFeedViewState extends State<_LocalityFeedView> {
   int _selectedCategoryIndex = 0;
+  
+  // UI filter categories mapping to backend categories
   final List<String> _categories = [
     'For you',
     'Sports',
-    'Wellness',
-    'Social',
-    'Offers'
+    'Meetups',
+    'Needs',
+    'General'
   ];
+
+  String? _getBackendCategoryFilter(int index) {
+    if (index == 0) return null; // 'For you' shows all
+    if (index == 1) return 'Sports';
+    if (index == 2) return 'Meetup';
+    if (index == 3) return 'Need';
+    return 'General';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,15 +92,25 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
         elevation: 0,
         title: ListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(
-            '📍 Within 2 km',
-            style: widget.tt.bodySmall?.copyWith(
-              fontWeight: FontWeight.normal,
-              color: widget.cs.onSurfaceVariant,
-            ),
+          title: Row(
+            children: [
+              Icon(
+                IconsaxPlusLinear.location,
+                size: 11,
+                color: widget.cs.primary,
+              ),
+              SizedBox(width: 3.w),
+              Text(
+                'Within 5 km',
+                style: widget.tt.bodySmall?.copyWith(
+                  fontWeight: FontWeight.normal,
+                  color: widget.cs.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
           subtitle: Text(
-            'Locality',
+            'Locality Feed',
             style: widget.tt.titleMedium?.copyWith(
               color: widget.cs.onSurface,
               fontWeight: FontWeight.bold,
@@ -69,113 +119,137 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: widget.onRefresh,
             icon: Icon(
-              IconsaxPlusLinear.search_normal,
+              IconsaxPlusLinear.refresh,
               color: widget.cs.onSurface,
             ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: AppSpacing.sm.h),
+      body: RefreshIndicator(
+        onRefresh: widget.onRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: AppSpacing.sm.h),
 
-            /// Toggle Switches (Horizontal Filter Chips)
-            SizedBox(
-              height: 40.h,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
-                itemCount: _categories.length,
-                itemBuilder: (context, index) {
-                  final isSelected = index == _selectedCategoryIndex;
-                  final category = _categories[index];
+              /// Horizontal Filter Chips
+              SizedBox(
+                height: 40.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final isSelected = index == _selectedCategoryIndex;
+                    final category = _categories[index];
 
-                  return Padding(
-                    padding: EdgeInsets.only(right: AppSpacing.sm.w),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedCategoryIndex = index;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: AppDurations.fast,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md.w,
-                          vertical: AppSpacing.xs.h,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? widget.cs.primary
-                              : widget.cs.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(100.r),
-                          border: Border.all(
+                    return Padding(
+                      padding: EdgeInsets.only(right: AppSpacing.sm.w),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedCategoryIndex = index;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: AppDurations.fast,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md.w,
+                            vertical: AppSpacing.xs.h,
+                          ),
+                          decoration: BoxDecoration(
                             color: isSelected
                                 ? widget.cs.primary
-                                : widget.cs.outlineVariant
-                                    .withValues(alpha: 0.4),
-                            width: 1.5.w,
+                                : widget.cs.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(100.r),
+                            border: Border.all(
+                              color: isSelected
+                                  ? widget.cs.primary
+                                  : widget.cs.outlineVariant
+                                      .withValues(alpha: 0.4),
+                              width: 1.5.w,
+                            ),
                           ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: widget.cs.primary
-                                        .withValues(alpha: 0.12),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          category,
-                          style: widget.tt.bodyMedium?.copyWith(
-                            color: isSelected
-                                ? widget.cs.onPrimary
-                                : widget.cs.onSurfaceVariant,
-                            fontWeight:
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
-                            fontSize: 13.sp,
+                          alignment: Alignment.center,
+                          child: Text(
+                            category,
+                            style: widget.tt.bodyMedium?.copyWith(
+                              color: isSelected
+                                  ? widget.cs.onPrimary
+                                  : widget.cs.onSurfaceVariant,
+                              fontWeight:
+                                  isSelected ? FontWeight.w600 : FontWeight.w500,
+                              fontSize: 13.sp,
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    );
+                  },
+                ),
+              ),
+
+              SizedBox(height: AppSpacing.lg.h),
+
+              /// Active posts by users nearby
+              BlocBuilder<PostsBloc, PostsState>(
+                builder: (context, state) {
+                  if (state.isLoading && state.posts.isEmpty) {
+                    return Skeletonizer(
+                      enabled: true,
+                      child: ListView.separated(
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 4,
+                        shrinkWrap: true,
+                        separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md.h),
+                        itemBuilder: (_, __) => const ActivityCard(),
+                      ),
+                    );
+                  }
+
+                  if (state.posts.isEmpty) {
+                    return const AppEmptyState(
+                      icon: IconsaxPlusLinear.location,
+                      title: 'No posts found',
+                      subtitle: 'Try changing category or refresh to search again.',
+                    );
+                  }
+
+                  // Apply Category Filter
+                  final backendFilter = _getBackendCategoryFilter(_selectedCategoryIndex);
+                  final filteredPosts = backendFilter == null
+                      ? state.posts
+                      : state.posts.where((p) => p.category.toLowerCase() == backendFilter.toLowerCase()).toList();
+
+                  if (filteredPosts.isEmpty) {
+                    return AppEmptyState(
+                      icon: IconsaxPlusLinear.location,
+                      title: 'No posts in $backendFilter',
+                      subtitle: 'Be the first to create one inside this category!',
+                    );
+                  }
+
+                  return ListView.separated(
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredPosts.length,
+                    shrinkWrap: true,
+                    separatorBuilder: (context, index) =>
+                        SizedBox(height: AppSpacing.md.h),
+                    itemBuilder: (context, index) {
+                      final post = filteredPosts[index];
+                      return ActivityCard(post: post);
+                    },
                   );
                 },
               ),
-            ),
 
-            SizedBox(height: AppSpacing.lg.h),
-
-            /// Active posts by users nearby
-            ListView.separated(
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 10,
-              shrinkWrap: true,
-              separatorBuilder: (context, index) =>
-                  SizedBox(height: AppSpacing.md.h),
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () {
-                    context.push(AppRoutes.activity);
-                  },
-                  child: const ActivityCard(
-                    title:
-                        'Need a pickleball partner from 6PM – 8PM in Vaishali Nagar',
-                    tag: 'Viral',
-                    who: 'Rajesh',
-                  ),
-                );
-              },
-            ),
-
-            SizedBox(height: AppSpacing.xxl.h),
-          ],
+              SizedBox(height: AppSpacing.xxl.h),
+            ],
+          ),
         ),
       ),
     );

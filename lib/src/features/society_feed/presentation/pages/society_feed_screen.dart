@@ -35,46 +35,55 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
       appBar: AppBar(
         backgroundColor: cs.surface,
         elevation: 0,
-        leadingWidth: 52.w,
-        leading: Padding(
-          padding: EdgeInsets.only(left: AppSpacing.lg.w),
-          child: Container(
-            width: 36.w,
-            height: 36.h,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [cs.primary, cs.primary.withValues(alpha: 0.7)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              'G',
-              style: tt.titleMedium?.copyWith(
-                color: cs.onPrimary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
+        leading: IconButton(
+          icon: const Icon(IconsaxPlusLinear.arrow_left),
+          onPressed: () => context.pop(),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        titleSpacing: 0,
+        title: Row(
           children: [
-            Text(
-              'Greenwood Heights',
-              style: tt.bodyLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: cs.onSurface,
+            Container(
+              width: 36.w,
+              height: 36.h,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cs.primary, AppPalettes.primary2Light],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'G',
+                style: tt.titleMedium?.copyWith(
+                  color: cs.onPrimary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-            SizedBox(height: 2.h),
-            Text(
-              '824 residents · Block A',
-              style: tt.bodySmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                fontSize: 11.sp,
+            SizedBox(width: 10.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Greenwood Heights',
+                    style: tt.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    '824 residents · Block A',
+                    style: tt.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontSize: 11.sp,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],

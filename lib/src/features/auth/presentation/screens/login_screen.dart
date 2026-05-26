@@ -1,8 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
-import 'package:area_connect/src/features/auth/presentation/providers/auth_bloc.dart';
-
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -32,15 +30,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
     Future<void> handleLogin() async {
       if (!(_formKey.currentState?.validate() ?? false)) return;
-      
 
       context.read<AuthBloc>().add(
-        LoginRequested(
-          context: context, 
-          email: _emailController.text, 
-          password: _passwordController.text,
-        ),
-      );
+            LoginRequested(
+              context: context,
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+            ),
+          );
     }
 
     return _LoginView(
@@ -49,10 +46,59 @@ class _LoginScreenState extends State<LoginScreen> {
       passwordController: _passwordController,
       obscurePassword: _obscurePassword,
       isLoading: isLoading,
-      onToggleObscure: () => setState(() => _obscurePassword = !_obscurePassword),
+      onToggleObscure: () =>
+          setState(() => _obscurePassword = !_obscurePassword),
       onLogin: handleLogin,
       cs: cs,
       tt: tt,
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.onPressed,
+    required this.icon,
+    required this.label,
+    required this.cs,
+    required this.tt,
+  });
+
+  final VoidCallback onPressed;
+  final Widget icon;
+  final String label;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        side: BorderSide(
+          color: cs.outlineVariant.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppBorders.button,
+        ),
+        padding: EdgeInsets.symmetric(vertical: 12.h),
+        backgroundColor: cs.surface,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 8.w,
+        children: [
+          icon,
+          Text(
+            label,
+            style: tt.labelLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: cs.onSurface,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -91,13 +137,40 @@ class _LoginView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: AppSpacing.xl.h),
+                // Brand icon
+                Container(
+                  width: 56.w,
+                  height: 56.w,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppPalettes.primaryLight, AppPalettes.primary2Light],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16.r),
+                    boxShadow: [
+                      BoxShadow(
+                        color: cs.primary.withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    IconsaxPlusBold.location,
+                    color: Colors.white,
+                    size: 26.sp,
+                  ),
+                ),
+                SizedBox(height: AppSpacing.lg.h),
                 Text(
                   'Welcome Back',
-                  style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style:
+                      tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: AppSpacing.sm.h),
                 Text(
-                  'Log in to continue your journey',
+                  'Sign in to your neighborhood account',
                   textAlign: TextAlign.center,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
@@ -130,10 +203,12 @@ class _LoginView extends StatelessWidget {
                         obscureText: obscurePassword,
                         prefixIcon: const Icon(IconsaxPlusBold.lock),
                         suffixIcon: IconButton(
-                          icon: Icon(obscurePassword ? Icons.visibility_off : Icons.visibility),
+                          icon: Icon(obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility),
                           onPressed: onToggleObscure,
                         ),
-                         validator: (v) {
+                        validator: (v) {
                           if (AppUtils.isBlank(v)) {
                             return 'Password is required';
                           }
@@ -160,7 +235,8 @@ class _LoginView extends StatelessWidget {
                               ),
                               Text(
                                 'Remember Me',
-                                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                                style: tt.bodySmall
+                                    ?.copyWith(color: cs.onSurfaceVariant),
                               ),
                             ],
                           ),
@@ -191,63 +267,69 @@ class _LoginView extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: AppSpacing.xxxl.h),
-                Column(
+                SizedBox(height: AppSpacing.xl.h),
+                // "Or continue with" divider
+                Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      spacing: 20.w,
-                      children: [
-                        SizedBox(
-                          width: 50.w,
-                          height: 50.w,
-                          child: TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              backgroundColor: const Color(0xFFEA4335).withValues(alpha: 0.8),
-                              padding: EdgeInsets.symmetric(horizontal: 10.w),
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: AppBorders.button,
-                              ),
-                            ),
-                            child: SvgPicture.asset(AppAssets.googleIcon),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 50.w,
-                          height: 50.w,
-                          child: TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              backgroundColor: const Color(0xFF4285F4),
-                              padding: EdgeInsets.symmetric(horizontal: 10.w),
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: AppBorders.button,
-                              ),
-                            ),
-                            child: SvgPicture.asset(AppAssets.facebookIcon),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 50.w,
-                          height: 50.w,
-                          child: TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              backgroundColor: const Color(0xFF000000),
-                              padding: EdgeInsets.symmetric(horizontal: 10.w),
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: AppBorders.button,
-                              ),
-                            ),
-                            child: SvgPicture.asset(AppAssets.appleIcon),
-                          ),
-                        ),
-                      ],
+                    Expanded(
+                      child: Divider(
+                        color: cs.outlineVariant.withValues(alpha: 0.5),
+                      ),
                     ),
-                    SizedBox(height: AppSpacing.xl.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md.w),
+                      child: Text(
+                        'or continue with',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Divider(
+                        color: cs.outlineVariant.withValues(alpha: 0.5),
+                      ),
+                    ),
                   ],
                 ),
+                SizedBox(height: AppSpacing.lg.h),
+                // Social auth buttons
+                Row(
+                  spacing: 12.w,
+                  children: [
+                    Expanded(
+                      child: _SocialButton(
+                        onPressed: () {},
+                        icon: SvgPicture.asset(
+                          AppAssets.googleIcon,
+                          width: 20.w,
+                          height: 20.w,
+                        ),
+                        label: 'Google',
+                        cs: cs,
+                        tt: tt,
+                      ),
+                    ),
+                    Expanded(
+                      child: _SocialButton(
+                        onPressed: () {},
+                        icon: SvgPicture.asset(
+                          AppAssets.appleIcon,
+                          width: 20.w,
+                          height: 20.w,
+                          colorFilter: ColorFilter.mode(
+                            cs.onSurface,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        label: 'Apple',
+                        cs: cs,
+                        tt: tt,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppSpacing.xxl.h),
                 InkWell(
                   onTap: () {
                     context.push(AppRoutes.signup);
@@ -255,7 +337,8 @@ class _LoginView extends StatelessWidget {
                   child: RichText(
                     text: TextSpan(
                       text: 'Don\'t have an account? ',
-                      style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                      style:
+                          tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                       children: [
                         TextSpan(
                           text: 'Sign Up',

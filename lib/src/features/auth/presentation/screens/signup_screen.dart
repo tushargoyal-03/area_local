@@ -1,8 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
-import 'package:area_connect/src/features/auth/presentation/providers/auth_bloc.dart';
-
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -46,8 +44,8 @@ class _SignupScreenState extends State<SignupScreen> {
       context.read<AuthBloc>().add(
             SignUpRequested(
               context: context,
-              name: _nameController.text,
-              email: _emailController.text,
+              name: _nameController.text.trim(),
+              email: _emailController.text.trim(),
               password: _passwordController.text,
               coordinates: const [77.5946, 12.9716],
             ),
@@ -116,6 +114,7 @@ class _SignupView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: context.theme.colorScheme.surface,
+        elevation: 0,
       ),
       body: SafeArea(
         child: Center(
@@ -123,7 +122,7 @@ class _SignupView extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: AppSpacing.xl.h),
+                SizedBox(height: AppSpacing.sm.h),
                 Text(
                   'Create Account',
                   style:
@@ -135,7 +134,7 @@ class _SignupView extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
-                SizedBox(height: AppSpacing.xxxl.h),
+                SizedBox(height: AppSpacing.xl.h),
                 Form(
                   key: formKey,
                   child: Column(

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:area_connect/src/features/auth/presentation/providers/auth_bloc.dart';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
@@ -56,7 +55,12 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
   void _resendCode() {
     if (_secondsRemaining > 0) return;
-    showToast(context, message: 'OTP resent successfully', status: 'success');
+    context.read<AuthBloc>().add(
+          ResendOtpRequested(
+            context: context,
+            email: widget.signupId.isEmpty ? 'mock@example.com' : widget.signupId,
+          ),
+        );
     _startTimer();
   }
 

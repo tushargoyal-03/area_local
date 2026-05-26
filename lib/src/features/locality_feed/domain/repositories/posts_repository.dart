@@ -1,0 +1,36 @@
+import 'package:area_connect/src/utils/utils.dart';
+import '../entities/post.dart';
+
+abstract class PostsRepository {
+  FutureEither<List<AppPost>> getNearbyFeed({
+    required double lng,
+    required double lat,
+    double radiusInKm = 5,
+    int page = 1,
+    int limit = 20,
+    String? currentUserId,
+  });
+
+  FutureEither<AppPost> createPost({
+    required String category,
+    required String title,
+    required String content,
+    required List<double> coordinates,
+  });
+
+  FutureEither<AppPost> toggleInterest({
+    required String postId,
+    required String currentUserId,
+  });
+
+  FutureEither<PostComment> addComment({
+    required String postId,
+    required String content,
+  });
+
+  FutureEither<List<PostComment>> getComments({
+    required String postId,
+  });
+
+  FutureEither<void> deletePost({required String postId});
+}

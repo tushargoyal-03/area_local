@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:area_connect/src/imports/core_imports.dart';
+import 'package:area_connect/src/imports/packages_imports.dart';
 
 class NearbyDiscoveryScreen extends StatelessWidget {
   const NearbyDiscoveryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.theme.colorScheme;
+    final tt = context.theme.textTheme;
     final people = ['Riya Sharma', 'Karan Singh', 'Meera Patel', 'Dev Arora'];
     final interests = ['pickleball', 'gym buddy', 'yoga', 'cycling'];
 
@@ -15,44 +17,54 @@ class NearbyDiscoveryScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Nearby'),
-            SizedBox(height: 2),
+            Text(
+              'Nearby',
+              style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 2.h),
             Text(
               'Vaishali Nagar · 2 km radius',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
+              style: tt.bodySmall?.copyWith(
+                fontSize: 11.sp,
+                color: cs.onSurfaceVariant,
+              ),
             ),
           ],
         ),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 12),
-            width: 40,
-            height: 40,
+            margin: EdgeInsets.only(right: 12.w),
+            width: 40.w,
+            height: 40.w,
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.1),
+              color: cs.surfaceContainerLow,
               shape: BoxShape.circle,
             ),
-            child: const Icon(IconsaxPlusLinear.filter),
-          )
+            child: Icon(
+              IconsaxPlusLinear.filter,
+              size: 18.sp,
+              color: cs.onSurface,
+            ),
+          ),
         ],
       ),
       body: Column(
         children: [
-          /// Chips
+          /// Filter Chips
           SizedBox(
-            height: 44,
+            height: 44.h,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: const [
-                _ChipItem('People', true),
-                _ChipItem('Activities', false),
-                _ChipItem('Business', false),
-                _ChipItem('Events', false),
-                _ChipItem('Society', false),
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              children: [
+                _ChipItem(label: 'People', active: true, cs: cs, tt: tt),
+                _ChipItem(label: 'Activities', active: false, cs: cs, tt: tt),
+                _ChipItem(label: 'Business', active: false, cs: cs, tt: tt),
+                _ChipItem(label: 'Events', active: false, cs: cs, tt: tt),
+                _ChipItem(label: 'Society', active: false, cs: cs, tt: tt),
               ],
             ),
           ),
@@ -60,23 +72,22 @@ class NearbyDiscoveryScreen extends StatelessWidget {
           /// Content
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
               children: [
                 /// Map / Discovery Card
                 Container(
-                  height: 160,
+                  height: 160.h,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(28.r),
                     gradient: LinearGradient(
                       colors: [
-                        Colors.blue.withValues(alpha: 0.2),
-                        Colors.purple.withValues(alpha: 0.15),
+                        cs.primary.withValues(alpha: 0.2),
+                        AppPalettes.primary2Light.withValues(alpha: 0.15),
                       ],
                     ),
                   ),
                   child: Stack(
                     children: [
-                      /// Fake people pins
                       ...[
                         {'left': 0.34, 'top': 0.22, 'name': 'Riya'},
                         {'left': 0.60, 'top': 0.45, 'name': 'K'},
@@ -87,16 +98,16 @@ class NearbyDiscoveryScreen extends StatelessWidget {
                           left: MediaQuery.of(context).size.width *
                               (p['left'] as double) *
                               0.85,
-                          top: 160 * (p['top'] as double),
+                          top: 160.h * (p['top'] as double),
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
                               Container(
-                                width: 36,
-                                height: 36,
+                                width: 36.w,
+                                height: 36.w,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: Colors.white,
+                                  color: cs.surface,
                                   boxShadow: [
                                     BoxShadow(
                                       blurRadius: 8,
@@ -108,19 +119,19 @@ class NearbyDiscoveryScreen extends StatelessWidget {
                                 child: Center(
                                   child: Text(
                                     (p['name'] as String)[0],
-                                    style: const TextStyle(
+                                    style: tt.labelMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ),
                               Container(
-                                width: 44,
-                                height: 44,
+                                width: 44.w,
+                                height: 44.w,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Colors.blue,
+                                    color: cs.primary,
                                     width: 2,
                                   ),
                                 ),
@@ -136,21 +147,18 @@ class NearbyDiscoveryScreen extends StatelessWidget {
                         right: 10,
                         child: ElevatedButton.icon(
                           onPressed: () {},
-                          icon: const Icon(
-                            IconsaxPlusLinear.location,
-                            size: 14,
-                          ),
+                          icon: const Icon(IconsaxPlusLinear.location, size: 14),
                           label: const Text(
                             'Center on me',
                             style: TextStyle(fontSize: 11),
                           ),
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12.w,
+                              vertical: 8.h,
                             ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(20.r),
                             ),
                           ),
                         ),
@@ -159,24 +167,27 @@ class NearbyDiscoveryScreen extends StatelessWidget {
                   ),
                 ),
 
-                const SizedBox(height: 14),
+                SizedBox(height: 14.h),
 
                 /// Active count
-                const Row(
+                Row(
                   children: [
-                    Icon(IconsaxPlusLinear.trend_up,
-                        size: 16, color: Colors.blue),
-                    SizedBox(width: 6),
+                    Icon(
+                      IconsaxPlusLinear.trend_up,
+                      size: 16.sp,
+                      color: cs.primary,
+                    ),
+                    SizedBox(width: 6.w),
                     Text(
                       '14 active nearby right now',
-                      style: TextStyle(
+                      style: tt.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 14),
+                SizedBox(height: 14.h),
 
                 /// People List
                 ...List.generate(people.length, (i) {
@@ -184,6 +195,8 @@ class NearbyDiscoveryScreen extends StatelessWidget {
                     name: people[i],
                     index: i,
                     interest: interests[i],
+                    cs: cs,
+                    tt: tt,
                   );
                 }),
               ],
@@ -195,18 +208,19 @@ class NearbyDiscoveryScreen extends StatelessWidget {
   }
 }
 
-/// ===============================
-/// NEARBY CARD
-/// ===============================
 class _NearbyCard extends StatelessWidget {
   final String name;
   final int index;
   final String interest;
+  final ColorScheme cs;
+  final TextTheme tt;
 
   const _NearbyCard({
     required this.name,
     required this.index,
     required this.interest,
+    required this.cs,
+    required this.tt,
   });
 
   @override
@@ -214,58 +228,56 @@ class _NearbyCard extends StatelessWidget {
     final distance = (0.2 + index * 0.3).toStringAsFixed(1);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           Stack(
             children: [
-              CircleAvatar(
-                radius: 24,
-                child: Text(name[0]),
-              ),
+              Avatar(name: name, size: 48),
               Positioned(
                 bottom: 2,
                 right: 2,
                 child: Container(
-                  width: 10,
-                  height: 10,
+                  width: 10.w,
+                  height: 10.w,
                   decoration: const BoxDecoration(
-                    color: Colors.green,
+                    color: Color(0xFF2E7D32),
                     shape: BoxShape.circle,
                   ),
                 ),
-              )
+              ),
             ],
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12.w),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                  ),
+                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4.h),
                 Row(
                   children: [
-                    const Icon(IconsaxPlusLinear.map, size: 12),
-                    const SizedBox(width: 4),
+                    Icon(
+                      IconsaxPlusLinear.map,
+                      size: 12.sp,
+                      color: cs.onSurfaceVariant,
+                    ),
+                    SizedBox(width: 4.w),
                     Expanded(
                       child: Text(
                         '$distance km · Looking for $interest',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade600,
+                        style: tt.bodySmall?.copyWith(
+                          fontSize: 11.sp,
+                          color: cs.onSurfaceVariant,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -278,17 +290,17 @@ class _NearbyCard extends StatelessWidget {
           ElevatedButton(
             onPressed: () {},
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 8,
+              padding: EdgeInsets.symmetric(
+                horizontal: 14.w,
+                vertical: 8.h,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(20.r),
               ),
             ),
-            child: const Text(
+            child: Text(
               'Say hi',
-              style: TextStyle(fontSize: 11),
+              style: TextStyle(fontSize: 11.sp),
             ),
           ),
         ],
@@ -297,34 +309,36 @@ class _NearbyCard extends StatelessWidget {
   }
 }
 
-/// ===============================
-/// CHIP
-/// ===============================
 class _ChipItem extends StatelessWidget {
   final String label;
   final bool active;
+  final ColorScheme cs;
+  final TextTheme tt;
 
-  const _ChipItem(this.label, this.active);
+  const _ChipItem({
+    required this.label,
+    required this.active,
+    required this.cs,
+    required this.tt,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
-      ),
+      margin: EdgeInsets.only(right: 8.w),
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: active
-            ? Colors.blue.withValues(alpha: 0.15)
-            : Colors.grey.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
+            ? cs.primary.withValues(alpha: 0.12)
+            : cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20.r),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 12,
+        style: tt.labelMedium?.copyWith(
+          fontSize: 12.sp,
           fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+          color: active ? cs.primary : cs.onSurfaceVariant,
         ),
       ),
     );

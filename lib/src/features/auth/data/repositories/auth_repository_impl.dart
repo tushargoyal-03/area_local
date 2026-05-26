@@ -16,6 +16,7 @@ class AuthRepositoryImpl implements AuthRepository {
         email: userData['email'] ?? '',
         name: userData['name'],
         photoUrl: userData['photoUrl'],
+        role: userData['role'] ?? 'User',
       );
     });
   }
@@ -32,11 +33,11 @@ class AuthRepositoryImpl implements AuthRepository {
         return left(const ServerFailure('Login failed: User record not found'));
       }
 
-      final data = userData['user'] ?? userData;
       final user = AppUser(
-        id: data['id'].toString(),
-        email: data['email'] ?? email,
-        name: data['name'],
+        id: userData['id']?.toString() ?? '',
+        email: userData['email'] ?? email,
+        name: userData['name'] ?? '',
+        role: userData['role'] ?? 'User',
       );
 
       return right(user);
@@ -63,11 +64,11 @@ class AuthRepositoryImpl implements AuthRepository {
             const ServerFailure('Sign up failed: User record corrupted'));
       }
 
-      final data = userData['user'] ?? userData;
       final user = AppUser(
-        id: data['id'].toString(),
-        email: data['email'] ?? email,
+        id: userData['id']?.toString() ?? '',
+        email: userData['email'] ?? email,
         name: name,
+        role: userData['role'] ?? 'User',
       );
 
       return right(user);
@@ -85,12 +86,38 @@ class AuthRepositoryImpl implements AuthRepository {
       if (userData == null) {
         return left(const ServerFailure('OTP verification failed'));
       }
-      final data = userData['user'] ?? userData;
+      
       final user = AppUser(
-        id: data['id'].toString(),
-        email: data['email'] ?? '',
-        name: data['name'],
-        photoUrl: data['photoUrl'],
+        id: userData['id']?.toString() ?? '',
+        email: userData['email'] ?? '',
+        name: userData['name'] ?? '',
+        photoUrl: userData['photoUrl'],
+        role: userData['role'] ?? 'User',
+      );
+
+      return right(user);
+    });
+  }
+
+  @override
+  FutureEither<void> resendOtp({required String email}) {
+    return _authService.resendOtp(email: email);
+  }
+
+  @override
+  FutureEither<AppUser> updateRole({required String role}) async {
+    final result = await _authService.updateRole(role: role);
+
+    return result.flatMap((userData) {
+      if (userData == null) {
+        return left(const ServerFailure('Role upgrade failed'));
+      }
+
+      final user = AppUser(
+        id: userData['id']?.toString() ?? '',
+        email: userData['email'] ?? '',
+        name: userData['name'] ?? '',
+        role: userData['role'] ?? role,
       );
 
       return right(user);
@@ -115,10 +142,11 @@ class AuthRepositoryImpl implements AuthRepository {
       if (userData == null) return null;
 
       return AppUser(
-        id: userData['id'],
+        id: userData['id']?.toString() ?? '',
         email: userData['email'] ?? '',
         name: userData['name'],
         photoUrl: userData['photoUrl'],
+        role: userData['role'] ?? 'User',
       );
     });
   }

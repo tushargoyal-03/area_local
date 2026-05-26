@@ -18,4 +18,6 @@ abstract final class AppRoutes {
   static const String notification = '/notification';
   static const String nearbyDiscovery = '/nearby-discovery';
   static const String societyFeed = '/society-feed';
+  static const String roleSelection = '/role-selection';
+  static const String chatRoom = '/chat-room';
 }

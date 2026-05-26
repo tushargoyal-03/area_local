@@ -1,7 +1,6 @@
-import 'package:area_connect/src/features/comment/presentation/pages/comment.dart';
-import 'package:area_connect/src/imports/core_imports.dart';
-import 'package:go_router/go_router.dart';
-import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:area_connect/src/imports/imports.dart';
+import 'package:area_connect/src/features/locality_feed/presentation/pages/locality_feed_page.dart';
+import 'package:area_connect/src/features/home/presentation/screens/conversations_screen.dart';
 
 class HomeDashboardScreen extends StatefulWidget {
   const HomeDashboardScreen({super.key});
@@ -11,67 +10,120 @@ class HomeDashboardScreen extends StatefulWidget {
 }
 
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
+  int _currentTab = 0;
+
   @override
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
 
-    return _HomeDashboardView(
-      cs: cs,
-      tt: tt,
-      onSearchTap: () {},
-      onBellTap: () {
-        context.push(AppRoutes.notification);
-      },
-      onExploreTap: () {},
-    );
-  }
-}
+    final List<Widget> tabs = [
+      _HomeFeedTab(
+        onExploreTap: () => setState(() => _currentTab = 1),
+      ),
+      const LocalityFeedPage(),
+      const ConversationsScreen(),
+      const _ProfileSettingsTab(),
+    ];
 
-/* ================= UI ONLY ================= */
-
-class _HomeDashboardView extends StatelessWidget {
-  final ColorScheme cs;
-  final TextTheme tt;
-
-  final VoidCallback onSearchTap;
-  final VoidCallback onBellTap;
-  final VoidCallback onExploreTap;
-
-  const _HomeDashboardView({
-    required this.cs,
-    required this.tt,
-    required this.onSearchTap,
-    required this.onBellTap,
-    required this.onExploreTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            _TopBar(
-                cs: cs, tt: tt, onSearchTap: onSearchTap, onBellTap: onBellTap),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _HeroCard(onExploreTap: onExploreTap, tt: tt),
-                    const SizedBox(height: 20),
-                    _QuickActions(),
-                    const SizedBox(height: 20),
-                    _TrendingSection(),
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
+      body: tabs[_currentTab],
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: cs.outlineVariant.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentTab,
+          onTap: (index) => setState(() => _currentTab = index),
+          type: BottomNavigationBarType.fixed,
+          backgroundColor: cs.surface,
+          selectedItemColor: cs.primary,
+          unselectedItemColor: cs.onSurfaceVariant.withValues(alpha: 0.6),
+          selectedLabelStyle:
+              tt.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+          unselectedLabelStyle: tt.bodySmall?.copyWith(fontSize: 10),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(IconsaxPlusLinear.home),
+              activeIcon: Icon(IconsaxPlusBold.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(IconsaxPlusLinear.location),
+              activeIcon: Icon(IconsaxPlusBold.location),
+              label: 'Discover',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(IconsaxPlusLinear.message),
+              activeIcon: Icon(IconsaxPlusBold.message),
+              label: 'Chats',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(IconsaxPlusLinear.user),
+              activeIcon: Icon(IconsaxPlusBold.user),
+              label: 'Profile',
             ),
           ],
         ),
       ),
-      // bottomNavigationBar: const BottomNav(active: "home"),
+      floatingActionButton: _currentTab == 1
+          ? FloatingActionButton(
+              onPressed: () => context.push(AppRoutes.createActivity),
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+              child: const Icon(IconsaxPlusLinear.add),
+            )
+          : null,
+    );
+  }
+}
+
+/* ================= HOME FEED TAB ================= */
+
+class _HomeFeedTab extends StatelessWidget {
+  final VoidCallback onExploreTap;
+
+  const _HomeFeedTab({required this.onExploreTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.theme.colorScheme;
+    final tt = context.theme.textTheme;
+
+    final user = context.select((SessionBloc bloc) => bloc.state.user);
+
+    return SafeArea(
+      child: Column(
+        children: [
+          _TopBar(
+            cs: cs,
+            tt: tt,
+            userName: user?.name ?? 'Resident',
+            userRole: user?.role ?? 'User',
+            onSearchTap: () {},
+            onBellTap: () => context.push(AppRoutes.notification),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _HeroCard(onExploreTap: onExploreTap, tt: tt),
+                  const SizedBox(height: 20),
+                  _QuickActions(onExploreTap: onExploreTap),
+                  const SizedBox(height: 20),
+                  _TrendingSection(),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -79,15 +131,25 @@ class _HomeDashboardView extends StatelessWidget {
 class _TopBar extends StatelessWidget {
   final ColorScheme cs;
   final TextTheme tt;
+  final String userName;
+  final String userRole;
   final VoidCallback onSearchTap;
   final VoidCallback onBellTap;
 
   const _TopBar({
     required this.cs,
     required this.tt,
+    required this.userName,
+    required this.userRole,
     required this.onSearchTap,
     required this.onBellTap,
   });
+
+  String _formatRole(String role) {
+    if (role == 'BusinessOwner') return 'Local Business Owner';
+    if (role == 'SocietyAdmin') return 'Society Representative';
+    return 'Resident';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,23 +157,57 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          const Avatar(name: 'You', size: 40, ring: true),
-          const SizedBox(width: 10),
-          const Expanded(
+          Avatar(name: userName, size: 42, ring: true),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('📍 Vaishali Nagar, Jaipur',
-                    style: TextStyle(fontSize: 11, color: Colors.grey)),
-                Text('Hi, Aanya 👋',
-                    style:
-                        TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    Icon(
+                      IconsaxPlusLinear.location,
+                      size: 11.sp,
+                      color: cs.primary,
+                    ),
+                    SizedBox(width: 3.w),
+                    Text(
+                      'Vaishali Nagar, Jaipur',
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  'Hello, $userName',
+                  style:
+                      TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 2.h),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(100.r),
+                  ),
+                  child: Text(
+                    _formatRole(userRole),
+                    style: TextStyle(
+                      fontSize: 9.sp,
+                      fontWeight: FontWeight.w600,
+                      color: cs.primary,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           IconButton(
             onPressed: onSearchTap,
-            icon: const Icon(IconsaxPlusLinear.search_favorite),
+            icon: const Icon(IconsaxPlusLinear.search_normal),
           ),
           IconButton(
             onPressed: onBellTap,
@@ -131,31 +227,63 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tt = context.theme.textTheme;
+    final cs = context.theme.colorScheme;
+
     return Container(
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Colors.purple, Colors.pink]),
+        gradient: const LinearGradient(
+          colors: [AppPalettes.primaryLight, AppPalettes.primary2Light],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Chip(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.xl)),
-              label: Text(
-                'Today',
-                style: tt.bodyMedium?.copyWith(color: Colors.black),
-              )),
-          const SizedBox(height: 10),
-          const Text(
-            '12 neighbors are looking for activity partners near you',
-            style: TextStyle(
-                color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          // Today chip
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(100.r),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(IconsaxPlusLinear.flash, size: 12.sp, color: Colors.white),
+                SizedBox(width: 4.w),
+                Text(
+                  'Today',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 11.sp,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
+          Text(
+            'Check out what neighbors are organizing within 5 km near you today!',
+            style: tt.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              height: 1.35,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
               const Avatar(name: 'Riya', size: 28),
@@ -165,11 +293,22 @@ class _HeroCard extends StatelessWidget {
               FilledButton(
                 onPressed: onExploreTap,
                 style: FilledButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.xl)),
+                  backgroundColor: Colors.white,
+                  foregroundColor: cs.primary,
+                  shape: const StadiumBorder(),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text('Explore'),
-              )
+                child: Text(
+                  'Explore Feed',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ),
             ],
           )
         ],
@@ -179,13 +318,30 @@ class _HeroCard extends StatelessWidget {
 }
 
 class _QuickActions extends StatelessWidget {
+  final VoidCallback onExploreTap;
+
+  const _QuickActions({required this.onExploreTap});
+
   @override
   Widget build(BuildContext context) {
+    final cs = context.theme.colorScheme;
     final items = [
-      ('Activity', IconsaxPlusLinear.flash),
-      ('Society', IconsaxPlusLinear.home_1),
-      ('Offers', IconsaxPlusLinear.star),
-      ('Nearby', IconsaxPlusLinear.location),
+      ('Feed', IconsaxPlusLinear.flash, onExploreTap),
+      (
+        'Society',
+        IconsaxPlusLinear.home_1,
+        () => context.push(AppRoutes.societyFeed)
+      ),
+      (
+        'Chats',
+        IconsaxPlusLinear.message,
+        () => context.push(AppRoutes.chatRoom)
+      ),
+      (
+        'Discovery',
+        IconsaxPlusLinear.location,
+        () => context.push(AppRoutes.nearbyDiscovery)
+      ),
     ];
 
     return Column(
@@ -194,10 +350,11 @@ class _QuickActions extends StatelessWidget {
         Text(
           'Quick Actions',
           style: context.theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: context.theme.colorScheme.onSurface),
+            fontWeight: FontWeight.bold,
+            color: cs.onSurface,
+          ),
         ).paddingSymmetric(horizontal: 16),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: items
@@ -205,20 +362,18 @@ class _QuickActions extends StatelessWidget {
                 (e) => Column(
                   children: [
                     GestureDetector(
-                        onTap: () {
-                          if (e.$1 == 'Nearby') {
-                            context.push(AppRoutes.nearbyDiscovery);
-                          } else if (e.$1 == 'Activity') {
-                            context.push(AppRoutes.activity);
-                          } else if (e.$1 == 'Offers') {
-                            // context.push(AppRoutes.offers);
-                          } else if (e.$1 == 'Society') {
-                            context.push(AppRoutes.societyFeed);
-                          }
-                        },
-                        child: CircleAvatar(child: Icon(e.$2))),
-                    const SizedBox(height: 5),
-                    Text(e.$1, style: const TextStyle(fontSize: 11)),
+                      onTap: e.$3,
+                      child: CircleAvatar(
+                        backgroundColor: cs.primary.withValues(alpha: 0.1),
+                        foregroundColor: cs.primary,
+                        radius: 26,
+                        child: Icon(e.$2, size: 24),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(e.$1,
+                        style: TextStyle(
+                            fontSize: 11.sp, fontWeight: FontWeight.w500)),
                   ],
                 ),
               )
@@ -232,6 +387,7 @@ class _QuickActions extends StatelessWidget {
 class _TrendingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final cs = context.theme.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -240,19 +396,25 @@ class _TrendingSection extends StatelessWidget {
             Text(
               'Trending Activities',
               style: context.theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: context.theme.colorScheme.onSurface),
+                fontWeight: FontWeight.bold,
+                color: cs.onSurface,
+              ),
             ).paddingSymmetric(horizontal: 16),
             const Spacer(),
             TextButton(
-                onPressed: () {
-                  context.push(AppRoutes.localityFeed);
-                },
-                child: const Text('See All'))
+              onPressed: () {
+                context.push(AppRoutes.localityFeed);
+              },
+              child: const Text('See All'),
+            )
           ],
         ),
         const SizedBox(height: 10),
-        const ActivityCard(),
+        const ActivityCard(
+          who: 'Riya Sharma',
+          title: 'Need a pickleball partner 6PM - 8PM in Vaishali Nagar',
+          tag: 'Sports',
+        ),
         const SizedBox(height: 10),
         const ActivityCard(
           who: 'Meera',
@@ -264,94 +426,134 @@ class _TrendingSection extends StatelessWidget {
   }
 }
 
-class ActivityCard extends StatelessWidget {
-  final String who;
-  final String title;
-  final String tag;
+/* ================= PROFILE SETTINGS TAB ================= */
 
-  const ActivityCard({
-    super.key,
-    this.who = 'Riya Sharma',
-    this.title = 'Need a pickleball partner 6PM - 8PM',
-    this.tag = 'Sports',
-  });
+class _ProfileSettingsTab extends StatelessWidget {
+  const _ProfileSettingsTab();
+
+  String _formatRole(String role) {
+    if (role == 'BusinessOwner') return 'Local Business Owner';
+    if (role == 'SocietyAdmin') return 'Society Representative';
+    return 'Resident';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
+    final user = context.select((SessionBloc bloc) => bloc.state.user);
 
-    return InkWell(
-      onTap: () {
-        context.push(AppRoutes.activity);
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                  color: context.theme.colorScheme.onSurfaceVariant
-                      .withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  spreadRadius: 5)
-            ],
-            border: Border.all(
-                color: context.theme.colorScheme.onSurfaceVariant
-                    .withValues(alpha: 0.3))),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(AppSpacing.lg.w),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Avatar(name: who, size: 40),
-                const SizedBox(width: 10),
-                Expanded(
-                    child: Text(who,
-                        style: tt.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold, color: Colors.black))),
-                Chip(
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.xl)),
-                    label: Text(tag,
-                        style: tt.bodySmall?.copyWith(color: Colors.black))),
-              ],
+            SizedBox(height: 20.h),
+            Avatar(
+                name: user?.name ?? 'You',
+                size: 90.w,
+                imageUrl: user?.photoUrl),
+            SizedBox(height: 16.h),
+            Text(
+              user?.name ?? 'Resident',
+              style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
-            Text(title),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(IconsaxPlusLinear.heart, size: 18),
-                const SizedBox(width: 5),
-                const Text('24'),
-                SizedBox(width: AppSpacing.md),
-                InkWell(
+            SizedBox(height: 4.h),
+            Text(
+              user?.email ?? 'resident@neighborhood.com',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+            SizedBox(height: 8.h),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(100.r),
+              ),
+              child: Text(
+                _formatRole(user?.role ?? 'User'),
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w600,
+                  color: cs.primary,
+                ),
+              ),
+            ),
+            SizedBox(height: 32.h),
+
+            // Profile Actions Card
+            Material(
+              color: cs.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(24.r),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  _profileItem(
+                    icon: IconsaxPlusLinear.profile_2user,
+                    title: 'Personal Info',
+                    cs: cs,
+                    onTap: () {},
+                  ),
+                  Divider(
+                      color: cs.outlineVariant.withValues(alpha: 0.15),
+                      height: 1),
+                  _profileItem(
+                    icon: IconsaxPlusLinear.shop,
+                    title: 'Upgrade / Select Role',
+                    cs: cs,
                     onTap: () {
-                      context.showAppBottomSheet<void>(
-                        builder: (context) => const CommentsSheetScreen(),
-                      );
+                      context.push(AppRoutes.roleSelection);
                     },
-                    child: const Icon(IconsaxPlusLinear.sms, size: 18)),
-                const SizedBox(width: 5),
-                const Text('24'),
-                const Spacer(),
-                FilledButton(
-                    style: FilledButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.xl))),
-                    onPressed: () {},
-                    child: const Text("I'm Available"))
-              ],
-            )
+                  ),
+                  Divider(
+                      color: cs.outlineVariant.withValues(alpha: 0.15),
+                      height: 1),
+                  _profileItem(
+                    icon: IconsaxPlusLinear.notification,
+                    title: 'Notification Settings',
+                    cs: cs,
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24.h),
+
+            // Sign Out Button
+            AppButton(
+              label: 'Sign Out',
+              variant: ButtonVariant.outline,
+              onPressed: () {
+                // Dispatch disconnect to clean socket.io connections
+                context.read<ChatBloc>().add(const DisconnectChatRequested());
+                context.read<SessionBloc>().add(const SessionLogoutRequested());
+              },
+              isFullWidth: true,
+            ),
           ],
         ),
       ),
     );
   }
+
+  Widget _profileItem({
+    required IconData icon,
+    required String title,
+    required ColorScheme cs,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: cs.primary),
+      title: Text(title,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+      trailing: Icon(Icons.arrow_forward_ios_rounded,
+          size: 14.sp, color: cs.onSurfaceVariant),
+      onTap: onTap,
+    );
+  }
 }
+
+/* ================= SHARED AVATAR ================= */
 
 class Avatar extends StatelessWidget {
   final String name;
@@ -390,7 +592,6 @@ class Avatar extends StatelessWidget {
   }
 
   Widget _buildContent(ColorScheme cs) {
-    // If image exists → show network image
     if (imageUrl != null && imageUrl!.isNotEmpty) {
       return Image.network(
         imageUrl!,
@@ -398,8 +599,6 @@ class Avatar extends StatelessWidget {
         errorBuilder: (_, __, ___) => _initials(cs),
       );
     }
-
-    // fallback → initials
     return _initials(cs);
   }
 
@@ -407,7 +606,7 @@ class Avatar extends StatelessWidget {
     final initials = _getInitials(name);
 
     return Container(
-      color: cs.surface.withValues(alpha: 0.50),
+      color: cs.primary.withValues(alpha: 0.1),
       alignment: Alignment.center,
       child: Text(
         initials,
@@ -421,11 +620,14 @@ class Avatar extends StatelessWidget {
   }
 
   String _getInitials(String name) {
-    final parts = name.trim().split(' ');
+    final cleanName = name.trim();
+    if (cleanName.isEmpty) return '?';
+
+    final parts = cleanName.split(' ').where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return '?';
 
     if (parts.length == 1) {
-      return parts.first.substring(0, 1).toUpperCase();
+      return parts.first[0].toUpperCase();
     }
 
     return (parts[0][0] + parts[1][0]).toUpperCase();

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import '../services/secure_storage_service.dart';
 
 class AppConfig {
   AppConfig._();
@@ -17,6 +18,24 @@ class AppConfig {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+        },
+      ),
+    );
+
+    // Request Authorization Interceptor
+    dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final tokenResult = await SecureStorageService.instance.read('access_token');
+          tokenResult.fold(
+            (_) => null,
+            (token) {
+              if (token != null && token.trim().isNotEmpty) {
+                options.headers['Authorization'] = 'Bearer $token';
+              }
+            },
+          );
+          return handler.next(options);
         },
       ),
     );

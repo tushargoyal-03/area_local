@@ -12,4 +12,6 @@ export 'url_launcher_service.dart';
 export 'media_service.dart';
 export 'device_info_service.dart';
 export 'version_update_service.dart';
+export 'posts_service.dart';
+export 'chat_service.dart';
 

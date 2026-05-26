@@ -13,6 +13,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignUpRequested>(_onSignUpRequested);
     on<ForgotPasswordRequested>(_onForgotPasswordRequested);
     on<VerifyOtpRequested>(_onVerifyOtpRequested);
+    on<ResendOtpRequested>(_onResendOtpRequested);
   }
 
   Future<void> _onLoginRequested(
@@ -104,13 +105,35 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(state.copyWith(isLoading: false));
         showGlobalToast(message: failure.message, status: 'error');
       },
-      (success) {
+      (user) {
         emit(state.copyWith(isLoading: false));
         showGlobalToast(
             message: 'OTP verified successfully', status: 'success');
         if (event.context.mounted) {
-          event.context.go(AppRoutes.login);
+          event.context.read<SessionBloc>().add(SessionUserChanged(user));
+          event.context.go(AppRoutes.roleSelection);
         }
+      },
+    );
+  }
+
+  Future<void> _onResendOtpRequested(
+    ResendOtpRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _repository.resendOtp(email: event.email);
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isLoading: false));
+        showGlobalToast(message: failure.message, status: 'error');
+      },
+      (_) {
+        emit(state.copyWith(isLoading: false));
+        showGlobalToast(
+            message: 'Verification code resent successfully', status: 'success');
       },
     );
   }
@@ -157,6 +180,15 @@ class VerifyOtpRequested extends AuthEvent {
   final String email;
   const VerifyOtpRequested(
       {required this.context, required this.otp, required this.email});
+}
+
+class ResendOtpRequested extends AuthEvent {
+  final BuildContext context;
+  final String email;
+  const ResendOtpRequested({required this.context, required this.email});
+
+  @override
+  List<Object> get props => [email];
 }
 
 class AuthState extends Equatable {

@@ -28,7 +28,13 @@ abstract class AuthRepository {
   FutureEither<void> logout();
 
   /// Verify OTP
-  FutureEither<void> verifyOtp({required String otp, required String email});
+  FutureEither<AppUser> verifyOtp({required String otp, required String email});
+
+  /// Resend verification OTP code
+  FutureEither<void> resendOtp({required String email});
+
+  /// Upgrade user role on the backend
+  FutureEither<AppUser> updateRole({required String role});
 
   /// Check if the user is currently authenticated natively
   FutureEither<AppUser?> checkAuthState();

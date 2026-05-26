@@ -1,8 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
-import 'package:area_connect/src/features/auth/presentation/providers/auth_bloc.dart';
-
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
 
@@ -29,14 +27,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     Future<void> handleForgotPassword() async {
       if (!(_formKey.currentState?.validate() ?? false)) return;
-      
 
       context.read<AuthBloc>().add(
-        ForgotPasswordRequested(
-          context: context, 
-          email: _emailController.text,
-        ),
-      );
+            ForgotPasswordRequested(
+              context: context,
+              email: _emailController.text,
+            ),
+          );
     }
 
     return _ForgotPasswordView(
@@ -81,7 +78,8 @@ class _ForgotPasswordView extends StatelessWidget {
                 SizedBox(height: AppSpacing.xl.h),
                 Text(
                   'Reset Password',
-                  style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style:
+                      tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: AppSpacing.sm.h),
                 Text(

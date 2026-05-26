@@ -1,11 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:area_connect/src/imports/imports.dart';
 
 class AuthService {
   AuthService._();
   static final AuthService instance = AuthService._();
 
-  // In-memory session for mock backend
   Map<String, dynamic>? _currentUser;
   final StreamController<Map<String, dynamic>?> _authStateController =
       StreamController<Map<String, dynamic>?>.broadcast();
@@ -19,30 +19,41 @@ class AuthService {
     required String password,
   }) async {
     final result = await DioService.instance.post(
-      'api/auth/login',
+      'auth/login',
       data: {
         'emailOrPhone': email,
         'password': password,
       },
     );
 
-    return result.map((response) {
-      final responseData = response.data as Map<String, dynamic>;
+    return result.fold(
+      (failure) async => left<Failure, Map<String, dynamic>?>(failure),
+      (response) async {
+        try {
+          final responseData = response.data as Map<String, dynamic>;
+          final innerData = responseData['data'] as Map<String, dynamic>;
+          final token = innerData['accessToken'] as String;
+          final refresh = innerData['refreshToken'] as String;
+          final user = innerData['user'] as Map<String, dynamic>;
 
-      _currentUser = responseData['user'] ?? responseData;
-      _authStateController.add(_currentUser);
+          await SecureStorageService.instance.write('access_token', token);
+          await SecureStorageService.instance.write('refresh_token', refresh);
 
-      // Save tokens if needed in SecureStorageService
-      // await SecureStorageService.instance.write(
-      //   key: 'access_token',
-      //   value: responseData['accessToken'] ?? '',
-      // );
-      // await SecureStorageService.instance.write(
-      //   key: 'refresh_token',
-      //   value: responseData['refreshToken'] ?? '',
-      // );
-      return _currentUser;
-    });
+          _currentUser = {
+            'id': user['userId'].toString(),
+            'email': user['emailOrPhone'] ?? email,
+            'name': user['displayName'] ?? user['name'] ?? '',
+            'role': user['role'] ?? 'User',
+            'photoUrl': user['avatarUrl'] ?? user['photoUrl'] ?? '',
+          };
+
+          _authStateController.add(_currentUser);
+          return right<Failure, Map<String, dynamic>?>(_currentUser);
+        } catch (e) {
+          return left<Failure, Map<String, dynamic>?>(ServerFailure('Invalid response data format: $e'));
+        }
+      },
+    );
   }
 
   FutureEither<Map<String, dynamic>?> signUp({
@@ -52,23 +63,32 @@ class AuthService {
     required List<double> coordinates,
   }) async {
     final result = await DioService.instance.post(
-      'api/auth/register',
+      'auth/register',
       data: {
         'displayName': name,
         'emailOrPhone': email,
         'password': password,
-        'coordinates': [77.5946, 12.9716],
+        'coordinates': coordinates,
       },
     );
 
     return result.map((response) {
-      final responseData = response.data as Map<String, dynamic>;
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        final innerData = responseData['data'] as Map<String, dynamic>;
 
-      _currentUser = responseData['user'] ?? responseData;
-      _authStateController.add(_currentUser);
+        _currentUser = {
+          'id': innerData['userId'].toString(),
+          'email': innerData['emailOrPhone'] ?? email,
+          'name': name,
+          'role': 'User',
+        };
 
-      // Save tokens if needed in SecureStorageService
-      return _currentUser;
+        // Note: OTP is not verified yet, so we don't dispatch authenticated state to controller
+        return _currentUser;
+      } catch (e) {
+        throw Exception('Invalid register response: $e');
+      }
     });
   }
 
@@ -80,7 +100,8 @@ class AuthService {
 
   FutureEither<void> logout() async {
     return runTask(() async {
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await SecureStorageService.instance.delete('access_token');
+      await SecureStorageService.instance.delete('refresh_token');
       _currentUser = null;
       _authStateController.add(null);
     });
@@ -90,33 +111,127 @@ class AuthService {
     required String otp,
     required String email,
   }) async {
-    return runTask(() async {
-      final result = await DioService.instance.post(
-        'api/auth/verify-otp',
-        data: {
-          'emailOrPhone': email,
-          'otp': otp,
-        },
-      );
+    final result = await DioService.instance.post(
+      'auth/verify-otp',
+      data: {
+        'emailOrPhone': email,
+        'otp': otp,
+      },
+    );
 
-      return result.fold(
-        (failure) => throw failure,
-        (response) {
+    return result.fold(
+      (failure) async => left<Failure, Map<String, dynamic>?>(failure),
+      (response) async {
+        try {
           final responseData = response.data as Map<String, dynamic>;
+          final innerData = responseData['data'] as Map<String, dynamic>;
+          final token = innerData['accessToken'] as String;
+          final refresh = innerData['refreshToken'] as String;
+          final user = innerData['user'] as Map<String, dynamic>;
 
-          _currentUser =
-              responseData['user'] as Map<String, dynamic>? ?? responseData;
+          await SecureStorageService.instance.write('access_token', token);
+          await SecureStorageService.instance.write('refresh_token', refresh);
+
+          _currentUser = {
+            'id': user['userId'].toString(),
+            'email': user['emailOrPhone'] ?? email,
+            'name': user['displayName'] ?? user['name'] ?? '',
+            'role': user['role'] ?? 'User',
+            'photoUrl': user['avatarUrl'] ?? user['photoUrl'] ?? '',
+          };
 
           _authStateController.add(_currentUser);
+          return right<Failure, Map<String, dynamic>?>(_currentUser);
+        } catch (e) {
+          return left<Failure, Map<String, dynamic>?>(ServerFailure('OTP verify parsing failed: $e'));
+        }
+      },
+    );
+  }
 
-          return _currentUser;
-        },
-      );
-    });
+  FutureEither<void> resendOtp({required String email}) async {
+    final result = await DioService.instance.post(
+      'auth/resend-otp',
+      data: {
+        'emailOrPhone': email,
+      },
+    );
+
+    return result.map((_) {});
+  }
+
+  FutureEither<Map<String, dynamic>?> updateRole({required String role}) async {
+    final result = await DioService.instance.post(
+      'auth/update-role',
+      data: {
+        'role': role,
+      },
+    );
+
+    return result.fold(
+      (failure) async => left<Failure, Map<String, dynamic>?>(failure),
+      (response) async {
+        try {
+          final responseData = response.data as Map<String, dynamic>;
+          final innerData = responseData['data'] as Map<String, dynamic>;
+          final token = innerData['accessToken'] as String;
+          final refresh = innerData['refreshToken'] as String;
+          final user = innerData['user'] as Map<String, dynamic>;
+
+          await SecureStorageService.instance.write('access_token', token);
+          await SecureStorageService.instance.write('refresh_token', refresh);
+
+          _currentUser = {
+            'id': user['userId'].toString(),
+            'email': user['emailOrPhone'],
+            'name': user['displayName'] ?? user['name'] ?? '',
+            'role': user['role'] ?? role,
+          };
+
+          _authStateController.add(_currentUser);
+          return right<Failure, Map<String, dynamic>?>(_currentUser);
+        } catch (e) {
+          return left<Failure, Map<String, dynamic>?>(ServerFailure('Role upgrade parsing failed: $e'));
+        }
+      },
+    );
+  }
+
+  Map<String, dynamic> _decodeJwt(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return {};
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final resp = utf8.decode(base64Url.decode(normalized));
+      return json.decode(resp) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
+    }
   }
 
   FutureEither<Map<String, dynamic>?> getCurrentUser() async {
     return runTask(() async {
+      if (_currentUser != null) return _currentUser;
+      
+      // Auto-login check by reading token and checking if exists
+      final tokenRes = await SecureStorageService.instance.read('access_token');
+      final token = tokenRes.fold((_) => null, (t) => t);
+      
+      if (token != null && token.isNotEmpty) {
+        final payload = _decodeJwt(token);
+        if (payload.isNotEmpty) {
+          _currentUser = {
+            'id': payload['sub']?.toString() ?? 'restored',
+            'email': payload['emailOrPhone'] ?? 'restored@example.com',
+            'name': payload['displayName'] ?? 'User',
+            'role': payload['role'] ?? 'User',
+            'photoUrl': payload['avatarUrl'] ?? '',
+          };
+          _authStateController.add(_currentUser);
+        }
+      }
+      
       return _currentUser;
     });
   }
