@@ -30,22 +30,30 @@ class ActivityDetailScreen extends StatelessWidget {
         final interestedCount = livePost.interestedUsers.length;
         final isMyPost = livePost.authorId == currentUserId;
 
+        // Parse dynamic post meta
+        final meta = livePost.parsedMeta;
+        final String displayDescription = meta['description'] ?? livePost.content;
+        final String displayDate = meta['date'] ?? 'Today, ${_formatDate(livePost.createdAt)}';
+        final String displayTime = meta['time'] ?? '6:00 – 8:00 PM';
+        final String displayLocation = meta['location'] ?? 'JLN Sports, V.N.';
+        final String displayCapacity = meta['capacity'] ?? '${livePost.interestedUsers.length} interested';
+
         final items = [
           {
             'icon': IconsaxPlusLinear.calendar,
-            'label': 'Today, ${_formatDate(livePost.createdAt)}',
+            'label': displayDate,
           },
           {
             'icon': IconsaxPlusLinear.clock,
-            'label': '6:00 – 8:00 PM',
+            'label': displayTime,
           },
           {
             'icon': IconsaxPlusLinear.map_1,
-            'label': 'JLN Sports, V.N.',
+            'label': displayLocation,
           },
           {
             'icon': IconsaxPlusLinear.user,
-            'label': '${livePost.interestedUsers.length} interested',
+            'label': displayCapacity,
           },
         ];
 
@@ -215,7 +223,7 @@ class ActivityDetailScreen extends StatelessWidget {
 
                   /// Description
                   Text(
-                    livePost.content,
+                    displayDescription,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant,
                       height: 1.6,

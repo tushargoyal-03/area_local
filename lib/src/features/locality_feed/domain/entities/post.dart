@@ -1,6 +1,45 @@
+import 'dart:convert';
 import 'package:equatable/equatable.dart';
 
 class AppPost extends Equatable {
+  Map<String, String> get parsedMeta {
+    try {
+      if (content.startsWith('{') && content.endsWith('}')) {
+        final parsed = jsonDecode(content) as Map<String, dynamic>;
+        return {
+          'description': parsed['description']?.toString() ?? '',
+          'date': parsed['date']?.toString() ?? '',
+          'time': parsed['time']?.toString() ?? '',
+          'location': parsed['location']?.toString() ?? '',
+          'capacity': parsed['capacity']?.toString() ?? '',
+        };
+      }
+    } catch (_) {}
+
+    // Fallback
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+    final dateStr = 'Today, ${months[createdAt.month - 1]} ${createdAt.day}';
+    return {
+      'description': content,
+      'date': dateStr,
+      'time': '6:00 – 8:00 PM',
+      'location': 'JLN Sports, V.N.',
+      'capacity': '2 people',
+    };
+  }
   final String id;
   final String authorId;
   final String authorName;

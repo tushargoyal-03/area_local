@@ -9,7 +9,8 @@ class HomeDashboardScreen extends StatefulWidget {
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
 }
 
-class _HomeDashboardScreenState extends State<HomeDashboardScreen> with WidgetsBindingObserver {
+class _HomeDashboardScreenState extends State<HomeDashboardScreen>
+    with WidgetsBindingObserver {
   int _currentTab = 0;
 
   @override
@@ -23,9 +24,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with WidgetsB
     // Trigger initial WebSocket binding if already logged in on boot
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final sessionState = context.read<SessionBloc>().state;
-      if (sessionState.status == SessionStatus.authenticated && sessionState.user != null) {
+      if (sessionState.status == SessionStatus.authenticated &&
+          sessionState.user != null) {
         final user = sessionState.user!;
-        context.read<ChatBloc>().add(LoadConversationsRequested(currentUserId: user.id));
+        context
+            .read<ChatBloc>()
+            .add(LoadConversationsRequested(currentUserId: user.id));
         Future.delayed(const Duration(seconds: 2), () {
           final socket = ChatService.instance.socket;
           if (socket != null) {
@@ -50,7 +54,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with WidgetsB
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     final sessionState = context.read<SessionBloc>().state;
-    if (sessionState.status == SessionStatus.authenticated && sessionState.user != null) {
+    if (sessionState.status == SessionStatus.authenticated &&
+        sessionState.user != null) {
       if (state == AppLifecycleState.resumed) {
         // App started or foregrounded -> online
         ChatService.instance.updatePresenceStatus(true);
@@ -79,13 +84,15 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with WidgetsB
 
     return BlocListener<SessionBloc, SessionState>(
       listener: (context, sessionState) {
-        if (sessionState.status == SessionStatus.authenticated && sessionState.user != null) {
+        if (sessionState.status == SessionStatus.authenticated &&
+            sessionState.user != null) {
           final user = sessionState.user!;
           // Wait for Socket to establish connect before binding listeners
           Future.delayed(const Duration(seconds: 2), () {
             final socket = ChatService.instance.socket;
             if (socket != null) {
-              NotificationService.instance.setupSocketListeners(socket, user.id);
+              NotificationService.instance
+                  .setupSocketListeners(socket, user.id);
               ChatService.instance.updatePresenceStatus(true);
             }
           });
@@ -109,8 +116,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with WidgetsB
             backgroundColor: cs.surface,
             selectedItemColor: cs.primary,
             unselectedItemColor: cs.onSurfaceVariant.withValues(alpha: 0.6),
-            selectedLabelStyle:
-                tt.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+            selectedLabelStyle: tt.bodySmall
+                ?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
             unselectedLabelStyle: tt.bodySmall?.copyWith(fontSize: 10),
             items: const [
               BottomNavigationBarItem(
@@ -277,7 +284,8 @@ class _TopBar extends StatelessWidget {
           ),
           BlocBuilder<NotificationBloc, NotificationState>(
             builder: (context, state) {
-              final unreadCount = state.notifications.where((n) => !n.isRead).length;
+              final unreadCount =
+                  state.notifications.where((n) => !n.isRead).length;
               return Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -433,11 +441,11 @@ class _QuickActions extends StatelessWidget {
         IconsaxPlusLinear.home_1,
         () => context.push(AppRoutes.societyFeed)
       ),
-      (
-        'Chats',
-        IconsaxPlusLinear.message,
-        () => context.push(AppRoutes.chatRoom)
-      ),
+      // (
+      //   'Chats',
+      //   IconsaxPlusLinear.message,
+      //   () => context.push(AppRoutes.chatRoom)
+      // ),
       (
         'Discovery',
         IconsaxPlusLinear.location,

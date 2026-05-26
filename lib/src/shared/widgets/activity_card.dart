@@ -35,6 +35,13 @@ class ActivityCard extends StatelessWidget {
     final currentUserId =
         context.select((SessionBloc bloc) => bloc.state.user?.id ?? '');
 
+    // Parse dynamic post meta
+    final meta = post != null ? post!.parsedMeta : <String, String>{};
+    final String displayDescription =
+        meta['description'] ?? (post?.content ?? '');
+    final String displayDate = meta['date'] ?? availability;
+    final String displayLocation = meta['location'] ?? 'Vaishali Nagar';
+
     // HSL-derived harmonic styling
     final cardColor = cs.surfaceContainerLow;
     final isMyPost = post != null && post!.authorId == currentUserId;
@@ -137,9 +144,9 @@ class ActivityCard extends StatelessWidget {
           if (!compact) ...[
             SizedBox(height: 10.h),
             // Description if post is present
-            if (post != null && post!.content.isNotEmpty) ...[
+            if (post != null && displayDescription.isNotEmpty) ...[
               Text(
-                post!.content,
+                displayDescription,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: tt.bodyMedium?.copyWith(
@@ -158,14 +165,12 @@ class ActivityCard extends StatelessWidget {
                 _miniChip(
                   context: context,
                   icon: IconsaxPlusLinear.calendar,
-                  text: post != null
-                      ? _formatDate(post!.createdAt)
-                      : availability,
+                  text: displayDate,
                 ),
                 _miniChip(
                   context: context,
                   icon: IconsaxPlusLinear.map_1,
-                  text: 'Vaishali Nagar',
+                  text: displayLocation,
                 ),
               ],
             ),
@@ -319,23 +324,5 @@ class ActivityCard extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _formatDate(DateTime date) {
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-    return '${months[date.month - 1]} ${date.day}';
   }
 }

@@ -128,10 +128,16 @@ class PostsRepositoryImpl implements PostsRepository {
     final result = await _service.addComment(postId: postId, content: content);
 
     return result.map((data) {
-      // Returns { success: true, comment: { postId, authorId, content, createdAt } }
-      final comment = data['comment'] as Map<String, dynamic>;
+      // Safely extract the comment map (under 'data', 'comment', or direct root)
+      Map<String, dynamic> comment = data;
+      if (data.containsKey('data') && data['data'] is Map<String, dynamic>) {
+        comment = data['data'] as Map<String, dynamic>;
+      } else if (data.containsKey('comment') && data['comment'] is Map<String, dynamic>) {
+        comment = data['comment'] as Map<String, dynamic>;
+      }
+
       return PostComment(
-        id: DateTime.now().millisecondsSinceEpoch.toString(), // Client generated id for skeleton
+        id: comment['_id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
         authorId: comment['authorId']?.toString() ?? '',
         authorName: 'You',
         content: comment['content']?.toString() ?? content,

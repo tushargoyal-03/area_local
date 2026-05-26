@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:area_connect/src/imports/imports.dart';
 
 class CreateActivityScreen extends StatefulWidget {
@@ -22,11 +23,180 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
 
   int selectedIndex = 0;
 
+  // Dynamic Options States
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _startTime = const TimeOfDay(hour: 18, minute: 0); // 6:00 PM
+  TimeOfDay _endTime = const TimeOfDay(hour: 20, minute: 0); // 8:00 PM
+  String _locationName = 'JLN Sports Club';
+  int _capacityCount = 2;
+
   @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
+  }
+
+  String _formatDateDisplay(DateTime date) {
+    final now = DateTime.now();
+    final tomorrow = DateTime.now().add(const Duration(days: 1));
+    final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
+    final isTomorrow = date.year == tomorrow.year && date.month == tomorrow.month && date.day == tomorrow.day;
+
+    final weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    final weekdayStr = weekdays[date.weekday % 7];
+    final monthStr = months[date.month - 1];
+
+    if (isToday) return 'Today, $monthStr ${date.day}';
+    if (isTomorrow) return 'Tomorrow, $monthStr ${date.day}';
+    return '$weekdayStr, $monthStr ${date.day}';
+  }
+
+  String _formatTimeDisplay(TimeOfDay start, TimeOfDay end) {
+    String formatTimeOfDay(TimeOfDay tod) {
+      final hour = tod.hourOfPeriod == 0 ? 12 : tod.hourOfPeriod;
+      final period = tod.period == DayPeriod.am ? 'AM' : 'PM';
+      final minuteStr = tod.minute.toString().padLeft(2, '0');
+      return '$hour:$minuteStr $period';
+    }
+    return '${formatTimeOfDay(start)} – ${formatTimeOfDay(end)}';
+  }
+
+  Future<void> _selectDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
+  }
+
+  Future<void> _selectTimeRange() async {
+    final startPicked = await showTimePicker(
+      context: context,
+      initialTime: _startTime,
+      helpText: 'SELECT START TIME',
+    );
+    if (startPicked == null) return;
+
+    if (!mounted) return;
+
+    final endPicked = await showTimePicker(
+      context: context,
+      initialTime: _endTime,
+      helpText: 'SELECT END TIME',
+    );
+    if (endPicked != null) {
+      setState(() {
+        _startTime = startPicked;
+        _endTime = endPicked;
+      });
+    }
+  }
+
+  Future<void> _selectLocation() async {
+    final controller = TextEditingController(text: _locationName);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+          title: const Text('Activity Location/Venue'),
+          content: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: 'e.g. JLN Sports Club, V.N.',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100.r)),
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+    if (result != null && result.isNotEmpty) {
+      setState(() => _locationName = result);
+    }
+  }
+
+  Future<void> _selectCapacity() async {
+    int localCount = _capacityCount;
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) {
+        final cs = context.theme.colorScheme;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+              title: const Text('Required People Limit'),
+              content: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton.filledTonal(
+                    onPressed: localCount > 1
+                        ? () => setDialogState(() => localCount--)
+                        : null,
+                    icon: const Icon(Icons.remove),
+                  ),
+                  SizedBox(width: 20.w),
+                  Text(
+                    '$localCount',
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                      color: cs.primary,
+                    ),
+                  ),
+                  SizedBox(width: 20.w),
+                  IconButton.filledTonal(
+                    onPressed: localCount < 100
+                        ? () => setDialogState(() => localCount++)
+                        : null,
+                    icon: const Icon(Icons.add),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, localCount),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100.r)),
+                  ),
+                  child: const Text('Confirm'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    if (result != null) {
+      setState(() => _capacityCount = result);
+    }
   }
 
   String _mapToBackendCategory(String uiCategory) {
@@ -40,9 +210,18 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final title = _titleController.text.trim();
-    final content = _contentController.text.trim();
+    final contentText = _contentController.text.trim();
     final uiCategory = categories[selectedIndex];
     final backendCategory = _mapToBackendCategory(uiCategory);
+
+    // Dynamic metadata serialization in JSON format inside 'content' field
+    final content = jsonEncode({
+      'description': contentText,
+      'date': _formatDateDisplay(_selectedDate),
+      'time': _formatTimeDisplay(_startTime, _endTime),
+      'location': _locationName,
+      'capacity': '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
+    });
 
     final locationRes = await LocationService.instance.getCurrentPosition();
 
@@ -207,30 +386,38 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
 
                 SizedBox(height: AppSpacing.lg.h),
 
-                // Meta details
+                // Dynamic options labels
+                const _SectionLabel('Activity Details (Tap to customize)'),
+                SizedBox(height: AppSpacing.sm.h),
+
+                // Dynamic Meta details Grid
                 GridView.count(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   crossAxisCount: 2,
                   crossAxisSpacing: 10.w,
                   mainAxisSpacing: 10.h,
-                  childAspectRatio: 2.7,
-                  children: const [
+                  childAspectRatio: 2.5,
+                  children: [
                     _FormRow(
                       icon: IconsaxPlusLinear.calendar,
-                      label: 'Today, May 20',
+                      label: _formatDateDisplay(_selectedDate),
+                      onTap: _selectDate,
                     ),
                     _FormRow(
                       icon: IconsaxPlusLinear.clock,
-                      label: '6:00 – 8:00 PM',
+                      label: _formatTimeDisplay(_startTime, _endTime),
+                      onTap: _selectTimeRange,
                     ),
                     _FormRow(
                       icon: IconsaxPlusLinear.map,
-                      label: 'JLN Sports, V.N.',
+                      label: _locationName,
+                      onTap: _selectLocation,
                     ),
                     _FormRow(
                       icon: IconsaxPlusLinear.user,
-                      label: '2 people',
+                      label: '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
+                      onTap: _selectCapacity,
                     ),
                   ],
                 ),
@@ -313,52 +500,64 @@ class _SectionLabel extends StatelessWidget {
 class _FormRow extends StatelessWidget {
   final IconData icon;
   final String label;
+  final VoidCallback onTap;
 
   const _FormRow({
     required this.icon,
     required this.label,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
 
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36.w,
-            height: 36.w,
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(
-              icon,
-              size: 17.sp,
-              color: cs.primary,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(20.r),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.3),
+              width: 1,
             ),
           ),
-          SizedBox(width: 8.w),
-          Expanded(
-            child: Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
-                color: cs.onSurface,
+          child: Row(
+            children: [
+              Container(
+                width: 36.w,
+                height: 36.w,
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Icon(
+                  icon,
+                  size: 17.sp,
+                  color: cs.primary,
+                ),
               ),
-            ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
-
