@@ -48,7 +48,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
-        0.0,
+        0,
         duration: AppDurations.medium,
         curve: Curves.easeOut,
       );
