@@ -93,7 +93,7 @@ class NotificationService {
     // 1. Request local notification permissions
     final iosPlugin =
         _localNotificationsPlugin.resolvePlatformSpecificImplementation<
-            DarwinFlutterLocalNotificationsPlugin>();
+            IOSFlutterLocalNotificationsPlugin>();
     if (iosPlugin != null) {
       await iosPlugin.requestPermissions(
         alert: true,
@@ -577,17 +577,23 @@ class NotificationService {
   /// Unregister/remove the FCM device token from the NestJS backend
   Future<void> removeDeviceFCMToken() async {
     try {
-      final token = await FirebaseMessaging.instance.getToken();
+      final messaging = FirebaseMessaging.instance;
+      final token = await messaging.getToken();
       if (token == null) {
         debugPrint('FCM Token is null. Skipping backend removal.');
         return;
       }
 
+      // 1. Remove from backend
       final removeRes = await NotificationsService.instance.removeDeviceToken(token);
       removeRes.fold(
         (failure) => debugPrint('Failed to remove device token from backend: ${failure.message}'),
         (_) => debugPrint('FCM device token removed successfully from backend!'),
       );
+
+      // 2. Delete the token locally on device (critical for iOS)
+      await messaging.deleteToken();
+      debugPrint('FCM token deleted locally on device.');
     } catch (e) {
       debugPrint('Error removing FCM token: $e');
     }

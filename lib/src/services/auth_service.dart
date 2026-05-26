@@ -106,8 +106,8 @@ class AuthService {
         await DioService.instance.post('auth/logout');
       } catch (_) {}
 
-      await SecureStorageService.instance.delete('access_token');
-      await SecureStorageService.instance.delete('refresh_token');
+      // Wipe all secure storage (more reliable than individual deletes on iOS Keychain)
+      await SecureStorageService.instance.deleteAll();
       _currentUser = null;
       _authStateController.add(null);
     });
