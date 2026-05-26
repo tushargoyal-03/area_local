@@ -133,7 +133,6 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                   ),
                   child: Stack(
                     children: [
-
                       /// Center Button
                       Positioned(
                         bottom: 10,

@@ -29,8 +29,11 @@ class AppNotification extends Equatable {
       title: json['title']?.toString() ?? '',
       message: json['body']?.toString() ?? json['message']?.toString() ?? '',
       isRead: json['readAt'] != null || json['isRead'] == true,
-      relatedId: (json['data'] is Map ? json['data']['postId']?.toString() : null) ?? json['relatedId']?.toString(),
-      createdAt: json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
+      relatedId:
+          (json['data'] is Map ? json['data']['postId']?.toString() : null) ??
+              json['relatedId']?.toString(),
+      createdAt:
+          json['createdAt']?.toString() ?? DateTime.now().toIso8601String(),
     );
   }
 

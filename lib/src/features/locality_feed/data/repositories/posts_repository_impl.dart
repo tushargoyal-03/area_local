@@ -27,30 +27,36 @@ class PostsRepositoryImpl implements PostsRepository {
       return list.map((item) {
         final post = item as Map<String, dynamic>;
         final author = post['author'] as Map<String, dynamic>?;
-        
+
         final interestedCount = post['interestedCount'] as int? ?? 0;
         final isInterested = post['isInterested'] as bool? ?? false;
-        
+
         // Mock interested array to satisfy legacy count UI if needed.
         final interested = List<String>.generate(
           interestedCount,
-          (i) => (i == 0 && isInterested && currentUserId != null) ? currentUserId : 'other_$i',
+          (i) => (i == 0 && isInterested && currentUserId != null)
+              ? currentUserId
+              : 'other_$i',
         );
 
         return AppPost(
           id: post['_id']?.toString() ?? '',
-          authorId: author?['userId']?.toString() ?? post['authorId']?.toString() ?? '',
+          authorId: author?['userId']?.toString() ??
+              post['authorId']?.toString() ??
+              '',
           authorName: author?['displayName']?.toString() ?? 'Neighbor',
           authorAvatar: author?['avatarUrl']?.toString(),
           category: post['category']?.toString() ?? 'General',
           title: post['title']?.toString() ?? '',
           content: post['content']?.toString() ?? '',
           mediaUrls: List<String>.from(post['mediaUrls'] ?? []),
-          coordinates: List<double>.from(post['location']?['coordinates'] ?? [lng, lat]),
+          coordinates:
+              List<double>.from(post['location']?['coordinates'] ?? [lng, lat]),
           interestedUsers: interested,
           commentsCount: post['commentsCount'] ?? 0,
           sharesCount: post['sharesCount'] ?? 0,
-          createdAt: DateTime.tryParse(post['createdAt']?.toString() ?? '') ?? DateTime.now(),
+          createdAt: DateTime.tryParse(post['createdAt']?.toString() ?? '') ??
+              DateTime.now(),
           isInterested: isInterested,
           distanceInMeters: (post['distanceInMeters'] as num?)?.toDouble(),
         );
@@ -81,11 +87,13 @@ class PostsRepositoryImpl implements PostsRepository {
         title: post['title']?.toString() ?? title,
         content: post['content']?.toString() ?? content,
         mediaUrls: List<String>.from(post['mediaUrls'] ?? []),
-        coordinates: List<double>.from(post['location']?['coordinates'] ?? coordinates),
+        coordinates:
+            List<double>.from(post['location']?['coordinates'] ?? coordinates),
         interestedUsers: const [],
         commentsCount: 0,
         sharesCount: 0,
-        createdAt: DateTime.tryParse(post['createdAt']?.toString() ?? '') ?? DateTime.now(),
+        createdAt: DateTime.tryParse(post['createdAt']?.toString() ?? '') ??
+            DateTime.now(),
         isInterested: false,
       );
     });
@@ -138,16 +146,19 @@ class PostsRepositoryImpl implements PostsRepository {
       Map<String, dynamic> comment = data;
       if (data.containsKey('data') && data['data'] is Map<String, dynamic>) {
         comment = data['data'] as Map<String, dynamic>;
-      } else if (data.containsKey('comment') && data['comment'] is Map<String, dynamic>) {
+      } else if (data.containsKey('comment') &&
+          data['comment'] is Map<String, dynamic>) {
         comment = data['comment'] as Map<String, dynamic>;
       }
 
       return PostComment(
-        id: comment['_id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        id: comment['_id']?.toString() ??
+            DateTime.now().millisecondsSinceEpoch.toString(),
         authorId: comment['authorId']?.toString() ?? '',
         authorName: 'You',
         content: comment['content']?.toString() ?? content,
-        createdAt: DateTime.tryParse(comment['createdAt']?.toString() ?? '') ?? DateTime.now(),
+        createdAt: DateTime.tryParse(comment['createdAt']?.toString() ?? '') ??
+            DateTime.now(),
       );
     });
   }
@@ -162,11 +173,15 @@ class PostsRepositoryImpl implements PostsRepository {
         final author = comment['author'] as Map<String, dynamic>?;
         return PostComment(
           id: comment['_id']?.toString() ?? '',
-          authorId: author?['userId']?.toString() ?? comment['authorId']?.toString() ?? '',
+          authorId: author?['userId']?.toString() ??
+              comment['authorId']?.toString() ??
+              '',
           authorName: author?['displayName']?.toString() ?? 'Neighbor',
           authorAvatar: author?['avatarUrl']?.toString(),
           content: comment['content']?.toString() ?? '',
-          createdAt: DateTime.tryParse(comment['createdAt']?.toString() ?? '') ?? DateTime.now(),
+          createdAt:
+              DateTime.tryParse(comment['createdAt']?.toString() ?? '') ??
+                  DateTime.now(),
         );
       }).toList();
     });

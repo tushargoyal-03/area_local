@@ -20,7 +20,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
     locationRes.fold(
       (failure) {
         showGlobalToast(
-          message: 'Location issue: ${failure.message}. Using default location.',
+          message:
+              'Location issue: ${failure.message}. Using default location.',
           status: 'warning',
         );
         debugPrint('Failed to fetch location on login: ${failure.message}');
@@ -30,13 +31,16 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
           message: 'Live location synchronized successfully!',
           status: 'success',
         );
-        debugPrint('Fetched dynamic login coordinates: [${position.longitude}, ${position.latitude}]');
+        debugPrint(
+            'Fetched dynamic login coordinates: [${position.longitude}, ${position.latitude}]');
         final updateRes = await UsersService.instance.updateProfile(
           coordinates: [position.longitude, position.latitude],
         );
         updateRes.fold(
-          (failure) => debugPrint('Failed to sync location to backend: ${failure.message}'),
-          (successData) => debugPrint('Successfully synced location to backend!'),
+          (failure) => debugPrint(
+              'Failed to sync location to backend: ${failure.message}'),
+          (successData) =>
+              debugPrint('Successfully synced location to backend!'),
         );
       },
     );

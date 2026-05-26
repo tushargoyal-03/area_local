@@ -133,7 +133,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (_) {
         emit(state.copyWith(isLoading: false));
         showGlobalToast(
-            message: 'Verification code resent successfully', status: 'success');
+            message: 'Verification code resent successfully',
+            status: 'success');
       },
     );
   }

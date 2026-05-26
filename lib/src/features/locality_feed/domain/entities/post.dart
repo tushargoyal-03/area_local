@@ -40,6 +40,7 @@ class AppPost extends Equatable {
       'capacity': '2 people',
     };
   }
+
   final String id;
   final String authorId;
   final String authorName;

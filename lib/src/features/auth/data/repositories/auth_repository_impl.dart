@@ -86,7 +86,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (userData == null) {
         return left(const ServerFailure('OTP verification failed'));
       }
-      
+
       final user = AppUser(
         id: userData['id']?.toString() ?? '',
         email: userData['email'] ?? '',

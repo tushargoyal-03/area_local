@@ -24,14 +24,10 @@ class StateWrapper extends StatelessWidget {
             create: (_) => AuthBloc(repository: AuthRepositoryImpl())),
         BlocProvider<PostsBloc>(
             create: (_) => PostsBloc(repository: PostsRepositoryImpl())),
-        BlocProvider<ChatBloc>(
-            create: (_) => ChatBloc()),
-        BlocProvider<NotificationBloc>(
-            create: (_) => NotificationBloc()),
-        BlocProvider<SocietyFeedBloc>(
-            create: (_) => SocietyFeedBloc()),
-        BlocProvider<NearbyDiscoveryBloc>(
-            create: (_) => NearbyDiscoveryBloc()),
+        BlocProvider<ChatBloc>(create: (_) => ChatBloc()),
+        BlocProvider<NotificationBloc>(create: (_) => NotificationBloc()),
+        BlocProvider<SocietyFeedBloc>(create: (_) => SocietyFeedBloc()),
+        BlocProvider<NearbyDiscoveryBloc>(create: (_) => NearbyDiscoveryBloc()),
       ],
       child: child,
     );

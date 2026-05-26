@@ -65,7 +65,7 @@ class _LocalityFeedView extends StatefulWidget {
 
 class _LocalityFeedViewState extends State<_LocalityFeedView> {
   int _selectedCategoryIndex = 0;
-  
+
   // UI filter categories mapping to backend categories
   final List<String> _categories = [
     'For you',
@@ -181,8 +181,9 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
                               color: isSelected
                                   ? widget.cs.onPrimary
                                   : widget.cs.onSurfaceVariant,
-                              fontWeight:
-                                  isSelected ? FontWeight.w600 : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                               fontSize: 13.sp,
                             ),
                           ),
@@ -205,7 +206,8 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: 4,
                         shrinkWrap: true,
-                        separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md.h),
+                        separatorBuilder: (_, __) =>
+                            SizedBox(height: AppSpacing.md.h),
                         itemBuilder: (_, __) => const ActivityCard(),
                       ),
                     );
@@ -215,21 +217,28 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
                     return const AppEmptyState(
                       icon: IconsaxPlusLinear.location,
                       title: 'No posts found',
-                      subtitle: 'Try changing category or refresh to search again.',
+                      subtitle:
+                          'Try changing category or refresh to search again.',
                     );
                   }
 
                   // Apply Category Filter
-                  final backendFilter = _getBackendCategoryFilter(_selectedCategoryIndex);
+                  final backendFilter =
+                      _getBackendCategoryFilter(_selectedCategoryIndex);
                   final filteredPosts = backendFilter == null
                       ? state.posts
-                      : state.posts.where((p) => p.category.toLowerCase() == backendFilter.toLowerCase()).toList();
+                      : state.posts
+                          .where((p) =>
+                              p.category.toLowerCase() ==
+                              backendFilter.toLowerCase())
+                          .toList();
 
                   if (filteredPosts.isEmpty) {
                     return AppEmptyState(
                       icon: IconsaxPlusLinear.location,
                       title: 'No posts in $backendFilter',
-                      subtitle: 'Be the first to create one inside this category!',
+                      subtitle:
+                          'Be the first to create one inside this category!',
                     );
                   }
 

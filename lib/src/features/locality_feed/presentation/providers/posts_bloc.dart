@@ -108,7 +108,8 @@ class PostsState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [posts, isLoading, errorMessage, isCreating, createSuccess];
+  List<Object?> get props =>
+      [posts, isLoading, errorMessage, isCreating, createSuccess];
 }
 
 // --- Bloc ---
@@ -138,7 +139,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
+      (failure) =>
+          emit(state.copyWith(isLoading: false, errorMessage: failure.message)),
       (posts) => emit(state.copyWith(isLoading: false, posts: posts)),
     );
   }
@@ -167,7 +169,9 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
           createSuccess: true,
           posts: [newPost, ...state.posts],
         ));
-        showGlobalToast(message: 'Hyperlocal activity published successfully!', status: 'success');
+        showGlobalToast(
+            message: 'Hyperlocal activity published successfully!',
+            status: 'success');
 
         if (event.context.mounted) {
           Navigator.pop(event.context);
@@ -186,7 +190,7 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
       if (post.id == event.postId) {
         final currentInterested = List<String>.from(post.interestedUsers);
         final isNowInterested = !post.isInterested;
-        
+
         if (isNowInterested) {
           currentInterested.add(event.currentUserId);
         } else {
@@ -251,7 +255,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
         }).toList();
 
         emit(state.copyWith(posts: updatedPosts));
-        showGlobalToast(message: 'Comment added successfully!', status: 'success');
+        showGlobalToast(
+            message: 'Comment added successfully!', status: 'success');
         if (event.onSuccess != null) {
           event.onSuccess!();
         }
@@ -264,7 +269,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     Emitter<PostsState> emit,
   ) async {
     final originalPosts = List<AppPost>.from(state.posts);
-    final updatedPosts = state.posts.where((post) => post.id != event.postId).toList();
+    final updatedPosts =
+        state.posts.where((post) => post.id != event.postId).toList();
 
     emit(state.copyWith(posts: updatedPosts));
 
@@ -276,7 +282,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
         showGlobalToast(message: failure.message, status: 'error');
       },
       (_) {
-        showGlobalToast(message: 'Activity removed successfully.', status: 'success');
+        showGlobalToast(
+            message: 'Activity removed successfully.', status: 'success');
       },
     );
   }

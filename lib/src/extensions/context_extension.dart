@@ -15,7 +15,8 @@ extension ContextExtension on BuildContext {
 
   /// Semantic/custom colors (success, warning, info).
   AppColorsExtension get appColors =>
-      theme.extension<AppColorsExtension>() ?? (isDarkMode ? AppPalettes.dark : AppPalettes.light);
+      theme.extension<AppColorsExtension>() ??
+      (isDarkMode ? AppPalettes.dark : AppPalettes.light);
 
   /// Design tokens (spacing, border radii, elevation defaults).
   AppDesignTokens get designTokens =>
@@ -87,7 +88,8 @@ extension ContextExtension on BuildContext {
       builder: builder,
       isScrollControlled: isScrollControlled,
       useSafeArea: useSafeArea,
-      backgroundColor: Colors.transparent, // Allow sheets to draw custom transparent backgrounds
+      backgroundColor: Colors
+          .transparent, // Allow sheets to draw custom transparent backgrounds
       elevation: 0,
     );
   }
@@ -112,8 +114,8 @@ extension ContextExtension on BuildContext {
     final bg = switch (type) {
       SnackBarType.success => appColors.success,
       SnackBarType.warning => appColors.warning,
-      SnackBarType.error   => colors.error,
-      SnackBarType.info    => colors.inverseSurface,
+      SnackBarType.error => colors.error,
+      SnackBarType.info => colors.inverseSurface,
     };
     ScaffoldMessenger.of(this)
       ..clearSnackBars()
@@ -129,11 +131,11 @@ extension ContextExtension on BuildContext {
   // ── Routing shortcuts ────────────────────────────────────────────────────
   String get currentRoute {
     final router = GoRouter.of(this);
-    final RouteMatch lastMatch = router.routerDelegate.currentConfiguration.last;
+    final RouteMatch lastMatch =
+        router.routerDelegate.currentConfiguration.last;
     final RouteMatchList matchList = lastMatch is ImperativeRouteMatch
         ? lastMatch.matches
         : router.routerDelegate.currentConfiguration;
     return matchList.uri.toString();
   }
-
 }

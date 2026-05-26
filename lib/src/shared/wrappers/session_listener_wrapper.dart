@@ -1,7 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
-
 class SessionListenerWrapper extends StatelessWidget {
   final Widget child;
   const SessionListenerWrapper({super.key, required this.child});

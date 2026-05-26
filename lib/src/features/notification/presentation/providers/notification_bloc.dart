@@ -1,4 +1,3 @@
-
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
@@ -78,7 +77,8 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     NotificationAdded event,
     Emitter<NotificationState> emit,
   ) {
-    if (state.notifications.any((element) => element.id == event.notification.id)) {
+    if (state.notifications
+        .any((element) => element.id == event.notification.id)) {
       return;
     }
     final updatedList = [event.notification, ...state.notifications];

@@ -106,4 +106,3 @@ class RawToastState extends State<RawToast> {
     );
   }
 }
-

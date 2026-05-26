@@ -111,13 +111,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: PageView.builder(
                 controller: _pageController,
                 itemCount: _pages.length,
-                onPageChanged: (index) =>
-                    setState(() => _currentIndex = index),
+                onPageChanged: (index) => setState(() => _currentIndex = index),
                 itemBuilder: (context, index) {
                   final page = _pages[index];
                   return Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
                     child: Column(
                       children: [
                         Expanded(
@@ -133,13 +131,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                             height: 1.15,
                             letterSpacing: -0.5,
                           ),
-                        )
-                            .animate()
-                            .fade(duration: AppDurations.slow)
-                            .slideY(
-                                begin: 0.15,
-                                end: 0,
-                                duration: AppDurations.slow),
+                        ).animate().fade(duration: AppDurations.slow).slideY(
+                            begin: 0.15, end: 0, duration: AppDurations.slow),
                         SizedBox(height: AppSpacing.md.h),
                         Text(
                           page.subtitle,
@@ -197,8 +190,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       onPressed: () => context.go(AppRoutes.login),
                       child: Text(
                         'Skip for now',
-                        style: tt.bodyMedium
-                            ?.copyWith(color: cs.onSurfaceVariant),
+                        style:
+                            tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                       ),
                     ),
                   ] else
@@ -380,8 +373,7 @@ class _DiscoverIllustration extends StatelessWidget {
         children: [
           // Location badge
           Container(
-            padding:
-                EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             decoration: BoxDecoration(
               color: cs.surface,
               borderRadius: BorderRadius.circular(100.r),
@@ -422,8 +414,8 @@ class _DiscoverIllustration extends StatelessWidget {
             children: items
                 .map(
                   (item) => Container(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 12.w, vertical: 8.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                     decoration: BoxDecoration(
                       color: item.$3.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16.r),
@@ -492,8 +484,7 @@ class _ChatIllustration extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: 14.w, vertical: 12.h),
+              padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
               decoration: BoxDecoration(
                 color: cs.surfaceContainerHigh,
                 borderRadius: BorderRadius.only(

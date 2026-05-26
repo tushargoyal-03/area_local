@@ -58,7 +58,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     context.read<AuthBloc>().add(
           ResendOtpRequested(
             context: context,
-            email: widget.signupId.isEmpty ? 'mock@example.com' : widget.signupId,
+            email:
+                widget.signupId.isEmpty ? 'mock@example.com' : widget.signupId,
           ),
         );
     _startTimer();
@@ -71,7 +72,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
           VerifyOtpRequested(
             context: context,
             otp: _otpController.text,
-            email: widget.signupId.isEmpty ? 'mock@example.com' : widget.signupId,
+            email:
+                widget.signupId.isEmpty ? 'mock@example.com' : widget.signupId,
           ),
         );
   }
@@ -127,7 +129,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                 ),
                               ),
                               TextSpan(
-                                text: widget.signupId.isEmpty ? '+91 98••• ••432' : widget.signupId,
+                                text: widget.signupId.isEmpty
+                                    ? '+91 98••• ••432'
+                                    : widget.signupId,
                                 style: tt.bodyMedium?.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: cs.onSurface,
@@ -279,7 +283,9 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
               AppButton(
                 label: 'Verify',
                 isLoading: isLoading,
-                onPressed: isLoading || _otpController.text.length < 6 ? null : _onVerify,
+                onPressed: isLoading || _otpController.text.length < 6
+                    ? null
+                    : _onVerify,
                 isFullWidth: true,
               ).paddingOnly(
                 left: AppSpacing.lg.w,
