@@ -25,14 +25,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     final tt = context.theme.textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Messages',
-          style: tt.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
-        ),
+      appBar: AppTopBar(
+        showbackbutton: false,
+        title: 'Messages',
         actions: [
           IconButton(
             onPressed: () {

@@ -48,7 +48,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        0.0,
         duration: AppDurations.medium,
         curve: Curves.easeOut,
       );
@@ -190,6 +190,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 child: state.isMessagesLoading
                     ? const Center(child: CircularProgressIndicator())
                     : ListView.builder(
+                        reverse: true,
                         controller: _scrollController,
                         padding: EdgeInsets.symmetric(
                             horizontal: 16.w, vertical: 12.h),
