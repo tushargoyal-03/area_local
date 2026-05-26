@@ -16,14 +16,16 @@ class _LocalityFeedPageState extends State<LocalityFeedPage> {
 
   Future<void> _loadFeed() async {
     final locationRes = await LocationService.instance.getCurrentPosition();
-    
+
     if (!mounted) return;
 
     locationRes.fold(
       (failure) {
         // Safe fallback: try using coordinates saved in the active user profile
         final user = context.read<SessionBloc>().state.user;
-        if (user != null && user.coordinates != null && user.coordinates!.length == 2) {
+        if (user != null &&
+            user.coordinates != null &&
+            user.coordinates!.length == 2) {
           context.read<PostsBloc>().add(LoadNearbyPostsRequested(
                 lng: user.coordinates![0],
                 lat: user.coordinates![1],
@@ -99,10 +101,9 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: widget.cs.surface,
-      appBar: AppBar(
-        backgroundColor: widget.cs.surface,
-        elevation: 0,
-        title: ListTile(
+      appBar: AppTopBar(
+        title: '',
+        titleWidget: ListTile(
           contentPadding: EdgeInsets.zero,
           title: Row(
             children: [

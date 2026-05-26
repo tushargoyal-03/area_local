@@ -36,13 +36,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final tt = context.theme.textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Notifications'),
+      appBar: AppTopBar(
+        title: 'Notifications',
         centerTitle: true,
         actions: [
           TextButton(

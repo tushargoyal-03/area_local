@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:area_connect/src/imports/imports.dart';
 
 class CreateActivityScreen extends StatefulWidget {
@@ -29,6 +30,51 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   TimeOfDay _endTime = const TimeOfDay(hour: 20, minute: 0); // 8:00 PM
   String _locationName = 'JLN Sports Club';
   int _capacityCount = 2;
+
+  File? _selectedImage;
+
+  Future<void> _pickImageFromCamera() async {
+    final result =
+        await MediaService.instance.pickImage(source: ImageSource.camera);
+    result.fold(
+      (failure) {
+        showGlobalToast(
+          message: 'Failed to take photo: ${failure.message}',
+          status: 'error',
+        );
+      },
+      (image) {
+        if (image != null) {
+          setState(() {
+            _selectedImage = image;
+          });
+          showGlobalToast(
+            message: 'Photo captured successfully!',
+            status: 'success',
+          );
+        }
+      },
+    );
+  }
+
+  Future<void> _shareImage() async {
+    if (_selectedImage == null) return;
+    final shareRes = await ShareService.instance.shareFiles(
+      [_selectedImage!.path],
+      text: 'Sharing my activity photo!',
+    );
+    shareRes.fold(
+      (failure) {
+        showGlobalToast(
+          message: 'Failed to share photo: ${failure.message}',
+          status: 'error',
+        );
+      },
+      (result) {
+        // Shared successfully
+      },
+    );
+  }
 
   @override
   void dispose() {
@@ -273,18 +319,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         context.select((PostsBloc bloc) => bloc.state.isCreating);
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        leadingWidth: 60,
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'New activity',
-          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
+      appBar: const AppTopBar(
+        title: 'New activity',
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -381,10 +417,10 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                   width: double.infinity,
                   constraints: const BoxConstraints(minHeight: 120),
                   padding: EdgeInsets.all(AppSpacing.md.w),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(22.r),
-                  ),
+                  // decoration: BoxDecoration(
+                  //   color: cs.surfaceContainerLow,
+                  //   borderRadius: BorderRadius.circular(22.r),
+                  // ),
                   child: TextFormField(
                     controller: _contentController,
                     enabled: !isCreating,
@@ -448,33 +484,95 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                 SizedBox(height: AppSpacing.lg.h),
 
                 // Photo upload
-                Container(
-                  height: 110.h,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(22.r),
-                    border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: 0.5),
-                      style: BorderStyle.solid,
+                GestureDetector(
+                  onTap: _selectedImage == null ? _pickImageFromCamera : null,
+                  child: Container(
+                    height: 110.h,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(22.r),
+                      border: Border.all(
+                        color: cs.outlineVariant.withValues(alpha: 0.5),
+                        style: BorderStyle.solid,
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        IconsaxPlusLinear.camera,
-                        size: 28.sp,
-                        color: cs.onSurfaceVariant,
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        'Add a photo (optional)',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                    clipBehavior: Clip.antiAlias,
+                    child: _selectedImage != null
+                        ? Stack(
+                            children: [
+                              Positioned.fill(
+                                child: Image.file(
+                                  _selectedImage!,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Positioned(
+                                top: 8.h,
+                                right: 8.w,
+                                child: Row(
+                                  children: [
+                                    // Share button
+                                    GestureDetector(
+                                      onTap: _shareImage,
+                                      child: Container(
+                                        padding: EdgeInsets.all(8.r),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.6),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.share_rounded,
+                                          size: 16.sp,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 8.w),
+                                    // Delete/Remove button
+                                    GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedImage = null;
+                                        });
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.all(8.r),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.6),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          IconsaxPlusLinear.trash,
+                                          size: 16.sp,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                IconsaxPlusLinear.camera,
+                                size: 28.sp,
+                                color: cs.onSurfaceVariant,
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Add a photo (optional)',
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
                   ),
                 ),
 

@@ -68,71 +68,68 @@ class _ForgotPasswordView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppTopBar(title: ''),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: AppSpacing.xl.h),
-                Text(
-                  'Reset Password',
-                  style:
-                      tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: AppSpacing.sm.h),
-                Text(
-                  'Enter your email to receive a reset link',
-                  textAlign: TextAlign.center,
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                SizedBox(height: AppSpacing.xxxl.h),
-                Form(
-                  key: formKey,
-                  child: Column(
-                    children: [
-                      AppTextField(
-                        controller: emailController,
-                        enabled: !isLoading,
-                        keyboardType: TextInputType.emailAddress,
-                        label: 'Email',
-                        prefixIcon: const Icon(IconsaxPlusBold.sms),
-                        validator: (v) {
-                          if (AppUtils.isBlank(v)) {
-                            return 'Email is required';
-                          }
-                          if (!AppUtils.isValidEmail(v!)) {
-                            return 'Enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: AppSpacing.lg.h),
-                      AppButton(
-                        label: 'Send Reset Link',
-                        isLoading: isLoading,
-                        onPressed: isLoading ? null : onForgotPassword,
-                        width: ButtonSize.large,
-                        isFullWidth: false,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: AppSpacing.xxxl.h),
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Back to Login',
-                    style: tt.labelLarge?.copyWith(
-                      color: cs.primary,
-                      fontWeight: FontWeight.bold,
+      body: Center(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: AppSpacing.xl.h),
+              Text(
+                'Reset Password',
+                style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: AppSpacing.sm.h),
+              Text(
+                'Enter your email to receive a reset link',
+                textAlign: TextAlign.center,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              SizedBox(height: AppSpacing.xxxl.h),
+              Form(
+                key: formKey,
+                child: Column(
+                  children: [
+                    AppTextField(
+                      controller: emailController,
+                      enabled: !isLoading,
+                      keyboardType: TextInputType.emailAddress,
+                      label: 'Email',
+                      prefixIcon: const Icon(IconsaxPlusBold.sms),
+                      validator: (v) {
+                        if (AppUtils.isBlank(v)) {
+                          return 'Email is required';
+                        }
+                        if (!AppUtils.isValidEmail(v!)) {
+                          return 'Enter a valid email';
+                        }
+                        return null;
+                      },
                     ),
+                    SizedBox(height: AppSpacing.lg.h),
+                    AppButton(
+                      label: 'Send Reset Link',
+                      isLoading: isLoading,
+                      onPressed: isLoading ? null : onForgotPassword,
+                      width: ButtonSize.large,
+                      isFullWidth: false,
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: AppSpacing.xxxl.h),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Back to Login',
+                  style: tt.labelLarge?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: AppSpacing.xl.h),
-              ],
-            ),
+              ),
+              SizedBox(height: AppSpacing.xl.h),
+            ],
           ),
         ),
       ),

@@ -121,10 +121,6 @@ class _SignupView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: context.theme.colorScheme.surface,
-        elevation: 0,
-      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

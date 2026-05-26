@@ -56,7 +56,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
               onPressed: handleBack,
             )
           : null,
-      iconTheme: theme.appBarTheme.iconTheme,
+      iconTheme: theme.iconTheme,
       actions: actions ?? [],
     );
   }

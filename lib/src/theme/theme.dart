@@ -286,8 +286,9 @@ ThemeData _buildTheme(
         return colorScheme.outline;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected))
+        if (states.contains(WidgetState.selected)) {
           return colorScheme.primaryContainer;
+        }
         return colorScheme.surfaceContainerHighest;
       }),
     ),

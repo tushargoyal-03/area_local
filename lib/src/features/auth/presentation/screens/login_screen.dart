@@ -267,6 +267,16 @@ class _LoginView extends StatelessWidget {
                         width: ButtonSize.large,
                         isFullWidth: false,
                       ),
+                      SizedBox(height: 20.h),
+                      const AppDivider(),
+                      TextButton(
+                        onPressed: () {
+                          context.go(AppRoutes.signup);
+                        },
+                        child: Text("Don't have an Account sign up",
+                            style: tt.bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant)),
+                      ),
                     ],
                   ),
                 ),

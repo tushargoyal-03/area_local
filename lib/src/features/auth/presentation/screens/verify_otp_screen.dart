@@ -95,7 +95,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: SafeArea(
         child: GestureDetector(
           onTap: () => _otpFocusNode.requestFocus(),

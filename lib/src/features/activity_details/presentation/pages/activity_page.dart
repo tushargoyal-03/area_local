@@ -62,26 +62,9 @@ class ActivityDetailScreen extends StatelessWidget {
 
         return Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
-          appBar: AppBar(
-            elevation: 0,
-            title: const Text('Activity'),
+          appBar: const AppTopBar(
+            title: 'Activity',
             centerTitle: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () => Navigator.pop(context),
-            ),
-            actions: [
-              if (isMyPost)
-                IconButton(
-                  onPressed: () {
-                    context
-                        .read<PostsBloc>()
-                        .add(DeletePostRequested(postId: livePost.id));
-                    Navigator.pop(context);
-                  },
-                  icon: const Icon(IconsaxPlusLinear.trash, color: Colors.red),
-                ),
-            ],
           ),
           bottomNavigationBar: Container(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),

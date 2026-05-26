@@ -50,7 +50,7 @@ TextTheme buildTextTheme() {
     ),
 
     /// 28 sp — Standard page-level heading.
-    /// Use for: AppBar titles on content-heavy screens, sheet headers.
+    /// Use for: AppTopBar titles on content-heavy screens, sheet headers.
     headlineMedium: TextStyle(
       fontSize: 28,
       fontWeight: FontWeight.w400,
@@ -70,7 +70,7 @@ TextTheme buildTextTheme() {
     // lists, or dialogs. More emphasis than body, less than headline.
 
     /// 22 sp — Prominent component title.
-    /// Use for: AppBar titles (standard), large list-section headers,
+    /// Use for: AppTopBar titles (standard), large list-section headers,
     ///          dialog/modal titles.
     titleLarge: TextStyle(
       fontSize: 22,

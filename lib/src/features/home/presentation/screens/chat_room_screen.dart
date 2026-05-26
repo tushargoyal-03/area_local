@@ -124,18 +124,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
         return Scaffold(
           backgroundColor: cs.surface,
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () {
-                // Mark messages read on leave
-                context
-                    .read<ChatBloc>()
-                    .add(MarkMessagesAsReadRequested(chatId: widget.chatId));
-                Navigator.pop(context);
-              },
-            ),
-            title: Row(
+          appBar: AppTopBar(
+            title: '',
+            titleWidget: Row(
               children: [
                 Avatar(
                     name: widget.recipientName,

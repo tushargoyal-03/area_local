@@ -70,5 +70,9 @@
 	<string>Area Connect needs your location to show activities, events, and neighbors nearby.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Area Connect needs your location to show activities, events, and neighbors nearby.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Area Connect needs access to your camera so you can take activity photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Area Connect needs access to your photo library to let you select and share photos.</string>
 </dict>
 </plist>

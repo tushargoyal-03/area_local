@@ -52,12 +52,9 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
     final tt = context.theme.textTheme;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Column(
+      appBar: AppTopBar(
+        title: '',
+        titleWidget: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(

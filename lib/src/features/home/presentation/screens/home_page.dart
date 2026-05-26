@@ -34,7 +34,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
         );
         debugPrint(
             'Fetched dynamic login coordinates: [${position.longitude}, ${position.latitude}]');
-        
+
         // Reverse geocode dynamically to get a real suburb and city name
         final addressRes =
             await LocationService.instance.getAddressFromCoordinates(
@@ -242,7 +242,8 @@ class _HomeFeedTab extends StatelessWidget {
   final VoidCallback onExploreTap;
   final String locationAddress;
 
-  const _HomeFeedTab({required this.onExploreTap, required this.locationAddress});
+  const _HomeFeedTab(
+      {required this.onExploreTap, required this.locationAddress});
 
   @override
   Widget build(BuildContext context) {
@@ -423,7 +424,7 @@ class _HeroCard extends StatelessWidget {
     final cs = context.theme.colorScheme;
 
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: EdgeInsets.all(AppSpacing.xs),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -488,7 +489,7 @@ class _HeroCard extends StatelessWidget {
                     final name = profile['displayName'] ?? 'Neighbor';
                     final avatarUrl = profile['avatarUrl'];
                     return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
+                      padding: const EdgeInsets.only(right: 8),
                       child: Avatar(name: name, size: 28, imageUrl: avatarUrl),
                     );
                   }),

@@ -45,15 +45,9 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(IconsaxPlusLinear.arrow_left),
-          onPressed: () => context.pop(),
-        ),
-        titleSpacing: 0,
-        title: Row(
+      appBar: AppTopBar(
+        title: '',
+        titleWidget: Row(
           children: [
             Container(
               width: 36.w,
