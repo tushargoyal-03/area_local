@@ -40,4 +40,30 @@ class NotificationsService {
     final result = await DioService.instance.post('notifications/read-all');
     return result.map((_) {});
   }
+
+  FutureEither<void> registerDeviceToken({
+    required String token,
+    required String platform,
+    String? deviceId,
+    String? appVersion,
+  }) async {
+    final result = await DioService.instance.post(
+      'notifications/device-token',
+      data: {
+        'token': token,
+        'platform': platform,
+        if (deviceId != null) 'deviceId': deviceId,
+        if (appVersion != null) 'appVersion': appVersion,
+      },
+    );
+    return result.map((_) {});
+  }
+
+  FutureEither<void> removeDeviceToken(String token) async {
+    final result = await DioService.instance.delete(
+      'notifications/device-token',
+      data: {'token': token},
+    );
+    return result.map((_) {});
+  }
 }

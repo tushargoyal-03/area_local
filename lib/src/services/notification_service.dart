@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:area_connect/src/imports/imports.dart';
 
@@ -36,12 +39,58 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
+    // --- Firebase Messaging Listeners ---
+
+    // 1. Listen for foreground messages
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('Foreground message received: ${message.messageId}');
+      final notification = message.notification;
+      final data = message.data;
+      if (notification != null) {
+        final title = notification.title ?? '';
+        final body = notification.body ?? '';
+        final type = data['type']?.toString() ?? 'System';
+
+        showForegroundBanner(
+          title: title,
+          message: body,
+          type: type,
+          onTap: () {
+            _handleNotificationPayloadRedirect(data);
+          },
+        );
+
+        showSystemNotification(
+          id: message.hashCode,
+          title: title,
+          body: body,
+          payload: jsonEncode(data),
+        );
+      }
+    });
+
+    // 2. Listen for clicks when the app is in the background
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('FCM message clicked from background: ${message.messageId}');
+      _handleNotificationPayloadRedirect(message.data);
+    });
+
+    // 3. Check if app was opened from a terminated state via a notification
+    FirebaseMessaging.instance.getInitialMessage().then((initialMessage) {
+      if (initialMessage != null) {
+        debugPrint('FCM message clicked from terminated: ${initialMessage.messageId}');
+        Future.delayed(const Duration(seconds: 1), () {
+          _handleNotificationPayloadRedirect(initialMessage.data);
+        });
+      }
+    });
+
     _isInitialized = true;
   }
 
   /// Request permissions for iOS and Android 13+
   Future<void> requestPermissions() async {
-    // iOS permission request is handled by initialization, but we can call it explicitly
+    // 1. Request local notification permissions
     final iosPlugin =
         _localNotificationsPlugin.resolvePlatformSpecificImplementation<
             DarwinFlutterLocalNotificationsPlugin>();
@@ -52,6 +101,15 @@ class NotificationService {
         sound: true,
       );
     }
+
+    // 2. Request FCM permissions explicitly
+    final messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      provisional: false,
+    );
   }
 
   /// Callback when a system notification is tapped by the user
@@ -61,15 +119,27 @@ class NotificationService {
 
     try {
       final Map<String, dynamic> data = jsonDecode(payload);
+      _handleNotificationPayloadRedirect(data);
+    } catch (e) {
+      debugPrint('Error handling local notification tap: $e');
+    }
+  }
+
+  /// Centralized logic to route a notification payload to the correct feature screen
+  void _handleNotificationPayloadRedirect(Map<String, dynamic> data) {
+    try {
       final typeStr = data['type']?.toString();
-      final relatedId = data['relatedId']?.toString();
+      final relatedId = data['relatedId']?.toString() ?? data['postId']?.toString();
       final senderName = data['senderName']?.toString();
-      final senderId = data['senderId']?.toString();
+      final senderId = data['senderId']?.toString() ?? data['actorId']?.toString();
 
       final context = rootContext;
-      if (context == null) return;
+      if (context == null) {
+        debugPrint('Could not redirect: rootContext is null');
+        return;
+      }
 
-      if (typeStr == 'chat' && relatedId != null) {
+      if ((typeStr == 'chat' || typeStr == 'CHAT') && relatedId != null) {
         context.push(
           AppRoutes.chatRoom,
           extra: {
@@ -83,7 +153,7 @@ class NotificationService {
         context.push(AppRoutes.notification);
       }
     } catch (e) {
-      debugPrint('Error handling notification tap: $e');
+      debugPrint('Error routing notification payload: $e');
     }
   }
 
@@ -433,5 +503,93 @@ class NotificationService {
         'relatedId': postId,
       }),
     );
+  }
+
+  /// Request push notification permissions and register/sync the device token with NestJS backend
+  Future<void> registerDeviceFCMToken() async {
+    try {
+      // 1. Request notification permissions from Firebase Messaging
+      final messaging = FirebaseMessaging.instance;
+      final settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+        provisional: false,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        debugPrint('FCM Notification permission denied by user.');
+        return;
+      }
+
+      // 2. Fetch the registration token
+      final token = await messaging.getToken();
+      if (token == null) {
+        debugPrint('FCM Token is null. Skipping backend registration.');
+        return;
+      }
+
+      debugPrint('Retrieved FCM Token: $token');
+
+      // 3. Fetch platform metadata
+      final String platform = Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'web');
+
+      // 4. Retrieve deviceId (using existing DeviceInfoService if possible)
+      String? deviceId;
+      final deviceRes = await DeviceInfoService.instance.getFullDeviceInfo();
+      deviceRes.fold(
+        (_) => null,
+        (info) {
+          if (Platform.isAndroid) {
+            deviceId = info['id']?.toString();
+          } else if (Platform.isIOS) {
+            deviceId = info['identifierForVendor']?.toString();
+          }
+        },
+      );
+
+      // 5. Retrieve appVersion
+      String? appVersion;
+      try {
+        final packageInfo = await PackageInfo.fromPlatform();
+        appVersion = packageInfo.version;
+      } catch (e) {
+        debugPrint('Failed to retrieve package/app version: $e');
+      }
+
+      // 6. Register token with backend
+      final registerRes = await NotificationsService.instance.registerDeviceToken(
+        token: token,
+        platform: platform,
+        deviceId: deviceId,
+        appVersion: appVersion,
+      );
+
+      registerRes.fold(
+        (failure) => debugPrint('Failed to register device token on backend: ${failure.message}'),
+        (_) => debugPrint('FCM device token registered successfully on backend!'),
+      );
+    } catch (e) {
+      debugPrint('Error registering FCM token: $e');
+    }
+  }
+
+  /// Unregister/remove the FCM device token from the NestJS backend
+  Future<void> removeDeviceFCMToken() async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) {
+        debugPrint('FCM Token is null. Skipping backend removal.');
+        return;
+      }
+
+      final removeRes = await NotificationsService.instance.removeDeviceToken(token);
+      removeRes.fold(
+        (failure) => debugPrint('Failed to remove device token from backend: ${failure.message}'),
+        (_) => debugPrint('FCM device token removed successfully from backend!'),
+      );
+    } catch (e) {
+      debugPrint('Error removing FCM token: $e');
+    }
   }
 }

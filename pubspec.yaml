@@ -69,6 +69,7 @@ dependencies:
 
   # Device & System
   device_info_plus: ^12.4.0
+  package_info_plus: ^9.0.1
   app_version_update: ^6.2.0
   flutter_local_notifications: ^21.0.0
 
@@ -78,6 +79,7 @@ dependencies:
   pretty_dio_logger: ^1.4.0
   socket_io_client: ^3.1.4
   firebase_core: ^4.9.0
+  firebase_messaging: ^16.2.2
 
 dev_dependencies:
   flutter_test:

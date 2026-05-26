@@ -91,6 +91,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
   ) {
     if (event.user != null) {
       emit(SessionState.authenticated(event.user!));
+      NotificationService.instance.registerDeviceFCMToken();
     } else {
       emit(const SessionState.unauthenticated());
     }
@@ -100,6 +101,7 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     SessionLogoutRequested event,
     Emitter<SessionState> emit,
   ) async {
+    await NotificationService.instance.removeDeviceFCMToken();
     await _repository.logout();
     emit(const SessionState.unauthenticated());
   }
