@@ -132,11 +132,11 @@ class _LoginView extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm.w),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: AppSpacing.xl.h),
+                SizedBox(height: AppSpacing.ml.h),
                 // Brand icon
                 Container(
                   width: 56.w,
@@ -273,7 +273,7 @@ class _LoginView extends StatelessWidget {
                         onPressed: () {
                           context.go(AppRoutes.signup);
                         },
-                        child: Text("Don't have an Account sign up",
+                        child: Text("Don't have an Account? sign up",
                             style: tt.bodyMedium
                                 ?.copyWith(color: cs.onSurfaceVariant)),
                       ),

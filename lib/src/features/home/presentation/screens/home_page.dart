@@ -666,7 +666,6 @@ class _ProfileSettingsTab extends StatelessWidget {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.all(AppSpacing.lg.w),
         child: Column(
           children: [
             SizedBox(height: 20.h),
@@ -753,7 +752,7 @@ class _ProfileSettingsTab extends StatelessWidget {
             ),
           ],
         ),
-      ),
+      ).paddingAll(AppSpacing.sm.w),
     );
   }
 

@@ -121,146 +121,143 @@ class _SignupView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: AppSpacing.sm.h),
-                Text(
-                  'Create Account',
-                  style:
-                      tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: AppSpacing.sm.h),
-                Text(
-                  'Join your neighborhood in 60 seconds.',
-                  textAlign: TextAlign.center,
-                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                ),
-                SizedBox(height: AppSpacing.xl.h),
-                Form(
-                  key: formKey,
-                  child: Column(
-                    children: [
-                      AppTextField(
-                        controller: nameController,
-                        enabled: !isLoading,
-                        filled: true,
-                        fillColor: cs.surface,
-                        label: 'Full Name',
-                        prefixIcon: const Icon(IconsaxPlusLinear.user),
-                        validator: (v) {
-                          if (AppUtils.isBlank(v)) {
-                            return 'Name is required';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: AppSpacing.md.h),
-                      AppTextField(
-                        controller: emailController,
-                        enabled: !isLoading,
-                        filled: true,
-                        fillColor: cs.surface,
-                        label: 'Email',
-                        prefixIcon: const Icon(IconsaxPlusLinear.sms),
-                        validator: (v) {
-                          if (AppUtils.isBlank(v)) {
-                            return 'Email is required';
-                          }
-                          if (!AppUtils.isValidEmail(v!)) {
-                            return 'Enter a valid email';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: AppSpacing.md.h),
-                      AppTextField(
-                        controller: passwordController,
-                        enabled: !isLoading,
-                        filled: true,
-                        fillColor: cs.surface,
-                        label: 'Password',
-                        obscureText: obscurePassword,
-                        prefixIcon: const Icon(IconsaxPlusLinear.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            obscurePassword
-                                ? IconsaxPlusLinear.eye_slash
-                                : IconsaxPlusLinear.eye,
-                          ),
-                          onPressed: onToggleObscure,
-                        ),
-                        validator: (v) {
-                          if (AppUtils.isBlank(v)) {
-                            return 'Password is required';
-                          }
-                          if (v!.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: AppSpacing.md.h),
-                      AppTextField(
-                        controller: confirmPasswordController,
-                        enabled: !isLoading,
-                        filled: true,
-                        fillColor: cs.surface,
-                        label: 'Confirm Password',
-                        obscureText: obscureConfirmPassword,
-                        prefixIcon: const Icon(IconsaxPlusLinear.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(obscureConfirmPassword
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(height: AppSpacing.sm.h),
+              Text(
+                'Create Account',
+                style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: AppSpacing.sm.h),
+              Text(
+                'Join your neighborhood in 60 seconds.',
+                textAlign: TextAlign.center,
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              ),
+              SizedBox(height: AppSpacing.xl.h),
+              Form(
+                key: formKey,
+                child: Column(
+                  children: [
+                    AppTextField(
+                      controller: nameController,
+                      enabled: !isLoading,
+                      filled: true,
+                      fillColor: cs.surface,
+                      label: 'Full Name',
+                      prefixIcon: const Icon(IconsaxPlusLinear.user),
+                      validator: (v) {
+                        if (AppUtils.isBlank(v)) {
+                          return 'Name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: AppSpacing.md.h),
+                    AppTextField(
+                      controller: emailController,
+                      enabled: !isLoading,
+                      filled: true,
+                      fillColor: cs.surface,
+                      label: 'Email',
+                      prefixIcon: const Icon(IconsaxPlusLinear.sms),
+                      validator: (v) {
+                        if (AppUtils.isBlank(v)) {
+                          return 'Email is required';
+                        }
+                        if (!AppUtils.isValidEmail(v!)) {
+                          return 'Enter a valid email';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: AppSpacing.md.h),
+                    AppTextField(
+                      controller: passwordController,
+                      enabled: !isLoading,
+                      filled: true,
+                      fillColor: cs.surface,
+                      label: 'Password',
+                      obscureText: obscurePassword,
+                      prefixIcon: const Icon(IconsaxPlusLinear.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword
                               ? IconsaxPlusLinear.eye_slash
-                              : IconsaxPlusLinear.eye),
-                          onPressed: onToggleConfirmObscure,
+                              : IconsaxPlusLinear.eye,
                         ),
-                        validator: (v) {
-                          if (AppUtils.isBlank(v)) {
-                            return 'Confirm password is required';
-                          }
-                          if (v != passwordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
+                        onPressed: onToggleObscure,
                       ),
-                      SizedBox(height: AppSpacing.lg.h),
-                      Row(
-                        children: [
-                          Checkbox(
-                            value: isChecked,
-                            onChanged: (v) => onChecked(),
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          Flexible(
-                            child: Text(
-                              'By signing up, you agree to our Terms of Service and Privacy Policy',
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
+                      validator: (v) {
+                        if (AppUtils.isBlank(v)) {
+                          return 'Password is required';
+                        }
+                        if (v!.length < 6) {
+                          return 'Password must be at least 6 characters';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: AppSpacing.md.h),
+                    AppTextField(
+                      controller: confirmPasswordController,
+                      enabled: !isLoading,
+                      filled: true,
+                      fillColor: cs.surface,
+                      label: 'Confirm Password',
+                      obscureText: obscureConfirmPassword,
+                      prefixIcon: const Icon(IconsaxPlusLinear.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(obscureConfirmPassword
+                            ? IconsaxPlusLinear.eye_slash
+                            : IconsaxPlusLinear.eye),
+                        onPressed: onToggleConfirmObscure,
+                      ),
+                      validator: (v) {
+                        if (AppUtils.isBlank(v)) {
+                          return 'Confirm password is required';
+                        }
+                        if (v != passwordController.text) {
+                          return 'Passwords do not match';
+                        }
+                        return null;
+                      },
+                    ),
+                    SizedBox(height: AppSpacing.lg.h),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: isChecked,
+                          onChanged: (v) => onChecked(),
+                          visualDensity: VisualDensity.compact,
+                        ),
+                        Flexible(
+                          child: Text(
+                            'By signing up, you agree to our Terms of Service and Privacy Policy',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
-                        ],
-                      ),
-                      SizedBox(height: AppSpacing.xxxl.h),
-                      AppButton(
-                        label: 'Sign Up',
-                        isLoading: isLoading,
-                        onPressed: isLoading ? null : onSignup,
-                        width: ButtonSize.large,
-                        isFullWidth: false,
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: AppSpacing.xxxl.h),
+                    AppButton(
+                      label: 'Sign Up',
+                      isLoading: isLoading,
+                      onPressed: isLoading ? null : onSignup,
+                      width: ButtonSize.large,
+                      isFullWidth: false,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ).paddingSymmetric(horizontal: AppSpacing.lg.w),
-        ),
+              ),
+            ],
+          ),
+        ).paddingSymmetric(horizontal: AppSpacing.ml.w),
       ),
     );
   }

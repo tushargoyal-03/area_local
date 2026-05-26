@@ -44,7 +44,7 @@ class NotificationService {
     // iOS permission request is handled by initialization, but we can call it explicitly
     final iosPlugin =
         _localNotificationsPlugin.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+            DarwinFlutterLocalNotificationsPlugin>();
     if (iosPlugin != null) {
       await iosPlugin.requestPermissions(
         alert: true,
