@@ -220,6 +220,13 @@ class ChatService {
     );
   }
 
+  /// Notify the WebSocket server of our online/offline presence status.
+  void updatePresenceStatus(bool isOnline) {
+    _socket?.emit('presence_status', {
+      'status': isOnline ? 'online' : 'offline',
+    });
+  }
+
   /// Update typing status for current user.
   void sendTypingStatus({
     required String conversationId,

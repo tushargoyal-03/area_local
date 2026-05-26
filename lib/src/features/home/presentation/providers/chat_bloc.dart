@@ -247,6 +247,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             recipientAvatar: otherUser?['avatarUrl']?.toString(),
             recipientId: otherUser?['userId']?.toString() ?? '',
             unreadCount: 0, // In dynamic apps, computed from readBy
+            isRecipientOnline: (otherUser?['isOnline'] as bool?) ??
+                (otherUser?['status'] == 'online'),
           );
         }).toList();
 
@@ -265,11 +267,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       _service.leaveConversation(state.activeRoomChatId!);
     }
 
+    final updatedConvs = state.conversations.map((c) {
+      if (c.id == event.chatId) {
+        return c.copyWith(unreadCount: 0);
+      }
+      return c;
+    }).toList();
+
     emit(state.copyWith(
       isMessagesLoading: true,
       activeRoomChatId: event.chatId,
       activeRoomMessages: const [],
       isPartnerTyping: false,
+      conversations: updatedConvs,
     ));
 
     // Join room

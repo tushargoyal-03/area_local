@@ -9,12 +9,13 @@ class HomeDashboardScreen extends StatefulWidget {
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
 }
 
-class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
+class _HomeDashboardScreenState extends State<HomeDashboardScreen> with WidgetsBindingObserver {
   int _currentTab = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Initialize native notifications and request platform permissions
     NotificationService.instance.init();
     NotificationService.instance.requestPermissions();
@@ -29,10 +30,37 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
           final socket = ChatService.instance.socket;
           if (socket != null) {
             NotificationService.instance.setupSocketListeners(socket, user.id);
+            // WhatsApp-style: notify server we are Online!
+            ChatService.instance.updatePresenceStatus(true);
           }
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Notify server we are Offline on close
+    ChatService.instance.updatePresenceStatus(false);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final sessionState = context.read<SessionBloc>().state;
+    if (sessionState.status == SessionStatus.authenticated && sessionState.user != null) {
+      if (state == AppLifecycleState.resumed) {
+        // App started or foregrounded -> online
+        ChatService.instance.updatePresenceStatus(true);
+      } else if (state == AppLifecycleState.paused ||
+          state == AppLifecycleState.detached ||
+          state == AppLifecycleState.inactive) {
+        // App closed or backgrounded -> offline
+        ChatService.instance.updatePresenceStatus(false);
+      }
+    }
   }
 
   @override
@@ -58,6 +86,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
             final socket = ChatService.instance.socket;
             if (socket != null) {
               NotificationService.instance.setupSocketListeners(socket, user.id);
+              ChatService.instance.updatePresenceStatus(true);
             }
           });
         }

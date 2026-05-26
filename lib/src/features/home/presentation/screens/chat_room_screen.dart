@@ -168,6 +168,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           ),
           body: Column(
             children: [
+              if (!state.isMessagesLoading && state.activeRoomMessages.isNotEmpty)
+                _buildMessageStatsHeader(
+                  cs,
+                  tt,
+                  state.activeRoomMessages.where((m) => m.isMe).length,
+                  state.activeRoomMessages.where((m) => !m.isMe).length,
+                ),
               Expanded(
                 child: state.isMessagesLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -224,13 +231,13 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                                       if (isMe) ...[
                                         SizedBox(width: 4.w),
                                         Icon(
-                                          msg.readBy.contains(widget.recipientId)
-                                              ? Icons.done_all_rounded
-                                              : Icons.done_rounded,
-                                          size: 12.sp,
+                                          msg.id.startsWith('optimistic_')
+                                              ? Icons.done_rounded
+                                              : Icons.done_all_rounded,
+                                          size: 14.sp,
                                           color: msg.readBy.contains(widget.recipientId)
-                                              ? Colors.blue
-                                              : cs.onPrimary.withValues(alpha: 0.7),
+                                              ? const Color(0xFF34B7F1) // WhatsApp Sky Blue
+                                              : Colors.white60,
                                         ),
                                       ],
                                     ],
@@ -344,6 +351,67 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
              delay: Duration(milliseconds: index * 100),
            );
         }),
+      ),
+    );
+  }
+
+  Widget _buildMessageStatsHeader(
+    ColorScheme cs,
+    TextTheme tt,
+    int myCount,
+    int partnerCount,
+  ) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow.withValues(alpha: 0.8),
+        border: Border(
+          bottom: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: 0.15),
+            width: 1.h,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(IconsaxPlusLinear.message_2, size: 14.sp, color: cs.primary),
+              SizedBox(width: 6.w),
+              Text(
+                'You: $myCount msg',
+                style: tt.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: cs.onSurfaceVariant,
+                  fontSize: 11.5.sp,
+                ),
+              ),
+            ],
+          ),
+          Container(
+            height: 14.h,
+            width: 1.5.w,
+            decoration: BoxDecoration(
+              color: cs.outlineVariant.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(100.r),
+            ),
+          ),
+          Row(
+            children: [
+              Icon(IconsaxPlusLinear.message_2, size: 14.sp, color: Colors.blue),
+              SizedBox(width: 6.w),
+              Text(
+                '${widget.recipientName}: $partnerCount msg',
+                style: tt.bodySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: cs.onSurfaceVariant,
+                  fontSize: 11.5.sp,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
