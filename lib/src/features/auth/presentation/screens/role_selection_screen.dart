@@ -17,21 +17,24 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     {
       'id': 'User',
       'title': 'Local Resident',
-      'desc': 'Connect with neighbors, find activities, join sports, and borrow resources nearby.',
+      'desc':
+          'Connect with neighbors, find activities, join sports, and borrow resources nearby.',
       'icon': IconsaxPlusBold.user,
       'gradient': const [AppPalettes.primaryLight, AppPalettes.primary2Light],
     },
     {
       'id': 'BusinessOwner',
       'title': 'Local Business Owner',
-      'desc': 'Promote your store, share active deals, and drive neighborhood foot traffic.',
+      'desc':
+          'Promote your store, share active deals, and drive neighborhood foot traffic.',
       'icon': IconsaxPlusBold.shop,
       'gradient': const [Color(0xFFFF8C42), Color(0xFFE06A2A)],
     },
     {
       'id': 'SocietyAdmin',
       'title': 'Society Representative',
-      'desc': 'Manage society circulars, moderate local posts, and coordinate building events.',
+      'desc':
+          'Manage society circulars, moderate local posts, and coordinate building events.',
       'icon': IconsaxPlusBold.home_1,
       'gradient': const [Color(0xFF2E7D6E), Color(0xFF4CAF96)],
     },
@@ -50,7 +53,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       },
       (user) {
         showGlobalToast(
-          message: 'Role upgraded to ${_selectedRole == 'User' ? 'Resident' : _selectedRole == 'BusinessOwner' ? 'Business Owner' : 'Society Representative'} successfully!',
+          message:
+              'Role upgraded to ${_selectedRole == 'User' ? 'Resident' : _selectedRole == 'BusinessOwner' ? 'Business Owner' : 'Society Representative'} successfully!',
           status: 'success',
         );
         // Dispatch session update
@@ -127,7 +131,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                               : cs.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(24.r),
                           border: Border.all(
-                            color: isSelected ? cs.primary : cs.outlineVariant.withValues(alpha: 0.3),
+                            color: isSelected
+                                ? cs.primary
+                                : cs.outlineVariant.withValues(alpha: 0.3),
                             width: 2.w,
                           ),
                           boxShadow: isSelected
@@ -170,7 +176,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                                     role['title'] as String,
                                     style: tt.titleMedium?.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      color: isSelected ? cs.primary : cs.onSurface,
+                                      color: isSelected
+                                          ? cs.primary
+                                          : cs.onSurface,
                                     ),
                                   ),
                                   SizedBox(height: 6.h),

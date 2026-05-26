@@ -108,9 +108,8 @@ class AppCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: AppBorders.card,
-        border: showShadow
-            ? null
-            : Border.all(color: cs.outlineVariant, width: 1),
+        border:
+            showShadow ? null : Border.all(color: cs.outlineVariant, width: 1),
         boxShadow: showShadow ? AppShadows.card : AppShadows.none,
       ),
       clipBehavior: Clip.antiAlias,

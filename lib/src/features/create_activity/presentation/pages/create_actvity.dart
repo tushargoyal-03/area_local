@@ -40,12 +40,28 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   String _formatDateDisplay(DateTime date) {
     final now = DateTime.now();
     final tomorrow = DateTime.now().add(const Duration(days: 1));
-    final isToday = date.year == now.year && date.month == now.month && date.day == now.day;
-    final isTomorrow = date.year == tomorrow.year && date.month == tomorrow.month && date.day == tomorrow.day;
+    final isToday =
+        date.year == now.year && date.month == now.month && date.day == now.day;
+    final isTomorrow = date.year == tomorrow.year &&
+        date.month == tomorrow.month &&
+        date.day == tomorrow.day;
 
     final weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
+
     final weekdayStr = weekdays[date.weekday % 7];
     final monthStr = months[date.month - 1];
 
@@ -61,6 +77,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       final minuteStr = tod.minute.toString().padLeft(2, '0');
       return '$hour:$minuteStr $period';
     }
+
     return '${formatTimeOfDay(start)} – ${formatTimeOfDay(end)}';
   }
 
@@ -105,7 +122,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
           title: const Text('Activity Location/Venue'),
           content: TextField(
             controller: controller,
@@ -125,7 +143,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
             ElevatedButton(
               onPressed: () => Navigator.pop(context, controller.text.trim()),
               style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100.r)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(100.r)),
               ),
               child: const Text('Save'),
             ),
@@ -147,7 +166,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24.r)),
               title: const Text('Required People Limit'),
               content: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -184,7 +204,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, localCount),
                   style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100.r)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100.r)),
                   ),
                   child: const Text('Confirm'),
                 ),
@@ -220,7 +241,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       'date': _formatDateDisplay(_selectedDate),
       'time': _formatTimeDisplay(_startTime, _endTime),
       'location': _locationName,
-      'capacity': '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
+      'capacity':
+          '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
     });
 
     final locationRes = await LocationService.instance.getCurrentPosition();
@@ -247,7 +269,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
-    final isCreating = context.select((PostsBloc bloc) => bloc.state.isCreating);
+    final isCreating =
+        context.select((PostsBloc bloc) => bloc.state.isCreating);
 
     return Scaffold(
       appBar: AppBar(
@@ -265,8 +288,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-              AppSpacing.lg.w, AppSpacing.sm.h, AppSpacing.lg.w, AppSpacing.xxl.h),
+          padding: EdgeInsets.fromLTRB(AppSpacing.lg.w, AppSpacing.sm.h,
+              AppSpacing.lg.w, AppSpacing.xxl.h),
           child: Form(
             key: _formKey,
             child: Column(
@@ -283,8 +306,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                         return Padding(
                           padding: EdgeInsets.only(right: 8.w),
                           child: GestureDetector(
-                            onTap: () =>
-                                setState(() => selectedIndex = index),
+                            onTap: () => setState(() => selectedIndex = index),
                             child: AnimatedContainer(
                               duration: AppDurations.fast,
                               padding: EdgeInsets.symmetric(
@@ -371,8 +393,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                     decoration: InputDecoration(
                       hintText:
                           'Describe details, skill level, date/time, and exact location...',
-                      hintStyle: tt.bodyMedium
-                          ?.copyWith(color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
+                      hintStyle: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
                       border: InputBorder.none,
                     ),
                     validator: (v) {
@@ -416,7 +438,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                     ),
                     _FormRow(
                       icon: IconsaxPlusLinear.user,
-                      label: '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
+                      label:
+                          '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
                       onTap: _selectCapacity,
                     ),
                   ],

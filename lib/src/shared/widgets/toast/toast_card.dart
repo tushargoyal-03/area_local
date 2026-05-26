@@ -54,4 +54,3 @@ class ToastCard extends StatelessWidget {
     );
   }
 }
-

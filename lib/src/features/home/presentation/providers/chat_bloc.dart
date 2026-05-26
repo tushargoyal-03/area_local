@@ -309,8 +309,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           );
         }).toList();
 
-        // Sort messages chronologically (oldest to newest)
-        parsedMsgs.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+        // Sort messages chronologically (newest first)
+        parsedMsgs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
         emit(state.copyWith(
             isMessagesLoading: false, activeRoomMessages: parsedMsgs));
@@ -336,7 +336,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     // Render message immediately
     emit(state.copyWith(
-      activeRoomMessages: [...state.activeRoomMessages, optimisticMsg],
+      activeRoomMessages: [optimisticMsg, ...state.activeRoomMessages],
     ));
 
     // Send through WebSocket with Acknowledgement
@@ -437,7 +437,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     if (state.activeRoomChatId == chatId) {
       _service.markAsRead(chatId);
       emit(state.copyWith(
-        activeRoomMessages: [...state.activeRoomMessages, newMsg],
+        activeRoomMessages: [newMsg, ...state.activeRoomMessages],
       ));
     } else if (senderId != event.currentUserId) {
       // Tapping message alert from outside the active conversation slides down the floating banner

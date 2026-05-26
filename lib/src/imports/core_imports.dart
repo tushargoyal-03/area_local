@@ -5,7 +5,6 @@ export 'package:flutter/foundation.dart';
 export 'package:flutter/services.dart';
 export 'package:flutter_native_splash/flutter_native_splash.dart';
 
-
 // Project Core — everything exported through shared.dart (theme, extensions,
 // utils, widgets, enums) plus routing and services.
 export '../config/app_config.dart';

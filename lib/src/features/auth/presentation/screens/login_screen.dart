@@ -143,7 +143,10 @@ class _LoginView extends StatelessWidget {
                   height: 56.w,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [AppPalettes.primaryLight, AppPalettes.primary2Light],
+                      colors: [
+                        AppPalettes.primaryLight,
+                        AppPalettes.primary2Light
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -277,7 +280,8 @@ class _LoginView extends StatelessWidget {
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md.w),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: AppSpacing.md.w),
                       child: Text(
                         'or continue with',
                         style: tt.bodySmall?.copyWith(

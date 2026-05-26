@@ -40,6 +40,7 @@ class AppPost extends Equatable {
       'capacity': '2 people',
     };
   }
+
   final String id;
   final String authorId;
   final String authorName;
@@ -54,6 +55,7 @@ class AppPost extends Equatable {
   final int sharesCount;
   final DateTime createdAt;
   final bool isInterested; // Computed for current user
+  final double? distanceInMeters;
 
   const AppPost({
     required this.id,
@@ -70,6 +72,7 @@ class AppPost extends Equatable {
     required this.sharesCount,
     required this.createdAt,
     this.isInterested = false,
+    this.distanceInMeters,
   });
 
   AppPost copyWith({
@@ -87,6 +90,7 @@ class AppPost extends Equatable {
     int? sharesCount,
     DateTime? createdAt,
     bool? isInterested,
+    double? distanceInMeters,
   }) {
     return AppPost(
       id: id ?? this.id,
@@ -103,6 +107,7 @@ class AppPost extends Equatable {
       sharesCount: sharesCount ?? this.sharesCount,
       createdAt: createdAt ?? this.createdAt,
       isInterested: isInterested ?? this.isInterested,
+      distanceInMeters: distanceInMeters ?? this.distanceInMeters,
     );
   }
 
@@ -122,6 +127,7 @@ class AppPost extends Equatable {
         sharesCount,
         createdAt,
         isInterested,
+        distanceInMeters,
       ];
 }
 

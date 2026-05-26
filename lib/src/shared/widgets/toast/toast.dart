@@ -9,8 +9,7 @@ int gapBetweenCard = 15;
 /// Calculate position of old cards based on current position.
 double calculatePosition(List<ToastBar> toastBars, ToastBar self) {
   if (toastBars.isNotEmpty && self != toastBars.last) {
-    final box =
-        self.info.key.currentContext?.findRenderObject() as RenderBox?;
+    final box = self.info.key.currentContext?.findRenderObject() as RenderBox?;
     if (box != null) {
       return gapBetweenCard * (toastBars.length - toastBars.indexOf(self) - 1);
     }
@@ -139,4 +138,3 @@ extension Cleaner on List<ToastBar> {
     ).toList();
   }
 }
-

@@ -14,7 +14,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     super.initState();
     // Load conversations list on initialization
     final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
-    context.read<ChatBloc>().add(LoadConversationsRequested(currentUserId: currentUserId));
+    context
+        .read<ChatBloc>()
+        .add(LoadConversationsRequested(currentUserId: currentUserId));
   }
 
   @override
@@ -23,22 +25,16 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     final tt = context.theme.textTheme;
 
     return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(
-        backgroundColor: cs.surface,
-        elevation: 0,
-        title: Text(
-          'Messages',
-          style: tt.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
-        ),
+      appBar: AppTopBar(
+        showbackbutton: false,
+        title: 'Messages',
         actions: [
           IconButton(
             onPressed: () {
-              final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
-              context.read<ChatBloc>().add(LoadConversationsRequested(currentUserId: currentUserId));
+              final currentUserId =
+                  context.read<SessionBloc>().state.user?.id ?? '';
+              context.read<ChatBloc>().add(
+                  LoadConversationsRequested(currentUserId: currentUserId));
             },
             icon: Icon(IconsaxPlusLinear.refresh, color: cs.onSurface),
           ),
@@ -54,17 +50,20 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
             return const AppEmptyState(
               icon: IconsaxPlusLinear.message,
               title: 'No conversations yet',
-              subtitle: 'Select "I\'m Available" on neighborhood posts to initiate chats with residents!',
+              subtitle:
+                  'Select "I\'m Available" on neighborhood posts to initiate chats with residents!',
             );
           }
 
           return RefreshIndicator(
             onRefresh: () async {
-              final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
-              context.read<ChatBloc>().add(LoadConversationsRequested(currentUserId: currentUserId));
+              final currentUserId =
+                  context.read<SessionBloc>().state.user?.id ?? '';
+              context.read<ChatBloc>().add(
+                  LoadConversationsRequested(currentUserId: currentUserId));
             },
             child: ListView.separated(
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg.w, vertical: AppSpacing.md.h),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
               itemCount: state.conversations.length,
               separatorBuilder: (_, __) => Divider(
                 color: cs.outlineVariant.withValues(alpha: 0.2),
@@ -73,11 +72,13 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               itemBuilder: (context, index) {
                 final conv = state.conversations[index];
 
-                return InkWell(
+                return ListTile(
                   onTap: () {
                     // Reset unread count locally
-                    context.read<ChatBloc>().add(MarkMessagesAsReadRequested(chatId: conv.id));
-                    
+                    context
+                        .read<ChatBloc>()
+                        .add(MarkMessagesAsReadRequested(chatId: conv.id));
+
                     context.push(
                       '/chat-room',
                       extra: {
@@ -87,99 +88,52 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                       },
                     );
                   },
-                  borderRadius: BorderRadius.circular(16.r),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
-                    child: Row(
-                      children: [
-                        Stack(
-                          children: [
-                            Avatar(name: conv.recipientName, size: 54.w, imageUrl: conv.recipientAvatar),
-                            if (conv.isRecipientOnline)
-                              Positioned(
-                                right: 0,
-                                bottom: 0,
-                                child: Container(
-                                  width: 14.w,
-                                  height: 14.w,
-                                  decoration: BoxDecoration(
-                                    color: Colors.green,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: cs.surface,
-                                      width: 2.w,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                        SizedBox(width: 14.w),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      conv.recipientName,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: tt.bodyLarge?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15.sp,
-                                      ),
-                                    ),
-                                  ),
-                                  if (conv.lastMessageTime != null)
-                                    Text(
-                                      _formatTime(conv.lastMessageTime!),
-                                      style: tt.bodySmall?.copyWith(
-                                        color: cs.onSurfaceVariant,
-                                        fontSize: 11.sp,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              SizedBox(height: 6.h),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      conv.lastMessageText ?? 'No messages yet',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: tt.bodyMedium?.copyWith(
-                                        color: conv.unreadCount > 0 ? cs.onSurface : cs.onSurfaceVariant,
-                                        fontWeight: conv.unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
-                                        fontSize: 13.sp,
-                                      ),
-                                    ),
-                                  ),
-                                  if (conv.unreadCount > 0)
-                                    Container(
-                                      margin: EdgeInsets.only(left: 8.w),
-                                      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                                      decoration: BoxDecoration(
-                                        color: cs.primary,
-                                        borderRadius: BorderRadius.circular(100.r),
-                                      ),
-                                      child: Text(
-                                        conv.unreadCount.toString(),
-                                        style: TextStyle(
-                                          color: cs.onPrimary,
-                                          fontSize: 10.sp,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                  leading: Badge(
+                    isLabelVisible: conv.isRecipientOnline,
+                    child: Avatar(
+                      name: conv.recipientName,
+                      size: 42,
+                      imageUrl: conv.recipientAvatar,
                     ),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    conv.recipientName,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.sp,
+                    ),
+                  ),
+                  subtitle: Text(
+                    conv.lastMessageText ?? 'No messages yet',
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.bodyMedium?.copyWith(
+                      color: conv.unreadCount > 0
+                          ? cs.onSurface
+                          : cs.onSurfaceVariant,
+                      fontWeight: conv.unreadCount > 0
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      fontSize: 13.sp,
+                    ),
+                  ),
+                  trailing: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatTime(conv.lastMessageTime ?? DateTime.now()),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Badge(
+                        isLabelVisible: conv.unreadCount > 0,
+                        label: Text(conv.unreadCount.toString()),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -215,7 +169,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                   children: [
                     Container(height: 16.h, width: 120.w, color: Colors.grey),
                     SizedBox(height: 8.h),
-                    Container(height: 12.h, width: double.infinity, color: Colors.grey),
+                    Container(
+                        height: 12.h,
+                        width: double.infinity,
+                        color: Colors.grey),
                   ],
                 ),
               ),

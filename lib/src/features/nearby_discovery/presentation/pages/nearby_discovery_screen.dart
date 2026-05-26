@@ -133,59 +133,6 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                   ),
                   child: Stack(
                     children: [
-                      ...[
-                        {'left': 0.34, 'top': 0.22, 'name': 'Riya'},
-                        {'left': 0.60, 'top': 0.45, 'name': 'K'},
-                        {'left': 0.25, 'top': 0.60, 'name': 'M'},
-                        {'left': 0.75, 'top': 0.70, 'name': 'D'},
-                      ].map(
-                        (p) => Positioned(
-                          left: MediaQuery.of(context).size.width *
-                              (p['left'] as double) *
-                              0.85,
-                          top: 160.h * (p['top'] as double),
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Container(
-                                width: 36.w,
-                                height: 36.w,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: cs.surface,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 8,
-                                      color:
-                                          Colors.black.withValues(alpha: 0.1),
-                                    ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    (p['name'] as String)[0],
-                                    style: tt.labelMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                width: 44.w,
-                                height: 44.w,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: cs.primary,
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
                       /// Center Button
                       Positioned(
                         bottom: 10,

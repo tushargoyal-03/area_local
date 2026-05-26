@@ -38,8 +38,10 @@ class SessionState extends Equatable {
   });
 
   const SessionState.unknown() : this();
-  const SessionState.authenticated(AppUser user) : this(status: SessionStatus.authenticated, user: user);
-  const SessionState.unauthenticated() : this(status: SessionStatus.unauthenticated);
+  const SessionState.authenticated(AppUser user)
+      : this(status: SessionStatus.authenticated, user: user);
+  const SessionState.unauthenticated()
+      : this(status: SessionStatus.unauthenticated);
 
   @override
   List<Object?> get props => [status, user];
@@ -108,4 +110,3 @@ class SessionBloc extends Bloc<SessionEvent, SessionState> {
     return super.close();
   }
 }
-

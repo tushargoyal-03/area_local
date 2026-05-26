@@ -6,9 +6,10 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     this.titleWidget,
     this.actions,
-    this.centerTitle = true,
+    this.centerTitle = false,
     this.onPressed,
     this.isTransparent = false,
+    this.showbackbutton = true,
   });
 
   final String title;
@@ -17,11 +18,12 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? onPressed;
   final bool? centerTitle;
   final bool isTransparent;
+  final bool showbackbutton;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    
+
     // Check if we can pop
     final bool canPop = context.canPop();
 
@@ -38,29 +40,22 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       centerTitle: centerTitle,
       elevation: 0,
+      titleTextStyle: theme.textTheme.headlineSmall?.copyWith(
+        fontWeight: FontWeight.bold,
+        letterSpacing: -0.5,
+      ),
       backgroundColor: isTransparent ? Colors.transparent : null,
       shadowColor: Colors.transparent,
       title: titleWidget ??
           Text(
             title,
-            style: theme.appBarTheme.titleTextStyle?.copyWith(
-              fontWeight: FontWeight.w600,
-            ) ?? theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
           ),
       leadingWidth: 40.w,
-      leading: GestureDetector(
-        onTap: handleBack,
-        child: ColoredBox(
-          color: Colors.transparent,
-          child:               Icon(
-                IconsaxPlusLinear.arrow_left,
-                color: theme.appBarTheme.iconTheme?.color ?? theme.colorScheme.onSurface,
-              )
-,
-        ),
-      ),
+      leading: showbackbutton
+          ? BackButton(
+              onPressed: handleBack,
+            )
+          : null,
       iconTheme: theme.appBarTheme.iconTheme,
       actions: actions ?? [],
     );

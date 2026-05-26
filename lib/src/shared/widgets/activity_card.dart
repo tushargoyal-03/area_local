@@ -98,7 +98,9 @@ class ActivityCard extends StatelessWidget {
                         ),
                         SizedBox(width: 4.w),
                         Text(
-                          'Within 5 km',
+                          post?.distanceInMeters != null
+                              ? 'Within ${(post!.distanceInMeters! / 1000).toStringAsFixed(1)} km'
+                              : 'Nearby',
                           style: tt.bodySmall?.copyWith(
                             fontSize: 11.sp,
                             color: cs.onSurfaceVariant.withValues(alpha: 0.7),
