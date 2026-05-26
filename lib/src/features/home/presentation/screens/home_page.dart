@@ -13,6 +13,29 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
   int _currentTab = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize native notifications and request platform permissions
+    NotificationService.instance.init();
+    NotificationService.instance.requestPermissions();
+
+    // Trigger initial WebSocket binding if already logged in on boot
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sessionState = context.read<SessionBloc>().state;
+      if (sessionState.status == SessionStatus.authenticated && sessionState.user != null) {
+        final user = sessionState.user!;
+        context.read<ChatBloc>().add(LoadConversationsRequested(currentUserId: user.id));
+        Future.delayed(const Duration(seconds: 2), () {
+          final socket = ChatService.instance.socket;
+          if (socket != null) {
+            NotificationService.instance.setupSocketListeners(socket, user.id);
+          }
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
@@ -26,59 +49,73 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> {
       const _ProfileSettingsTab(),
     ];
 
-    return Scaffold(
-      body: tabs[_currentTab],
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: cs.outlineVariant.withValues(alpha: 0.2),
-              width: 1,
+    return BlocListener<SessionBloc, SessionState>(
+      listener: (context, sessionState) {
+        if (sessionState.status == SessionStatus.authenticated && sessionState.user != null) {
+          final user = sessionState.user!;
+          // Wait for Socket to establish connect before binding listeners
+          Future.delayed(const Duration(seconds: 2), () {
+            final socket = ChatService.instance.socket;
+            if (socket != null) {
+              NotificationService.instance.setupSocketListeners(socket, user.id);
+            }
+          });
+        }
+      },
+      child: Scaffold(
+        body: tabs[_currentTab],
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(
+              top: BorderSide(
+                color: cs.outlineVariant.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
           ),
+          child: BottomNavigationBar(
+            currentIndex: _currentTab,
+            onTap: (index) => setState(() => _currentTab = index),
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: cs.surface,
+            selectedItemColor: cs.primary,
+            unselectedItemColor: cs.onSurfaceVariant.withValues(alpha: 0.6),
+            selectedLabelStyle:
+                tt.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
+            unselectedLabelStyle: tt.bodySmall?.copyWith(fontSize: 10),
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(IconsaxPlusLinear.home),
+                activeIcon: Icon(IconsaxPlusBold.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(IconsaxPlusLinear.location),
+                activeIcon: Icon(IconsaxPlusBold.location),
+                label: 'Discover',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(IconsaxPlusLinear.message),
+                activeIcon: Icon(IconsaxPlusBold.message),
+                label: 'Chats',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(IconsaxPlusLinear.user),
+                activeIcon: Icon(IconsaxPlusBold.user),
+                label: 'Profile',
+              ),
+            ],
+          ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentTab,
-          onTap: (index) => setState(() => _currentTab = index),
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: cs.surface,
-          selectedItemColor: cs.primary,
-          unselectedItemColor: cs.onSurfaceVariant.withValues(alpha: 0.6),
-          selectedLabelStyle:
-              tt.bodySmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 10),
-          unselectedLabelStyle: tt.bodySmall?.copyWith(fontSize: 10),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(IconsaxPlusLinear.home),
-              activeIcon: Icon(IconsaxPlusBold.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(IconsaxPlusLinear.location),
-              activeIcon: Icon(IconsaxPlusBold.location),
-              label: 'Discover',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(IconsaxPlusLinear.message),
-              activeIcon: Icon(IconsaxPlusBold.message),
-              label: 'Chats',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(IconsaxPlusLinear.user),
-              activeIcon: Icon(IconsaxPlusBold.user),
-              label: 'Profile',
-            ),
-          ],
-        ),
+        floatingActionButton: _currentTab == 1
+            ? FloatingActionButton(
+                onPressed: () => context.push(AppRoutes.createActivity),
+                backgroundColor: cs.primary,
+                foregroundColor: cs.onPrimary,
+                child: const Icon(IconsaxPlusLinear.add),
+              )
+            : null,
       ),
-      floatingActionButton: _currentTab == 1
-          ? FloatingActionButton(
-              onPressed: () => context.push(AppRoutes.createActivity),
-              backgroundColor: cs.primary,
-              foregroundColor: cs.onPrimary,
-              child: const Icon(IconsaxPlusLinear.add),
-            )
-          : null,
     );
   }
 }
@@ -209,9 +246,43 @@ class _TopBar extends StatelessWidget {
             onPressed: onSearchTap,
             icon: const Icon(IconsaxPlusLinear.search_normal),
           ),
-          IconButton(
-            onPressed: onBellTap,
-            icon: const Icon(IconsaxPlusLinear.notification),
+          BlocBuilder<NotificationBloc, NotificationState>(
+            builder: (context, state) {
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    onPressed: onBellTap,
+                    icon: const Icon(IconsaxPlusLinear.notification),
+                  ),
+                  if (state.unreadCount > 0)
+                    Positioned(
+                      top: 4.h,
+                      right: 4.w,
+                      child: Container(
+                        padding: EdgeInsets.all(3.w),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: BoxConstraints(
+                          minWidth: 16.w,
+                          minHeight: 16.w,
+                        ),
+                        child: Text(
+                          '${state.unreadCount}',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 7.5.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -545,7 +616,8 @@ class _ProfileSettingsTab extends StatelessWidget {
     return ListTile(
       leading: Icon(icon, color: cs.primary),
       title: Text(title,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          style: TextStyle(
+              fontWeight: FontWeight.w600, fontSize: 14, color: cs.onSurface)),
       trailing: Icon(Icons.arrow_forward_ios_rounded,
           size: 14.sp, color: cs.onSurfaceVariant),
       onTap: onTap,

@@ -23,6 +23,8 @@ class StateWrapper extends StatelessWidget {
             create: (_) => PostsBloc(repository: PostsRepositoryImpl())),
         BlocProvider<ChatBloc>(
             create: (_) => ChatBloc()),
+        BlocProvider<NotificationBloc>(
+            create: (_) => NotificationBloc()),
       ],
       child: child,
     );

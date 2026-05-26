@@ -7,6 +7,7 @@ class ChatService {
   static final ChatService instance = ChatService._();
 
   io.Socket? _socket;
+  io.Socket? get socket => _socket;
 
   // Real-time Streams
   final StreamController<Map<String, dynamic>> _messageController =

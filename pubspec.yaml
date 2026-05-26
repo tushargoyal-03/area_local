@@ -70,13 +70,14 @@ dependencies:
   # Device & System
   device_info_plus: ^11.2.0
   app_version_update: ^6.2.0
-
+  flutter_local_notifications: ^17.2.2
 
   # Localization
 
   flutter_native_splash: ^2.4.7
   pretty_dio_logger: ^1.4.0
   socket_io_client: ^3.1.4
+  firebase_core: ^4.9.0
 
 dev_dependencies:
   flutter_test:

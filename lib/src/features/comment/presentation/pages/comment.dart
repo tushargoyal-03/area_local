@@ -1,6 +1,5 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
-import 'package:area_connect/src/services/posts_service.dart';
 
 class CommentsSheetScreen extends StatefulWidget {
   final String postId;

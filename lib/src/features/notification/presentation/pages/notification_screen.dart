@@ -4,130 +4,145 @@ import 'package:area_connect/src/imports/packages_imports.dart';
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
+  String _formatTimeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inDays > 0) return '${diff.inDays}d';
+    if (diff.inHours > 0) return '${diff.inHours}h';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}m';
+    return 'now';
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
 
-    final items = [
-      {
-        'who': 'Riya Sharma',
-        't': 'liked your activity post',
-        'time': '2m',
-        'new': true,
-      },
-      {
-        'who': 'Karan Singh',
-        't': 'is interested in your pickleball activity',
-        'time': '8m',
-        'new': true,
-      },
-      {
-        'who': 'Meera Patel',
-        't': 'commented: "Joining! Bringing my friend too"',
-        'time': '22m',
-        'new': true,
-      },
-      {
-        'who': 'Greenwood Heights',
-        't': 'New notice: Water tank cleaning Saturday',
-        'time': '1h',
-        'new': false,
-      },
-      {
-        'who': 'Boho Cafe',
-        't': 'posted a new offer near you: 20% off coffee',
-        'time': '3h',
-        'new': false,
-      },
-      {
-        'who': 'Area Connect',
-        't': 'Your join request was approved',
-        'time': 'Yest',
-        'new': false,
-      },
-    ];
+    return BlocBuilder<NotificationBloc, NotificationState>(
+      builder: (context, state) {
+        final items = state.notifications;
 
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Notifications'),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: () {},
-            child: Text(
-              'Mark all read',
-              style: tt.bodySmall?.copyWith(
-                fontSize: 12.5.sp,
-                color: cs.primary,
+        return Scaffold(
+          appBar: AppBar(
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              onPressed: () => Navigator.pop(context),
+            ),
+            title: const Text('Notifications'),
+            centerTitle: true,
+            actions: [
+              TextButton(
+                onPressed: () {
+                  context.read<NotificationBloc>().add(const MarkAllAsReadRequested());
+                },
+                child: Text(
+                  'Mark all read',
+                  style: tt.bodySmall?.copyWith(
+                    fontSize: 12.5.sp,
+                    color: cs.primary,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          /// Tabs
-          SizedBox(
-            height: 44.h,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
-              children: [
-                _TabChip(label: 'All', active: true, cs: cs, tt: tt),
-                _TabChip(label: 'Activity', active: false, cs: cs, tt: tt),
-                _TabChip(label: 'Society', active: false, cs: cs, tt: tt),
-                _TabChip(label: 'Business', active: false, cs: cs, tt: tt),
-                _TabChip(label: 'System', active: false, cs: cs, tt: tt),
-              ],
-            ),
-          ),
+          body: Column(
+            children: [
+              /// Tabs
+              SizedBox(
+                height: 44.h,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  children: [
+                    _TabChip(label: 'All', active: true, cs: cs, tt: tt),
+                    _TabChip(label: 'Activity', active: false, cs: cs, tt: tt),
+                    _TabChip(label: 'Society', active: false, cs: cs, tt: tt),
+                    _TabChip(label: 'Business', active: false, cs: cs, tt: tt),
+                    _TabChip(label: 'System', active: false, cs: cs, tt: tt),
+                  ],
+                ),
+              ),
 
-          SizedBox(height: 8.h),
+              SizedBox(height: 8.h),
 
-          /// List
-          Expanded(
-            child: ListView.builder(
-              itemCount: items.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                      vertical: 8.h,
-                    ),
-                    child: Text(
-                      'NEW',
-                      style: tt.labelSmall?.copyWith(
-                        fontSize: 10.5.sp,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                        color: cs.onSurfaceVariant,
+              /// List
+              Expanded(
+                child: items.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              IconsaxPlusLinear.notification,
+                              size: 48.sp,
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+                            ),
+                            SizedBox(height: 12.h),
+                            Text(
+                              'No new notifications',
+                              style: tt.titleSmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: items.length + 1,
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16.w,
+                                vertical: 8.h,
+                              ),
+                              child: Text(
+                                'RECENT',
+                                style: tt.labelSmall?.copyWith(
+                                  fontSize: 10.5.sp,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.2,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                            );
+                          }
+
+                          final it = items[index - 1];
+
+                          return GestureDetector(
+                            onTap: () {
+                              context.read<NotificationBloc>().add(ToggleReadStatusRequested(it.id));
+                              
+                              if (it.type == NotificationType.chat && it.relatedId != null) {
+                                context.push(
+                                  AppRoutes.chatRoom,
+                                  extra: {
+                                    'chatId': it.relatedId!,
+                                    'recipientName': it.senderName,
+                                    'recipientId': it.senderId,
+                                  },
+                                );
+                              } else if (it.relatedId != null && it.relatedId!.isNotEmpty) {
+                                context.push(AppRoutes.localityFeed);
+                              }
+                            },
+                            child: _NotificationItem(
+                              who: it.senderName,
+                              text: it.message,
+                              time: _formatTimeAgo(it.timestamp),
+                              isNew: !it.isRead,
+                              cs: cs,
+                              tt: tt,
+                            ),
+                          );
+                        },
                       ),
-                    ),
-                  );
-                }
-
-                final it = items[index - 1];
-
-                return _NotificationItem(
-                  who: it['who'] as String,
-                  text: it['t'] as String,
-                  time: it['time'] as String,
-                  isNew: it['new'] as bool? ?? false,
-                  cs: cs,
-                  tt: tt,
-                );
-              },
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

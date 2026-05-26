@@ -12,7 +12,7 @@ abstract class ChatEvent extends Equatable {
 class LoadConversationsRequested extends ChatEvent {
   final String currentUserId;
   const LoadConversationsRequested({required this.currentUserId});
-  
+
   @override
   List<Object?> get props => [currentUserId];
 }
@@ -20,7 +20,8 @@ class LoadConversationsRequested extends ChatEvent {
 class LoadMessagesRequested extends ChatEvent {
   final String chatId;
   final String currentUserId;
-  const LoadMessagesRequested({required this.chatId, required this.currentUserId});
+  const LoadMessagesRequested(
+      {required this.chatId, required this.currentUserId});
 
   @override
   List<Object?> get props => [chatId, currentUserId];
@@ -59,7 +60,8 @@ class StartDirectChatRequested extends ChatEvent {
 class RealtimeMessageReceived extends ChatEvent {
   final Map<String, dynamic> message;
   final String currentUserId;
-  const RealtimeMessageReceived({required this.message, required this.currentUserId});
+  const RealtimeMessageReceived(
+      {required this.message, required this.currentUserId});
 
   @override
   List<Object?> get props => [message, currentUserId];
@@ -84,7 +86,8 @@ class RealtimeTypingStatusChanged extends ChatEvent {
 class SendTypingStatusRequested extends ChatEvent {
   final String chatId;
   final bool isTyping;
-  const SendTypingStatusRequested({required this.chatId, required this.isTyping});
+  const SendTypingStatusRequested(
+      {required this.chatId, required this.isTyping});
 
   @override
   List<Object?> get props => [chatId, isTyping];
@@ -142,7 +145,8 @@ class ChatState extends Equatable {
     return ChatState(
       conversations: conversations ?? this.conversations,
       activeRoomMessages: activeRoomMessages ?? this.activeRoomMessages,
-      isConversationsLoading: isConversationsLoading ?? this.isConversationsLoading,
+      isConversationsLoading:
+          isConversationsLoading ?? this.isConversationsLoading,
       isMessagesLoading: isMessagesLoading ?? this.isMessagesLoading,
       activeRoomChatId: activeRoomChatId ?? this.activeRoomChatId,
       isPartnerTyping: isPartnerTyping ?? this.isPartnerTyping,
@@ -165,7 +169,7 @@ class ChatState extends Equatable {
 // --- Bloc ---
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatService _service = ChatService.instance;
-  
+
   StreamSubscription<Map<String, dynamic>>? _msgSub;
   StreamSubscription<Map<String, dynamic>>? _presenceSub;
   StreamSubscription<Map<String, dynamic>>? _typingSub;
@@ -196,9 +200,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     // Setup listeners if not already active
     _cancelStreamSubscriptions();
-    
+
     _msgSub = _service.onMessageReceived.listen((msg) {
-      add(RealtimeMessageReceived(message: msg, currentUserId: event.currentUserId));
+      add(RealtimeMessageReceived(
+          message: msg, currentUserId: event.currentUserId));
     });
     _presenceSub = _service.onPresenceStatusChanged.listen((presence) {
       add(RealtimePresenceStatusChanged(presence: presence));
@@ -213,14 +218,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final result = await _service.getConversations();
 
     result.fold(
-      (failure) => emit(state.copyWith(isConversationsLoading: false, errorMessage: failure.message)),
+      (failure) => emit(state.copyWith(
+          isConversationsLoading: false, errorMessage: failure.message)),
       (list) {
         final parsedConvs = list.map((item) {
           final conv = item as Map<String, dynamic>;
-          final participants = List<String>.from(conv['participants']?.map((e) => e.toString()) ?? []);
-          
+          final participants = List<String>.from(
+              conv['participants']?.map((e) => e.toString()) ?? []);
+
           // Identify the neighbor profile from participantProfiles list
-          final otherUser = (conv['participantProfiles'] as List<dynamic>?)?.firstWhere(
+          final otherUser =
+              (conv['participantProfiles'] as List<dynamic>?)?.firstWhere(
             (p) => p is Map && p['userId']?.toString() != event.currentUserId,
             orElse: () => null,
           ) as Map<String, dynamic>?;
@@ -231,15 +239,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             id: conv['_id']?.toString() ?? '',
             participants: participants,
             lastMessageText: lastMsg?['text']?.toString() ?? 'No messages yet',
-            lastMessageTime: DateTime.tryParse(conv['updatedAt']?.toString() ?? ''),
-            recipientName: otherUser?['displayName']?.toString() ?? otherUser?['emailOrPhone']?.toString() ?? 'Neighbor',
+            lastMessageTime:
+                DateTime.tryParse(conv['updatedAt']?.toString() ?? ''),
+            recipientName: otherUser?['displayName']?.toString() ??
+                otherUser?['emailOrPhone']?.toString() ??
+                'Neighbor',
             recipientAvatar: otherUser?['avatarUrl']?.toString(),
             recipientId: otherUser?['userId']?.toString() ?? '',
             unreadCount: 0, // In dynamic apps, computed from readBy
           );
         }).toList();
 
-        emit(state.copyWith(isConversationsLoading: false, conversations: parsedConvs));
+        emit(state.copyWith(
+            isConversationsLoading: false, conversations: parsedConvs));
       },
     );
   }
@@ -267,7 +279,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final result = await _service.getMessages(chatId: event.chatId);
 
     result.fold(
-      (failure) => emit(state.copyWith(isMessagesLoading: false, errorMessage: failure.message)),
+      (failure) => emit(state.copyWith(
+          isMessagesLoading: false, errorMessage: failure.message)),
       (list) {
         final parsedMsgs = list.map((item) {
           final msg = item as Map<String, dynamic>;
@@ -278,8 +291,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             senderId: senderId,
             text: msg['text']?.toString() ?? '',
             attachments: List<String>.from(msg['attachments'] ?? []),
-            readBy: List<String>.from(msg['readBy']?.map((e) => e.toString()) ?? []),
-            createdAt: DateTime.tryParse(msg['createdAt']?.toString() ?? '') ?? DateTime.now(),
+            readBy: List<String>.from(
+                msg['readBy']?.map((e) => e.toString()) ?? []),
+            createdAt: DateTime.tryParse(msg['createdAt']?.toString() ?? '') ??
+                DateTime.now(),
             isMe: senderId == event.currentUserId,
           );
         }).toList();
@@ -287,7 +302,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         // Sort messages chronologically (oldest to newest)
         parsedMsgs.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-        emit(state.copyWith(isMessagesLoading: false, activeRoomMessages: parsedMsgs));
+        emit(state.copyWith(
+            isMessagesLoading: false, activeRoomMessages: parsedMsgs));
       },
     );
   }
@@ -329,7 +345,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           text: event.text,
           attachments: const [],
           readBy: List<String>.from([event.currentUserId]),
-          createdAt: DateTime.tryParse(ack['createdAt']?.toString() ?? '') ?? optimisticMsg.createdAt,
+          createdAt: DateTime.tryParse(ack['createdAt']?.toString() ?? '') ??
+              optimisticMsg.createdAt,
           isMe: true,
         );
       }
@@ -358,7 +375,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     emit(state.copyWith(isConversationsLoading: true));
-    
+
     final result = await _service.getOrCreateDirectChat(event.recipientId);
 
     result.fold(
@@ -393,7 +410,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final chatId = msg['conversationId']?.toString() ?? '';
     final senderId = msg['senderId']?.toString() ?? '';
     final text = msg['text']?.toString() ?? '';
-    
+
     final newMsg = AppChatMessage(
       id: msg['_id']?.toString() ?? '',
       conversationId: chatId,
@@ -401,7 +418,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       text: text,
       attachments: List<String>.from(msg['attachments'] ?? []),
       readBy: const [],
-      createdAt: DateTime.tryParse(msg['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(msg['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
       isMe: senderId == event.currentUserId,
     );
 
@@ -411,12 +429,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(state.copyWith(
         activeRoomMessages: [...state.activeRoomMessages, newMsg],
       ));
+    } else if (senderId != event.currentUserId) {
+      // Tapping message alert from outside the active conversation slides down the floating banner
+      NotificationService.instance.triggerChatNotification(
+        message: msg,
+        currentUserId: event.currentUserId,
+      );
     }
 
     // Update conversations list items dynamically
     final updatedConvs = state.conversations.map((c) {
       if (c.id == chatId) {
-        final isUnread = state.activeRoomChatId != chatId && senderId != event.currentUserId;
+        final isUnread =
+            state.activeRoomChatId != chatId && senderId != event.currentUserId;
         return c.copyWith(
           lastMessageText: text,
           lastMessageTime: newMsg.createdAt,

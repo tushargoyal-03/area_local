@@ -168,6 +168,16 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
           posts: [newPost, ...state.posts],
         ));
         showGlobalToast(message: 'Hyperlocal activity published successfully!', status: 'success');
+        
+        // Simulation Showcase: In 5 seconds, simulate another neighbor posting nearby.
+        Future.delayed(const Duration(seconds: 5), () {
+          NotificationService.instance.triggerNewPostNotification(
+            senderName: 'Meera Patel',
+            postTitle: 'Morning Yoga in Central Park',
+            postId: 'post_mock_yoga',
+          );
+        });
+
         if (event.context.mounted) {
           Navigator.pop(event.context);
         }
@@ -225,6 +235,17 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
           return post;
         }).toList();
         emit(state.copyWith(posts: finalPosts));
+
+        // Simulation Showcase: In 4 seconds, simulate another neighbor liking user's post back.
+        if (updatedPostSkeleton.isInterested) {
+          Future.delayed(const Duration(seconds: 4), () {
+            NotificationService.instance.triggerLikeNotification(
+              senderName: 'Karan Singh',
+              postTitle: 'Need a pickleball partner',
+              postId: event.postId,
+            );
+          });
+        }
       },
     );
   }

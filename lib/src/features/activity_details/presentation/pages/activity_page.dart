@@ -365,7 +365,7 @@ class ActivityDetailScreen extends StatelessWidget {
                   /// Comments Section
                   InkWell(
                     onTap: () {
-                      showModalBottomSheet(
+                      showModalBottomSheet<void>(
                         context: context,
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
