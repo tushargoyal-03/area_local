@@ -1,6 +1,7 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:area_connect/src/features/comment/presentation/pages/comment.dart';
+
 class ActivityDetailScreen extends StatelessWidget {
   final AppPost post;
 
@@ -369,12 +370,14 @@ class ActivityDetailScreen extends StatelessWidget {
                         context: context,
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
-                        builder: (context) => CommentsSheetScreen(postId: livePost.id),
+                        builder: (context) =>
+                            CommentsSheetScreen(postId: livePost.id),
                       );
                     },
                     borderRadius: BorderRadius.circular(16.r),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
                       child: Row(
                         children: [
                           Icon(
