@@ -1,15 +1,37 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
+import '../providers/nearby_discovery_bloc.dart';
 
-class NearbyDiscoveryScreen extends StatelessWidget {
+class NearbyDiscoveryScreen extends StatefulWidget {
   const NearbyDiscoveryScreen({super.key});
+
+  @override
+  State<NearbyDiscoveryScreen> createState() => _NearbyDiscoveryScreenState();
+}
+
+class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
+  final List<String> _tabs = [
+    'People',
+    'Activities',
+    'Business',
+    'Events',
+    'Society'
+  ];
+  int _activeTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Assuming location is known. Using mock coords for New Delhi for demo.
+    context.read<NearbyDiscoveryBloc>().add(
+          const LoadNearbyNeighbors(lng: 77.2090, lat: 28.6139),
+        );
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
-    final people = ['Riya Sharma', 'Karan Singh', 'Meera Patel', 'Dev Arora'];
-    final interests = ['pickleball', 'gym buddy', 'yoga', 'cycling'];
 
     return Scaffold(
       appBar: AppBar(
@@ -56,16 +78,21 @@ class NearbyDiscoveryScreen extends StatelessWidget {
           /// Filter Chips
           SizedBox(
             height: 44.h,
-            child: ListView(
+            child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              children: [
-                _ChipItem(label: 'People', active: true, cs: cs, tt: tt),
-                _ChipItem(label: 'Activities', active: false, cs: cs, tt: tt),
-                _ChipItem(label: 'Business', active: false, cs: cs, tt: tt),
-                _ChipItem(label: 'Events', active: false, cs: cs, tt: tt),
-                _ChipItem(label: 'Society', active: false, cs: cs, tt: tt),
-              ],
+              itemCount: _tabs.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => setState(() => _activeTabIndex = index),
+                  child: _ChipItem(
+                    label: _tabs[index],
+                    active: _activeTabIndex == index,
+                    cs: cs,
+                    tt: tt,
+                  ),
+                );
+              },
             ),
           ),
 
@@ -147,7 +174,8 @@ class NearbyDiscoveryScreen extends StatelessWidget {
                         right: 10,
                         child: ElevatedButton.icon(
                           onPressed: () {},
-                          icon: const Icon(IconsaxPlusLinear.location, size: 14),
+                          icon:
+                              const Icon(IconsaxPlusLinear.location, size: 14),
                           label: const Text(
                             'Center on me',
                             style: TextStyle(fontSize: 11),
@@ -169,36 +197,69 @@ class NearbyDiscoveryScreen extends StatelessWidget {
 
                 SizedBox(height: 14.h),
 
-                /// Active count
-                Row(
-                  children: [
-                    Icon(
-                      IconsaxPlusLinear.trend_up,
-                      size: 16.sp,
-                      color: cs.primary,
-                    ),
-                    SizedBox(width: 6.w),
-                    Text(
-                      '14 active nearby right now',
-                      style: tt.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-
                 SizedBox(height: 14.h),
 
-                /// People List
-                ...List.generate(people.length, (i) {
-                  return _NearbyCard(
-                    name: people[i],
-                    index: i,
-                    interest: interests[i],
-                    cs: cs,
-                    tt: tt,
-                  );
-                }),
+                /// People List via Bloc
+                BlocBuilder<NearbyDiscoveryBloc, NearbyDiscoveryState>(
+                  builder: (context, state) {
+                    if (state.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (state.error != null) {
+                      return Center(child: Text(state.error!));
+                    }
+                    if (state.neighbors.isEmpty) {
+                      return const Center(
+                          child: Text('No neighbors found nearby.'));
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              IconsaxPlusLinear.trend_up,
+                              size: 16.sp,
+                              color: cs.primary,
+                            ),
+                            SizedBox(width: 6.w),
+                            Text(
+                              '${state.neighbors.length} active nearby right now',
+                              style: tt.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 14.h),
+                        ...List.generate(state.neighbors.length, (i) {
+                          final neighbor = state.neighbors[i];
+                          final profile =
+                              neighbor['profile'] ?? <String, dynamic>{};
+                          final name = profile['displayName'] ?? 'Neighbor';
+                          final dist = neighbor['distanceInMeters'] ?? 0.0;
+
+                          // Defaulting to general interest if parsing fails
+                          String interest = 'connecting';
+                          if (profile['lookingFor'] != null &&
+                              (profile['lookingFor'] as List).isNotEmpty) {
+                            interest = profile['lookingFor'].join(', ');
+                          }
+
+                          return _NearbyCard(
+                            userId: neighbor['userId'] ?? '',
+                            name: name,
+                            distance: (dist / 1000.0).toStringAsFixed(1),
+                            interest: interest,
+                            cs: cs,
+                            tt: tt,
+                          );
+                        }),
+                      ],
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -209,15 +270,17 @@ class NearbyDiscoveryScreen extends StatelessWidget {
 }
 
 class _NearbyCard extends StatelessWidget {
+  final String userId;
   final String name;
-  final int index;
+  final String distance;
   final String interest;
   final ColorScheme cs;
   final TextTheme tt;
 
   const _NearbyCard({
+    required this.userId,
     required this.name,
-    required this.index,
+    required this.distance,
     required this.interest,
     required this.cs,
     required this.tt,
@@ -225,8 +288,6 @@ class _NearbyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final distance = (0.2 + index * 0.3).toStringAsFixed(1);
-
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.w),
@@ -288,7 +349,9 @@ class _NearbyCard extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              context.read<NearbyDiscoveryBloc>().add(SayHiToNeighbor(userId));
+            },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(
                 horizontal: 14.w,

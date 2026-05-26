@@ -1,5 +1,7 @@
+import 'package:area_connect/src/features/society_feed/domain/entities/society_post.dart';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
+import '../providers/society_feed_bloc.dart';
 
 class SocietyFeedScreen extends StatefulWidget {
   const SocietyFeedScreen({super.key});
@@ -18,12 +20,23 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
     'Events'
   ];
 
-  // Interactive Poll Voting State Demonstration
-  int? _selectedPollOption;
-  int _yesVotes = 68;
-  int _noVotes = 24;
-  int _maybeVotes = 8;
-  bool _hasVoted = false;
+  @override
+  void initState() {
+    super.initState();
+    // Assuming society ID is known or passed. For demo, we use a mock one.
+    // In a real app, this might come from User profile `session_bloc`
+    context
+        .read<SocietyFeedBloc>()
+        .add(const LoadSocietyFeed('mock_society_id_123', type: 'All'));
+  }
+
+  void _onCategoryTapped(int index) {
+    setState(() => _selectedCategoryIndex = index);
+    final category = _categories[index];
+    context
+        .read<SocietyFeedBloc>()
+        .add(LoadSocietyFeed('mock_society_id_123', type: category));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,11 +174,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                 return Padding(
                   padding: EdgeInsets.only(right: AppSpacing.xs.w),
                   child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedCategoryIndex = index;
-                      });
-                    },
+                    onTap: () => _onCategoryTapped(index),
                     child: AnimatedContainer(
                       duration: AppDurations.fast,
                       padding: EdgeInsets.symmetric(
@@ -211,60 +220,36 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
 
           /// Society Posts List
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(AppSpacing.lg.w),
-              children: [
-                if (_selectedCategoryIndex == 0 || _selectedCategoryIndex == 1)
-                  _buildSocietyPost(
-                    type: 'notice',
-                    title: 'Water tank cleaning — Saturday 8 AM',
-                    body:
-                        'Water supply will be paused 8 AM – 12 PM on Saturday. Please store water in advance.',
-                    who: 'Society Admin',
-                    replies: 12,
-                    likes: 48,
-                    time: '2h',
-                    icon: IconsaxPlusLinear.volume_high,
-                    gradientColors: [Colors.lightBlueAccent, Colors.indigo],
-                    cs: cs,
-                    tt: tt,
-                  ),
-                if (_selectedCategoryIndex == 0 ||
-                    _selectedCategoryIndex == 2) ...[
-                  SizedBox(height: AppSpacing.md.h),
-                  _buildSocietyPost(
-                    type: 'complaint',
-                    title: 'Parking blocked at Tower B, slot 24',
-                    body:
-                        'Black SUV blocking my slot for 2 days now. Please help.',
-                    who: 'Karan, B-407',
-                    replies: 5,
-                    likes: 12,
-                    time: '2h',
-                    icon: IconsaxPlusLinear.warning_2,
-                    gradientColors: [Colors.redAccent, Colors.orangeAccent],
-                    cs: cs,
-                    tt: tt,
-                  ),
-                ],
-                if (_selectedCategoryIndex == 0 ||
-                    _selectedCategoryIndex == 3) ...[
-                  SizedBox(height: AppSpacing.md.h),
-                  _buildSocietyPost(
-                    type: 'poll',
-                    title: 'Should we install EV chargers in basement?',
-                    who: 'Society Admin',
-                    replies: 24,
-                    likes: 142,
-                    time: '2h',
-                    icon: IconsaxPlusLinear.ranking,
-                    gradientColors: [Colors.greenAccent, Colors.teal],
-                    cs: cs,
-                    tt: tt,
-                  ),
-                ],
-                SizedBox(height: AppSpacing.xxl.h),
-              ],
+            child: BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
+              builder: (context, state) {
+                if (state.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (state.error != null) {
+                  return Center(child: Text(state.error!));
+                }
+
+                if (state.posts.isEmpty) {
+                  return const Center(child: Text('No posts found.'));
+                }
+
+                return ListView.builder(
+                  padding: EdgeInsets.all(AppSpacing.lg.w),
+                  itemCount: state.posts.length,
+                  itemBuilder: (context, index) {
+                    final post = state.posts[index];
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: AppSpacing.md.h),
+                      child: _buildSocietyPost(
+                        post: post,
+                        cs: cs,
+                        tt: tt,
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],
@@ -324,19 +309,30 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
   }
 
   Widget _buildSocietyPost({
-    required String type,
-    required String title,
-    String? body,
-    required String who,
-    required int replies,
-    required int likes,
-    required String time,
-    required IconData icon,
-    required List<Color> gradientColors,
+    required SocietyPost post,
     required ColorScheme cs,
     required TextTheme tt,
   }) {
-    final String label = type[0].toUpperCase() + type.substring(1);
+    final type = post.type;
+    final String label =
+        type.isNotEmpty ? type[0].toUpperCase() + type.substring(1) : '';
+
+    IconData icon = IconsaxPlusLinear.message;
+    List<Color> gradientColors = [Colors.blue, Colors.blueAccent];
+
+    if (type == 'notice') {
+      icon = IconsaxPlusLinear.volume_high;
+      gradientColors = [Colors.lightBlueAccent, Colors.indigo];
+    } else if (type == 'complaint') {
+      icon = IconsaxPlusLinear.warning_2;
+      gradientColors = [Colors.redAccent, Colors.orangeAccent];
+    } else if (type == 'poll') {
+      icon = IconsaxPlusLinear.ranking;
+      gradientColors = [Colors.greenAccent, Colors.teal];
+    } else if (type == 'event') {
+      icon = IconsaxPlusLinear.calendar_1;
+      gradientColors = [Colors.purpleAccent, Colors.deepPurple];
+    }
 
     return Container(
       padding: EdgeInsets.all(AppSpacing.md.w),
@@ -404,7 +400,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                         ),
                         SizedBox(width: AppSpacing.xs.w),
                         Text(
-                          time,
+                          _formatTime(post.createdAt),
                           style: tt.bodySmall?.copyWith(
                             fontSize: 10.sp,
                             color: cs.onSurfaceVariant,
@@ -414,7 +410,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                     ),
                     SizedBox(height: 2.h),
                     Text(
-                      who,
+                      post.authorName,
                       style: tt.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: cs.onSurface,
@@ -430,7 +426,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
 
           /// Title
           Text(
-            title,
+            post.title,
             style: tt.bodyLarge?.copyWith(
               fontWeight: FontWeight.bold,
               fontSize: 14.sp,
@@ -439,10 +435,10 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
           ),
 
           /// Body (optional)
-          if (body != null) ...[
+          if (post.content != null && post.content!.isNotEmpty) ...[
             SizedBox(height: 4.h),
             Text(
-              body,
+              post.content!,
               style: tt.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
                 fontSize: 12.5.sp,
@@ -452,9 +448,9 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
           ],
 
           /// Poll Option Section
-          if (type == 'poll') ...[
+          if (type == 'poll' && post.pollOptions != null) ...[
             SizedBox(height: AppSpacing.md.h),
-            _buildPollSection(cs, tt),
+            _buildPollSection(post, cs, tt),
           ],
 
           SizedBox(height: AppSpacing.md.h),
@@ -479,7 +475,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    '$replies replies',
+                    '${post.commentsCount} replies',
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontSize: 11.sp,
@@ -495,7 +491,9 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    type == 'poll' ? '$likes votes cast' : '$likes',
+                    type == 'poll'
+                        ? '${post.totalVotes ?? 0} votes cast'
+                        : '${post.likesCount}',
                     style: tt.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       fontSize: 11.sp,
@@ -515,63 +513,52 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
     );
   }
 
-  Widget _buildPollSection(ColorScheme cs, TextTheme tt) {
-    final total = _yesVotes + _noVotes + _maybeVotes;
+  Widget _buildPollSection(SocietyPost post, ColorScheme cs, TextTheme tt) {
+    final options = post.pollOptions!;
+    final total = post.totalVotes ?? 0;
+    final votedIndex = post.userVotedOptionIndex;
 
     return Column(
-      children: [
-        _buildPollOption(
-          label: 'Yes, install them',
-          votes: _yesVotes,
-          total: total,
-          index: 0,
-          cs: cs,
-          tt: tt,
-        ),
-        SizedBox(height: AppSpacing.sm.h),
-        _buildPollOption(
-          label: 'No, not needed',
-          votes: _noVotes,
-          total: total,
-          index: 1,
-          cs: cs,
-          tt: tt,
-        ),
-        SizedBox(height: AppSpacing.sm.h),
-        _buildPollOption(
-          label: 'Maybe later',
-          votes: _maybeVotes,
-          total: total,
-          index: 2,
-          cs: cs,
-          tt: tt,
-        ),
-      ],
+      children: List.generate(options.length, (index) {
+        final opt = options[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: AppSpacing.sm.h),
+          child: _buildPollOption(
+            post: post,
+            label: opt.text,
+            votes: opt.votes,
+            total: total,
+            index: index,
+            isSelected: votedIndex == index,
+            hasVoted: votedIndex != null,
+            cs: cs,
+            tt: tt,
+          ),
+        );
+      }),
     );
   }
 
   Widget _buildPollOption({
+    required SocietyPost post,
     required String label,
     required int votes,
     required int total,
     required int index,
+    required bool isSelected,
+    required bool hasVoted,
     required ColorScheme cs,
     required TextTheme tt,
   }) {
     final double percent = total > 0 ? (votes / total) : 0;
     final int percentInt = (percent * 100).round();
-    final bool isSelected = _selectedPollOption == index;
 
     return GestureDetector(
       onTap: () {
-        if (!_hasVoted) {
-          setState(() {
-            _selectedPollOption = index;
-            _hasVoted = true;
-            if (index == 0) _yesVotes++;
-            if (index == 1) _noVotes++;
-            if (index == 2) _maybeVotes++;
-          });
+        if (!hasVoted) {
+          context
+              .read<SocietyFeedBloc>()
+              .add(VotePoll(postId: post.id, optionIndex: index));
         }
       },
       child: Container(
@@ -634,5 +621,18 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
         ),
       ),
     );
+  }
+
+  String _formatTime(String isoString) {
+    try {
+      final date = DateTime.parse(isoString);
+      final diff = DateTime.now().difference(date);
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+      if (diff.inHours < 24) return '${diff.inHours}h';
+      if (diff.inDays == 1) return 'Yest';
+      return '${diff.inDays}d';
+    } catch (_) {
+      return '';
+    }
   }
 }

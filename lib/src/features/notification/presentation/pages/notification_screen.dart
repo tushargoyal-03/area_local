@@ -1,15 +1,34 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
+import '../providers/notification_bloc.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
-  String _formatTimeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inDays > 0) return '${diff.inDays}d';
-    if (diff.inHours > 0) return '${diff.inHours}h';
-    if (diff.inMinutes > 0) return '${diff.inMinutes}m';
-    return 'now';
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  final List<String> _tabs = [
+    'All',
+    'Activity',
+    'Society',
+    'Business',
+    'System'
+  ];
+  int _activeTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<NotificationBloc>().add(const LoadNotifications(type: 'All'));
+  }
+
+  void _onTabTapped(int index) {
+    setState(() => _activeTabIndex = index);
+    final type = _tabs[index];
+    context.read<NotificationBloc>().add(LoadNotifications(type: type));
   }
 
   @override
@@ -17,133 +36,117 @@ class NotificationsScreen extends StatelessWidget {
     final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
 
-    return BlocBuilder<NotificationBloc, NotificationState>(
-      builder: (context, state) {
-        final items = state.notifications;
-
-        return Scaffold(
-          appBar: AppBar(
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              onPressed: () => Navigator.pop(context),
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Notifications'),
+        centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: () {
+              context
+                  .read<NotificationBloc>()
+                  .add(MarkAllNotificationsAsRead());
+            },
+            child: Text(
+              'Mark all read',
+              style: tt.bodySmall?.copyWith(
+                fontSize: 12.5.sp,
+                color: cs.primary,
+              ),
             ),
-            title: const Text('Notifications'),
-            centerTitle: true,
-            actions: [
-              TextButton(
-                onPressed: () {
-                  context.read<NotificationBloc>().add(const MarkAllAsReadRequested());
-                },
-                child: Text(
-                  'Mark all read',
-                  style: tt.bodySmall?.copyWith(
-                    fontSize: 12.5.sp,
-                    color: cs.primary,
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          /// Tabs
+          SizedBox(
+            height: 44.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              itemCount: _tabs.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => _onTabTapped(index),
+                  child: _TabChip(
+                    label: _tabs[index],
+                    active: _activeTabIndex == index,
+                    cs: cs,
+                    tt: tt,
                   ),
-                ),
-              ),
-            ],
+                );
+              },
+            ),
           ),
-          body: Column(
-            children: [
-              /// Tabs
-              SizedBox(
-                height: 44.h,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  children: [
-                    _TabChip(label: 'All', active: true, cs: cs, tt: tt),
-                    _TabChip(label: 'Activity', active: false, cs: cs, tt: tt),
-                    _TabChip(label: 'Society', active: false, cs: cs, tt: tt),
-                    _TabChip(label: 'Business', active: false, cs: cs, tt: tt),
-                    _TabChip(label: 'System', active: false, cs: cs, tt: tt),
-                  ],
-                ),
-              ),
 
-              SizedBox(height: 8.h),
+          SizedBox(height: 8.h),
 
-              /// List
-              Expanded(
-                child: items.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              IconsaxPlusLinear.notification,
-                              size: 48.sp,
-                              color: cs.onSurfaceVariant.withValues(alpha: 0.4),
-                            ),
-                            SizedBox(height: 12.h),
-                            Text(
-                              'No new notifications',
-                              style: tt.titleSmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: items.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16.w,
-                                vertical: 8.h,
-                              ),
-                              child: Text(
-                                'RECENT',
-                                style: tt.labelSmall?.copyWith(
-                                  fontSize: 10.5.sp,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 1.2,
-                                  color: cs.onSurfaceVariant,
-                                ),
-                              ),
-                            );
-                          }
+          /// List
+          Expanded(
+            child: BlocBuilder<NotificationBloc, NotificationState>(
+              builder: (context, state) {
+                if (state.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                          final it = items[index - 1];
+                if (state.error != null) {
+                  return Center(child: Text(state.error!));
+                }
 
-                          return GestureDetector(
-                            onTap: () {
-                              context.read<NotificationBloc>().add(ToggleReadStatusRequested(it.id));
-                              
-                              if (it.type == NotificationType.chat && it.relatedId != null) {
-                                context.push(
-                                  AppRoutes.chatRoom,
-                                  extra: {
-                                    'chatId': it.relatedId!,
-                                    'recipientName': it.senderName,
-                                    'recipientId': it.senderId,
-                                  },
-                                );
-                              } else if (it.relatedId != null && it.relatedId!.isNotEmpty) {
-                                context.push(AppRoutes.localityFeed);
-                              }
-                            },
-                            child: _NotificationItem(
-                              who: it.senderName,
-                              text: it.message,
-                              time: _formatTimeAgo(it.timestamp),
-                              isNew: !it.isRead,
-                              cs: cs,
-                              tt: tt,
-                            ),
-                          );
-                        },
+                if (state.notifications.isEmpty) {
+                  return const Center(child: Text('No notifications yet.'));
+                }
+
+                return ListView.builder(
+                  itemCount: state.notifications.length,
+                  itemBuilder: (context, index) {
+                    final it = state.notifications[index];
+
+                    return GestureDetector(
+                      onTap: () {
+                        if (!it.isRead) {
+                          context
+                              .read<NotificationBloc>()
+                              .add(MarkNotificationAsRead(it.id));
+                        }
+                      },
+                      child: _NotificationItem(
+                        who: it
+                            .type, // Could be system, user name etc. Using type as fallback if sender name not available in model
+                        text: it.message,
+                        time: _formatTime(it.createdAt),
+                        isNew: !it.isRead,
+                        cs: cs,
+                        tt: tt,
                       ),
-              ),
-            ],
+                    );
+                  },
+                );
+              },
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
+  }
+
+  String _formatTime(String isoString) {
+    try {
+      final date = DateTime.parse(isoString);
+      final diff = DateTime.now().difference(date);
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m';
+      if (diff.inHours < 24) return '${diff.inHours}h';
+      if (diff.inDays == 1) return 'Yest';
+      return '${diff.inDays}d';
+    } catch (_) {
+      return '';
+    }
   }
 }
 

@@ -84,6 +84,24 @@ class ChatService {
     });
   }
 
+  /// Quickly start a conversation with a neighbor and send a default '👋 Hi!' message
+  FutureEither<Map<String, dynamic>> sayHi(String recipientId) async {
+    final result = await DioService.instance.post(
+      'chat/say-hi',
+      data: {
+        'recipientId': recipientId,
+      },
+    );
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Failed to say hi: $e');
+      }
+    });
+  }
+
   // --- WebSockets Gateway ---
 
   /// Initialize and connect to the real-time NestJS ChatGateway.
