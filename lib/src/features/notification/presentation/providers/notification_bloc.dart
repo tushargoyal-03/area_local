@@ -1,4 +1,4 @@
-import 'package:area_connect/src/features/notification/domain/entities/app_notification.dart';
+
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
@@ -14,6 +14,13 @@ class LoadNotifications extends NotificationEvent {
   const LoadNotifications({this.type});
   @override
   List<Object?> get props => [type];
+}
+
+class NotificationAdded extends NotificationEvent {
+  final AppNotification notification;
+  const NotificationAdded(this.notification);
+  @override
+  List<Object?> get props => [notification];
 }
 
 class MarkNotificationAsRead extends NotificationEvent {
@@ -64,6 +71,20 @@ class NotificationBloc extends Bloc<NotificationEvent, NotificationState> {
     on<LoadNotifications>(_onLoadNotifications);
     on<MarkNotificationAsRead>(_onMarkAsRead);
     on<MarkAllNotificationsAsRead>(_onMarkAllAsRead);
+    on<NotificationAdded>(_onNotificationAdded);
+  }
+
+  void _onNotificationAdded(
+    NotificationAdded event,
+    Emitter<NotificationState> emit,
+  ) {
+    if (state.notifications.any((element) => element.id == event.notification.id)) {
+      return;
+    }
+    final updatedList = [event.notification, ...state.notifications];
+    emit(state.copyWith(
+      notifications: updatedList,
+    ));
   }
 
   Future<void> _onLoadNotifications(

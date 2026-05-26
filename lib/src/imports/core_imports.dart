@@ -26,5 +26,5 @@ export '../features/locality_feed/presentation/providers/posts_bloc.dart';
 export '../features/home/presentation/providers/chat_bloc.dart';
 export '../features/locality_feed/domain/entities/post.dart';
 export '../features/home/domain/entities/chat.dart';
-export '../features/notification/domain/entities/notification.dart';
+export '../features/notification/domain/entities/app_notification.dart';
 export '../features/notification/presentation/providers/notification_bloc.dart';

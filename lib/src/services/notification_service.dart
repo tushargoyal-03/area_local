@@ -128,7 +128,7 @@ class NotificationService {
   void showForegroundBanner({
     required String title,
     required String message,
-    required NotificationType type,
+    required String type,
     required VoidCallback onTap,
   }) {
     final context = rootContext;
@@ -183,9 +183,9 @@ class NotificationService {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      type == NotificationType.chat
+                      type == 'chat'
                           ? IconsaxPlusBold.message
-                          : type == NotificationType.like
+                          : type == 'like'
                               ? IconsaxPlusBold.heart
                               : IconsaxPlusBold.location,
                       size: 20.sp,
@@ -304,12 +304,13 @@ class NotificationService {
 
     final appNotif = AppNotification(
       id: message['_id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      senderId: senderId,
-      senderName: senderName,
+      recipientId: currentUserId,
+      type: 'chat',
+      title: senderName,
       message: 'Sent you a message: "$text"',
-      type: NotificationType.chat,
-      timestamp: DateTime.now(),
+      isRead: false,
       relatedId: chatId,
+      createdAt: DateTime.now().toIso8601String(),
     );
 
     // Dispatch globally to NotificationBloc to add in notification feed
@@ -319,7 +320,7 @@ class NotificationService {
     showForegroundBanner(
       title: senderName,
       message: text,
-      type: NotificationType.chat,
+      type: 'chat',
       onTap: () {
         context.push(
           AppRoutes.chatRoom,
@@ -357,12 +358,13 @@ class NotificationService {
 
     final appNotif = AppNotification(
       id: 'like_${DateTime.now().millisecondsSinceEpoch}',
-      senderId: 'some_user',
-      senderName: senderName,
+      recipientId: '',
+      type: 'like',
+      title: senderName,
       message: 'liked your activity post "$postTitle"',
-      type: NotificationType.like,
-      timestamp: DateTime.now(),
+      isRead: false,
       relatedId: postId,
+      createdAt: DateTime.now().toIso8601String(),
     );
 
     context.read<NotificationBloc>().add(NotificationAdded(appNotif));
@@ -370,7 +372,7 @@ class NotificationService {
     showForegroundBanner(
       title: 'Activity Liked',
       message: '$senderName liked your post: "$postTitle"',
-      type: NotificationType.like,
+      type: 'like',
       onTap: () {
         context.push(AppRoutes.notification);
       },
@@ -398,12 +400,13 @@ class NotificationService {
 
     final appNotif = AppNotification(
       id: 'post_${DateTime.now().millisecondsSinceEpoch}',
-      senderId: 'some_user',
-      senderName: senderName,
+      recipientId: '',
+      type: 'System',
+      title: senderName,
       message: 'created a new activity "$postTitle" near you',
-      type: NotificationType.newPost,
-      timestamp: DateTime.now(),
+      isRead: false,
       relatedId: postId,
+      createdAt: DateTime.now().toIso8601String(),
     );
 
     context.read<NotificationBloc>().add(NotificationAdded(appNotif));
@@ -411,7 +414,7 @@ class NotificationService {
     showForegroundBanner(
       title: 'New Activity Nearby',
       message: '$senderName posted: "$postTitle"',
-      type: NotificationType.newPost,
+      type: 'System',
       onTap: () {
         context.push(AppRoutes.notification);
       },
