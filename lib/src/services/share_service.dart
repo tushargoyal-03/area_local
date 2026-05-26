@@ -8,16 +8,20 @@ class ShareService {
 
   /// Share plain text content.
   FutureEither<ShareResult> shareText(String text, {String? subject}) async {
-    return runTask(() => Share.share(text, subject: subject));
+    return runTask(() => SharePlus.instance.share(
+          ShareParams(text: text, subject: subject),
+        ));
   }
 
   /// Share files.
   FutureEither<ShareResult> shareFiles(List<String> paths,
       {String? text, String? subject}) async {
-    return runTask(() => Share.shareXFiles(
-          paths.map((p) => XFile(p)).toList(),
-          text: text,
-          subject: subject,
+    return runTask(() => SharePlus.instance.share(
+          ShareParams(
+            text: text,
+            files: paths.map((p) => XFile(p)).toList(),
+            subject: subject,
+          ),
         ));
   }
 }

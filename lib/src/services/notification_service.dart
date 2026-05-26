@@ -25,13 +25,14 @@ class NotificationService {
       requestSoundPermission: true,
     );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsDarwin,
     );
 
     await _localNotificationsPlugin.initialize(
-      initializationSettings,
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
@@ -41,8 +42,8 @@ class NotificationService {
   /// Request permissions for iOS and Android 13+
   Future<void> requestPermissions() async {
     // iOS permission request is handled by initialization, but we can call it explicitly
-    final iosPlugin = _localNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
+    final iosPlugin =
+        _localNotificationsPlugin.resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin>();
     if (iosPlugin != null) {
       await iosPlugin.requestPermissions(
@@ -95,10 +96,12 @@ class NotificationService {
   }) async {
     await init();
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
       'area_connect_alerts',
       'Area Connect Alerts',
-      channelDescription: 'Real-time notifications for nearby posts, likes, and chats',
+      channelDescription:
+          'Real-time notifications for nearby posts, likes, and chats',
       importance: Importance.max,
       priority: Priority.high,
       showWhen: true,
@@ -116,10 +119,10 @@ class NotificationService {
     );
 
     await _localNotificationsPlugin.show(
-      id,
-      title,
-      body,
-      platformDetails,
+      notificationDetails: platformDetails,
+      id: id,
+      title: title,
+      body: body,
       payload: payload,
     );
   }
@@ -303,7 +306,8 @@ class NotificationService {
     if (context == null) return;
 
     final appNotif = AppNotification(
-      id: message['_id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id: message['_id']?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       recipientId: currentUserId,
       type: 'chat',
       title: senderName,
