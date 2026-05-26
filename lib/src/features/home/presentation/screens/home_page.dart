@@ -12,6 +12,7 @@ class HomeDashboardScreen extends StatefulWidget {
 class _HomeDashboardScreenState extends State<HomeDashboardScreen>
     with WidgetsBindingObserver {
   int _currentTab = 0;
+  String _locationAddress = 'Vaishali Nagar, Jaipur';
 
   Future<void> _fetchAndSyncLocation() async {
     // Request location permission, fetch coordinates, and sync to backend user profile
@@ -30,6 +31,23 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
           status: 'success',
         );
         debugPrint('Fetched dynamic login coordinates: [${position.longitude}, ${position.latitude}]');
+        
+        // Reverse geocode dynamically to get a real suburb and city name
+        final addressRes = await LocationService.instance.getAddressFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        addressRes.fold(
+          (failure) => debugPrint('Failed to reverse-geocode: ${failure.message}'),
+          (address) {
+            if (mounted) {
+              setState(() {
+                _locationAddress = address;
+              });
+            }
+          },
+        );
+
         final updateRes = await UsersService.instance.updateProfile(
           coordinates: [position.longitude, position.latitude],
         );
@@ -105,6 +123,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
     final List<Widget> tabs = [
       _HomeFeedTab(
         onExploreTap: () => setState(() => _currentTab = 1),
+        locationAddress: _locationAddress,
       ),
       const LocalityFeedPage(),
       const ConversationsScreen(),
@@ -190,8 +209,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
 
 class _HomeFeedTab extends StatelessWidget {
   final VoidCallback onExploreTap;
+  final String locationAddress;
 
-  const _HomeFeedTab({required this.onExploreTap});
+  const _HomeFeedTab({required this.onExploreTap, required this.locationAddress});
 
   @override
   Widget build(BuildContext context) {
@@ -210,6 +230,7 @@ class _HomeFeedTab extends StatelessWidget {
             userRole: user?.role ?? 'User',
             onSearchTap: () {},
             onBellTap: () => context.push(AppRoutes.notification),
+            locationAddress: locationAddress,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -238,6 +259,7 @@ class _TopBar extends StatelessWidget {
   final String userRole;
   final VoidCallback onSearchTap;
   final VoidCallback onBellTap;
+  final String locationAddress;
 
   const _TopBar({
     required this.cs,
@@ -246,6 +268,7 @@ class _TopBar extends StatelessWidget {
     required this.userRole,
     required this.onSearchTap,
     required this.onBellTap,
+    required this.locationAddress,
   });
 
   String _formatRole(String role) {
@@ -275,7 +298,7 @@ class _TopBar extends StatelessWidget {
                     ),
                     SizedBox(width: 3.w),
                     Text(
-                      'Vaishali Nagar, Jaipur',
+                      locationAddress,
                       style: TextStyle(
                         fontSize: 10.sp,
                         color: cs.onSurfaceVariant,

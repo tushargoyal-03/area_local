@@ -1,4 +1,5 @@
 import 'package:geolocator/geolocator.dart';
+import 'package:dio/dio.dart';
 import '../utils/utils.dart';
 
 /// A service to handle device location requests and status checks.
@@ -74,5 +75,48 @@ class LocationService {
         distanceFilter: distanceFilter,
       ),
     );
+  }
+
+  /// Get address string from coordinates via Nominatim reverse geocoding
+  FutureEither<String> getAddressFromCoordinates(double lat, double lng) async {
+    return runTask(() async {
+      final dio = Dio();
+      dio.options.headers['User-Agent'] = 'AreaConnect/1.0';
+      
+      final response = await dio.get<Map<String, dynamic>>(
+        'https://nominatim.openstreetmap.org/reverse',
+        queryParameters: {
+          'lat': lat,
+          'lon': lng,
+          'format': 'json',
+          'accept-language': 'en',
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data as Map<String, dynamic>;
+        final address = data['address'] as Map<String, dynamic>?;
+        if (address != null) {
+          final suburb = address['suburb'] ?? address['neighbourhood'] ?? address['residential'] ?? address['village'] ?? address['subdistrict'] ?? '';
+          final city = address['city'] ?? address['town'] ?? address['county'] ?? '';
+          if (suburb.isNotEmpty && city.isNotEmpty) {
+            return '$suburb, $city';
+          } else if (suburb.isNotEmpty) {
+            return suburb.toString();
+          } else if (city.isNotEmpty) {
+            return city.toString();
+          }
+        }
+        final displayName = data['display_name']?.toString() ?? '';
+        if (displayName.isNotEmpty) {
+          final parts = displayName.split(',');
+          if (parts.length >= 2) {
+            return '${parts[0].trim()}, ${parts[1].trim()}';
+          }
+          return displayName;
+        }
+      }
+      throw Exception('Failed to reverse geocode coordinates.');
+    });
   }
 }
