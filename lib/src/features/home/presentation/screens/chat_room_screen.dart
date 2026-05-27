@@ -304,10 +304,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 14.w),
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(24.r),
-                        ),
+                        // decoration: BoxDecoration(
+                        //   color: cs.surfaceContainerHigh,
+                        //   borderRadius: BorderRadius.circular(24.r),
+                        // ),
                         child: TextField(
                           controller: _msgController,
                           onChanged: _onTextChanged,
@@ -384,59 +384,59 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     int partnerCount,
   ) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow.withValues(alpha: 0.8),
-        border: Border(
-          bottom: BorderSide(
-            color: cs.outlineVariant.withValues(alpha: 0.15),
-            width: 1.h,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(IconsaxPlusLinear.message_2, size: 14.sp, color: cs.primary),
-              SizedBox(width: 6.w),
-              Text(
-                'You: $myCount msg',
-                style: tt.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: cs.onSurfaceVariant,
-                  fontSize: 11.5.sp,
-                ),
-              ),
-            ],
-          ),
-          Container(
-            height: 14.h,
-            width: 1.5.w,
-            decoration: BoxDecoration(
-              color: cs.outlineVariant.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(100.r),
-            ),
-          ),
-          Row(
-            children: [
-              Icon(IconsaxPlusLinear.message_2,
-                  size: 14.sp, color: Colors.blue),
-              SizedBox(width: 6.w),
-              Text(
-                '${widget.recipientName}: $partnerCount msg',
-                style: tt.bodySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: cs.onSurfaceVariant,
-                  fontSize: 11.5.sp,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+        // padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+        // decoration: BoxDecoration(
+        //   color: cs.surfaceContainerLow.withValues(alpha: 0.8),
+        //   border: Border(
+        //     bottom: BorderSide(
+        //       color: cs.outlineVariant.withValues(alpha: 0.15),
+        //       width: 1.h,
+        //     ),
+        //   ),
+        // ),
+        // child: Row(
+        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        //   children: [
+        //     Row(
+        //       children: [
+        //         Icon(IconsaxPlusLinear.message_2, size: 14.sp, color: cs.primary),
+        //         SizedBox(width: 6.w),
+        //         Text(
+        //           'You: $myCount msg',
+        //           style: tt.bodySmall?.copyWith(
+        //             fontWeight: FontWeight.bold,
+        //             color: cs.onSurfaceVariant,
+        //             fontSize: 11.5.sp,
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //     Container(
+        //       height: 14.h,
+        //       width: 1.5.w,
+        //       decoration: BoxDecoration(
+        //         color: cs.outlineVariant.withValues(alpha: 0.4),
+        //         borderRadius: BorderRadius.circular(100.r),
+        //       ),
+        //     ),
+        //     Row(
+        //       children: [
+        //         Icon(IconsaxPlusLinear.message_2,
+        //             size: 14.sp, color: Colors.blue),
+        //         SizedBox(width: 6.w),
+        //         Text(
+        //           '${widget.recipientName}: $partnerCount msg',
+        //           style: tt.bodySmall?.copyWith(
+        //             fontWeight: FontWeight.bold,
+        //             color: cs.onSurfaceVariant,
+        //             fontSize: 11.5.sp,
+        //           ),
+        //         ),
+        //       ],
+        //     ),
+        //   ],
+        // ),
+        );
   }
 
   String _formatMsgTime(DateTime time) {
