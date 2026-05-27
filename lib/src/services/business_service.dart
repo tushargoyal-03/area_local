@@ -63,4 +63,25 @@ class BusinessService {
       }
     });
   }
+  FutureEither<List<dynamic>> getMyPromotions({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final result = await DioService.instance.get(
+      'business/promotions/mine',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+      },
+    );
+
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['promotions'] as List<dynamic>;
+      } catch (e) {
+        throw Exception('Failed to load my promotions: $e');
+      }
+    });
+  }
 }

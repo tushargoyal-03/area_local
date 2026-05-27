@@ -25,6 +25,20 @@ class VotePoll extends SocietyFeedEvent {
   List<Object?> get props => [postId, optionIndex];
 }
 
+class LikePost extends SocietyFeedEvent {
+  final String postId;
+  const LikePost({required this.postId});
+  @override
+  List<Object?> get props => [postId];
+}
+
+class UpvoteComplaint extends SocietyFeedEvent {
+  final String postId;
+  const UpvoteComplaint({required this.postId});
+  @override
+  List<Object?> get props => [postId];
+}
+
 // --- State ---
 class SocietyFeedState extends Equatable {
   final bool isLoading;
@@ -63,6 +77,8 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
   SocietyFeedBloc() : super(const SocietyFeedState()) {
     on<LoadSocietyFeed>(_onLoadFeed);
     on<VotePoll>(_onVotePoll);
+    on<LikePost>(_onLikePost);
+    on<UpvoteComplaint>(_onUpvoteComplaint);
   }
 
   Future<void> _onLoadFeed(
@@ -132,6 +148,46 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
         // Simple rollback might require storing previous state, but skipping for brevity
       },
       (_) {}, // Keep optimistically updated state
+    );
+  }
+
+  Future<void> _onLikePost(
+    LikePost event,
+    Emitter<SocietyFeedState> emit,
+  ) async {
+    // Optimistic update
+    final updated = state.posts.map((p) {
+      if (p.id == event.postId) {
+        return p.copyWith(likesCount: p.likesCount + 1);
+      }
+      return p;
+    }).toList();
+    emit(state.copyWith(posts: updated));
+
+    final result = await SocietiesService.instance.likePost(event.postId);
+    result.fold(
+      (failure) => showGlobalToast(message: failure.message, status: 'error'),
+      (_) {},
+    );
+  }
+
+  Future<void> _onUpvoteComplaint(
+    UpvoteComplaint event,
+    Emitter<SocietyFeedState> emit,
+  ) async {
+    // Optimistic update
+    final updated = state.posts.map((p) {
+      if (p.id == event.postId && p.type == 'complaint') {
+        return p.copyWith(likesCount: p.likesCount + 1); // using likesCount for upvotes
+      }
+      return p;
+    }).toList();
+    emit(state.copyWith(posts: updated));
+
+    final result = await SocietiesService.instance.upvoteComplaint(event.postId);
+    result.fold(
+      (failure) => showGlobalToast(message: failure.message, status: 'error'),
+      (_) {},
     );
   }
 }

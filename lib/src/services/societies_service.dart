@@ -120,4 +120,17 @@ class SocietiesService {
       }
     });
   }
+
+  FutureEither<Map<String, dynamic>> upvoteComplaint(String postId) async {
+    final result =
+        await DioService.instance.post('societies/complaints/$postId/upvote');
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Failed to upvote complaint: $e');
+      }
+    });
+  }
 }

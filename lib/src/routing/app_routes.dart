@@ -20,4 +20,7 @@ abstract final class AppRoutes {
   static const String societyFeed = '/society-feed';
   static const String roleSelection = '/role-selection';
   static const String chatRoom = '/chat-room';
+  static const String searchUsers = '/search-users';
+  static const String editProfile = '/edit-profile';
+  static const String viewProfile = '/view-profile';
 }

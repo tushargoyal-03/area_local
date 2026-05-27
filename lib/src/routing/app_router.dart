@@ -19,6 +19,9 @@ import 'package:area_connect/src/features/locality_feed/domain/entities/post.dar
 
 import 'package:area_connect/src/features/home/presentation/screens/home_page.dart';
 import 'package:area_connect/src/features/onboarding/presentation/screens/onboarding_page.dart';
+import 'package:area_connect/src/features/user_profile/presentation/pages/search_users_screen.dart';
+import 'package:area_connect/src/features/user_profile/presentation/pages/edit_profile_screen.dart';
+import 'package:area_connect/src/features/user_profile/presentation/pages/view_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
@@ -112,6 +115,24 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.societyFeed,
       name: 'societyFeed',
       builder: (context, state) => const SocietyFeedScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.searchUsers,
+      name: 'searchUsers',
+      builder: (context, state) => const SearchUsersScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.editProfile,
+      name: 'editProfile',
+      builder: (context, state) => const EditProfileScreen(),
+    ),
+    GoRoute(
+      path: '${AppRoutes.viewProfile}/:id',
+      name: 'viewProfile',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return ViewProfileScreen(userId: id);
+      },
     ),
   ],
 );

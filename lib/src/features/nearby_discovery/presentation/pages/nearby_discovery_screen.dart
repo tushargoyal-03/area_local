@@ -1,6 +1,9 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import '../providers/nearby_discovery_bloc.dart';
+import 'package:area_connect/src/features/locality_feed/presentation/providers/posts_bloc.dart';
+import 'package:area_connect/src/features/business/presentation/providers/business_bloc.dart';
+import 'package:area_connect/src/shared/widgets/activity_card.dart';
 
 class NearbyDiscoveryScreen extends StatefulWidget {
   const NearbyDiscoveryScreen({super.key});
@@ -42,6 +45,8 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                 lat: position.latitude,
               ),
             );
+        context.read<PostsBloc>().add(LoadNearbyPostsRequested(lng: position.longitude, lat: position.latitude));
+        context.read<BusinessBloc>().add(LoadNearbyPromotions(lng: position.longitude, lat: position.latitude));
       },
     );
   }
@@ -162,71 +167,120 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                 SizedBox(height: 14.h),
 
                 /// People List via Bloc
-                BlocBuilder<NearbyDiscoveryBloc, NearbyDiscoveryState>(
-                  builder: (context, state) {
-                    if (state.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (state.error != null) {
-                      return Center(child: Text(state.error!));
-                    }
-                    if (state.neighbors.isEmpty) {
-                      return const Center(
-                          child: Text('No neighbors found nearby.'));
-                    }
+                if (_activeTabIndex == 0)
+                  _buildPeopleList(cs, tt),
+                
+                if (_activeTabIndex == 1)
+                  _buildActivitiesList(cs, tt),
+                  
+                if (_activeTabIndex == 2)
+                  _buildBusinessList(cs, tt),
 
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              IconsaxPlusLinear.trend_up,
-                              size: 16.sp,
-                              color: cs.primary,
-                            ),
-                            SizedBox(width: 6.w),
-                            Text(
-                              '${state.neighbors.length} active nearby right now',
-                              style: tt.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 14.h),
-                        ...List.generate(state.neighbors.length, (i) {
-                          final neighbor = state.neighbors[i];
-                          final profile =
-                              neighbor['profile'] ?? <String, dynamic>{};
-                          final name = profile['displayName'] ?? 'Neighbor';
-                          final dist = neighbor['distanceInMeters'] ?? 0.0;
-
-                          // Defaulting to general interest if parsing fails
-                          String interest = 'connecting';
-                          if (profile['lookingFor'] != null &&
-                              (profile['lookingFor'] as List).isNotEmpty) {
-                            interest = profile['lookingFor'].join(', ');
-                          }
-
-                          return _NearbyCard(
-                            userId: neighbor['userId'] ?? '',
-                            name: name,
-                            distance: (dist / 1000.0).toStringAsFixed(1),
-                            interest: interest,
-                            cs: cs,
-                            tt: tt,
-                          );
-                        }),
-                      ],
-                    );
-                  },
-                ),
+                if (_activeTabIndex == 3 || _activeTabIndex == 4)
+                  Center(child: Padding(
+                    padding: EdgeInsets.only(top: 20.h),
+                    child: Text('Coming soon...', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                  )),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildPeopleList(ColorScheme cs, TextTheme tt) {
+    return BlocBuilder<NearbyDiscoveryBloc, NearbyDiscoveryState>(
+      builder: (context, state) {
+        if (state.isLoading) return const Center(child: CircularProgressIndicator());
+        if (state.error != null) return Center(child: Text(state.error!));
+        if (state.neighbors.isEmpty) return const Center(child: Text('No neighbors found nearby.'));
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(IconsaxPlusLinear.trend_up, size: 16.sp, color: cs.primary),
+                SizedBox(width: 6.w),
+                Text('${state.neighbors.length} active nearby right now', style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            SizedBox(height: 14.h),
+            ...List.generate(state.neighbors.length, (i) {
+              final neighbor = state.neighbors[i];
+              final profile = neighbor['profile'] ?? <String, dynamic>{};
+              final name = profile['displayName'] ?? 'Neighbor';
+              final dist = neighbor['distanceInMeters'] ?? 0.0;
+
+              String interest = 'connecting';
+              if (profile['lookingFor'] != null && (profile['lookingFor'] as List).isNotEmpty) {
+                interest = profile['lookingFor'].join(', ');
+              }
+
+              return _NearbyCard(
+                userId: neighbor['userId'] ?? '',
+                name: name,
+                distance: (dist / 1000.0).toStringAsFixed(1),
+                interest: interest,
+                cs: cs,
+                tt: tt,
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildActivitiesList(ColorScheme cs, TextTheme tt) {
+    return BlocBuilder<PostsBloc, PostsState>(
+      builder: (context, state) {
+        if (state.isLoading && state.posts.isEmpty) return const Center(child: CircularProgressIndicator());
+        if (state.posts.isEmpty) return const Center(child: Text('No nearby activities found.'));
+
+        return Column(
+          children: state.posts.map((post) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: 12.h),
+              child: ActivityCard(post: post),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildBusinessList(ColorScheme cs, TextTheme tt) {
+    return BlocBuilder<BusinessBloc, BusinessState>(
+      builder: (context, state) {
+        if (state.isLoadingNearby) return const Center(child: CircularProgressIndicator());
+        if (state.nearbyPromotions.isEmpty) return const Center(child: Text('No nearby business promotions.'));
+
+        return Column(
+          children: state.nearbyPromotions.map((promo) {
+            return Container(
+              margin: EdgeInsets.only(bottom: 12.h),
+              padding: EdgeInsets.all(AppSpacing.md.w),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(promo['businessName'] ?? 'Business', style: tt.labelSmall?.copyWith(color: cs.primary)),
+                  SizedBox(height: 4.h),
+                  Text(promo['title'] ?? 'Promotion', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  SizedBox(height: 8.h),
+                  Text(promo['description'] ?? '', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
     );
   }
 }

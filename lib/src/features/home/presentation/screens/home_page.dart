@@ -260,7 +260,7 @@ class _HomeFeedTab extends StatelessWidget {
             tt: tt,
             userName: user?.name ?? 'Resident',
             userRole: user?.role ?? 'User',
-            onSearchTap: () {},
+            onSearchTap: () => context.push(AppRoutes.searchUsers),
             onBellTap: () => context.push(AppRoutes.notification),
             locationAddress: locationAddress,
           ),
@@ -712,7 +712,7 @@ class _ProfileSettingsTab extends StatelessWidget {
                     icon: IconsaxPlusLinear.profile_2user,
                     title: 'Personal Info',
                     cs: cs,
-                    onTap: () {},
+                    onTap: () => context.push(AppRoutes.editProfile),
                   ),
                   Divider(
                       color: cs.outlineVariant.withValues(alpha: 0.15),

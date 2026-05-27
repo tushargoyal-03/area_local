@@ -1,0 +1,169 @@
+import 'package:area_connect/src/imports/core_imports.dart';
+import 'package:area_connect/src/imports/packages_imports.dart';
+
+// --- Events ---
+abstract class BusinessEvent extends Equatable {
+  const BusinessEvent();
+  @override
+  List<Object?> get props => [];
+}
+
+class LoadNearbyPromotions extends BusinessEvent {
+  final double lng;
+  final double lat;
+  final double radiusInKm;
+
+  const LoadNearbyPromotions({
+    required this.lng,
+    required this.lat,
+    this.radiusInKm = 5,
+  });
+
+  @override
+  List<Object?> get props => [lng, lat, radiusInKm];
+}
+
+class LoadMyPromotions extends BusinessEvent {}
+
+class CreatePromotionRequested extends BusinessEvent {
+  final String businessName;
+  final String title;
+  final String description;
+  final List<double> coordinates;
+  final String? discountCode;
+  final String? expiryDate;
+
+  const CreatePromotionRequested({
+    required this.businessName,
+    required this.title,
+    required this.description,
+    required this.coordinates,
+    this.discountCode,
+    this.expiryDate,
+  });
+
+  @override
+  List<Object?> get props => [businessName, title, description, coordinates, discountCode, expiryDate];
+}
+
+// --- State ---
+class BusinessState extends Equatable {
+  final bool isLoadingNearby;
+  final bool isLoadingMine;
+  final bool isCreating;
+  final List<dynamic> nearbyPromotions;
+  final List<dynamic> myPromotions;
+  final String? error;
+  final bool createSuccess;
+
+  const BusinessState({
+    this.isLoadingNearby = false,
+    this.isLoadingMine = false,
+    this.isCreating = false,
+    this.nearbyPromotions = const [],
+    this.myPromotions = const [],
+    this.error,
+    this.createSuccess = false,
+  });
+
+  BusinessState copyWith({
+    bool? isLoadingNearby,
+    bool? isLoadingMine,
+    bool? isCreating,
+    List<dynamic>? nearbyPromotions,
+    List<dynamic>? myPromotions,
+    String? error,
+    bool? createSuccess,
+    bool clearError = false,
+  }) {
+    return BusinessState(
+      isLoadingNearby: isLoadingNearby ?? this.isLoadingNearby,
+      isLoadingMine: isLoadingMine ?? this.isLoadingMine,
+      isCreating: isCreating ?? this.isCreating,
+      nearbyPromotions: nearbyPromotions ?? this.nearbyPromotions,
+      myPromotions: myPromotions ?? this.myPromotions,
+      error: clearError ? null : (error ?? this.error),
+      createSuccess: createSuccess ?? this.createSuccess,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        isLoadingNearby,
+        isLoadingMine,
+        isCreating,
+        nearbyPromotions,
+        myPromotions,
+        error,
+        createSuccess,
+      ];
+}
+
+// --- Bloc ---
+class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
+  BusinessBloc() : super(const BusinessState()) {
+    on<LoadNearbyPromotions>(_onLoadNearby);
+    on<LoadMyPromotions>(_onLoadMine);
+    on<CreatePromotionRequested>(_onCreatePromotion);
+  }
+
+  Future<void> _onLoadNearby(
+    LoadNearbyPromotions event,
+    Emitter<BusinessState> emit,
+  ) async {
+    emit(state.copyWith(isLoadingNearby: true, clearError: true));
+    final result = await BusinessService.instance.getNearbyPromotions(
+      lng: event.lng,
+      lat: event.lat,
+      radiusInKm: event.radiusInKm,
+    );
+
+    result.fold(
+      (failure) => emit(state.copyWith(isLoadingNearby: false, error: failure.message)),
+      (promotions) => emit(state.copyWith(isLoadingNearby: false, nearbyPromotions: promotions)),
+    );
+  }
+
+  Future<void> _onLoadMine(
+    LoadMyPromotions event,
+    Emitter<BusinessState> emit,
+  ) async {
+    emit(state.copyWith(isLoadingMine: true, clearError: true));
+    final result = await BusinessService.instance.getMyPromotions();
+
+    result.fold(
+      (failure) => emit(state.copyWith(isLoadingMine: false, error: failure.message)),
+      (promotions) => emit(state.copyWith(isLoadingMine: false, myPromotions: promotions)),
+    );
+  }
+
+  Future<void> _onCreatePromotion(
+    CreatePromotionRequested event,
+    Emitter<BusinessState> emit,
+  ) async {
+    emit(state.copyWith(isCreating: true, createSuccess: false, clearError: true));
+    final result = await BusinessService.instance.createPromotion(
+      businessName: event.businessName,
+      title: event.title,
+      description: event.description,
+      coordinates: event.coordinates,
+      discountCode: event.discountCode,
+      expiryDate: event.expiryDate,
+    );
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isCreating: false, error: failure.message));
+        showGlobalToast(message: failure.message, status: 'error');
+      },
+      (newPromotion) {
+        emit(state.copyWith(
+          isCreating: false,
+          createSuccess: true,
+          myPromotions: [newPromotion, ...state.myPromotions],
+        ));
+        showGlobalToast(message: 'Promotion created successfully!', status: 'success');
+      },
+    );
+  }
+}

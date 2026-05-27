@@ -23,11 +23,10 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
   @override
   void initState() {
     super.initState();
-    // Assuming society ID is known or passed. For demo, we use a mock one.
-    // In a real app, this might come from User profile `session_bloc`
+    // Using a valid ObjectId format for the backend ParseObjectIdPipe
     context
         .read<SocietyFeedBloc>()
-        .add(const LoadSocietyFeed('mock_society_id_123', type: 'All'));
+        .add(const LoadSocietyFeed('65522e848651a547b7440bd8', type: 'All'));
   }
 
   void _onCategoryTapped(int index) {
@@ -35,7 +34,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
     final category = _categories[index];
     context
         .read<SocietyFeedBloc>()
-        .add(LoadSocietyFeed('mock_society_id_123', type: category));
+        .add(LoadSocietyFeed('65522e848651a547b7440bd8', type: category));
   }
 
   @override
@@ -476,21 +475,34 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                     ),
                   ),
                   SizedBox(width: AppSpacing.md.w),
-                  Icon(
-                    type == 'poll'
-                        ? IconsaxPlusLinear.box_1
-                        : IconsaxPlusLinear.like_1,
-                    size: 14.w,
-                    color: cs.onSurfaceVariant,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    type == 'poll'
-                        ? '${post.totalVotes ?? 0} votes cast'
-                        : '${post.likesCount}',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 11.sp,
+                  GestureDetector(
+                    onTap: () {
+                      if (type == 'complaint') {
+                        context.read<SocietyFeedBloc>().add(UpvoteComplaint(postId: post.id));
+                      } else if (type != 'poll') {
+                        context.read<SocietyFeedBloc>().add(LikePost(postId: post.id));
+                      }
+                    },
+                    child: Row(
+                      children: [
+                        Icon(
+                          type == 'poll'
+                              ? IconsaxPlusLinear.box_1
+                              : (type == 'complaint' ? IconsaxPlusLinear.arrow_up_1 : IconsaxPlusLinear.like_1),
+                          size: 14.w,
+                          color: cs.onSurfaceVariant,
+                        ),
+                        SizedBox(width: 4.w),
+                        Text(
+                          type == 'poll'
+                              ? '${post.totalVotes ?? 0} votes cast'
+                              : '${post.likesCount}',
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                            fontSize: 11.sp,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

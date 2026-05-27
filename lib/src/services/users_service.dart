@@ -78,4 +78,27 @@ class UsersService {
       }
     });
   }
+  FutureEither<List<dynamic>> searchUsers({
+    required String query,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final result = await DioService.instance.get(
+      'users/search',
+      queryParameters: {
+        'q': query,
+        'page': page,
+        'limit': limit,
+      },
+    );
+
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as List<dynamic>;
+      } catch (e) {
+        throw Exception('Failed to search users: $e');
+      }
+    });
+  }
 }

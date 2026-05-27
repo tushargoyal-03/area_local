@@ -4,6 +4,8 @@ import '../../features/locality_feed/data/repositories/posts_repository_impl.dar
 
 import '../../features/society_feed/presentation/providers/society_feed_bloc.dart';
 import '../../features/nearby_discovery/presentation/providers/nearby_discovery_bloc.dart';
+import '../../features/user_profile/presentation/providers/user_profile_bloc.dart';
+import '../../features/business/presentation/providers/business_bloc.dart';
 
 /// A wrapper to initialize the chosen State Management library.
 class StateWrapper extends StatelessWidget {
@@ -28,6 +30,8 @@ class StateWrapper extends StatelessWidget {
         BlocProvider<NotificationBloc>(create: (_) => NotificationBloc()),
         BlocProvider<SocietyFeedBloc>(create: (_) => SocietyFeedBloc()),
         BlocProvider<NearbyDiscoveryBloc>(create: (_) => NearbyDiscoveryBloc()),
+        BlocProvider<UserProfileBloc>(create: (_) => UserProfileBloc()),
+        BlocProvider<BusinessBloc>(create: (_) => BusinessBloc()),
       ],
       child: child,
     );
