@@ -25,6 +25,9 @@ Future<void> main() async {
 
   await dotenv.load(fileName: '.env');
 
+  // Initialize local storage service
+  await StorageService.instance.init();
+
   await AppConfig.init();
 
   runApp(

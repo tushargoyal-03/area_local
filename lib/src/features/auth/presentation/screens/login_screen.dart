@@ -13,6 +13,26 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
+
+  void _loadSavedCredentials() {
+    final rememberMe = StorageService.instance.getBool('remember_me') ?? false;
+    if (rememberMe) {
+      final savedEmail = StorageService.instance.getString('saved_email') ?? '';
+      final savedPassword = StorageService.instance.getString('saved_password') ?? '';
+      setState(() {
+        _rememberMe = true;
+        _emailController.text = savedEmail;
+        _passwordController.text = savedPassword;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -31,13 +51,28 @@ class _LoginScreenState extends State<LoginScreen> {
     Future<void> handleLogin() async {
       if (!(_formKey.currentState?.validate() ?? false)) return;
 
-      context.read<AuthBloc>().add(
-            LoginRequested(
-              context: context,
-              email: _emailController.text.trim(),
-              password: _passwordController.text,
-            ),
-          );
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+
+      if (_rememberMe) {
+        await StorageService.instance.setBool('remember_me', true);
+        await StorageService.instance.setString('saved_email', email);
+        await StorageService.instance.setString('saved_password', password);
+      } else {
+        await StorageService.instance.setBool('remember_me', false);
+        await StorageService.instance.remove('saved_email');
+        await StorageService.instance.remove('saved_password');
+      }
+
+      if (context.mounted) {
+        context.read<AuthBloc>().add(
+              LoginRequested(
+                context: context,
+                email: email,
+                password: password,
+              ),
+            );
+      }
     }
 
     return _LoginView(
@@ -45,9 +80,12 @@ class _LoginScreenState extends State<LoginScreen> {
       emailController: _emailController,
       passwordController: _passwordController,
       obscurePassword: _obscurePassword,
+      rememberMe: _rememberMe,
       isLoading: isLoading,
       onToggleObscure: () =>
           setState(() => _obscurePassword = !_obscurePassword),
+      onToggleRememberMe: (value) =>
+          setState(() => _rememberMe = value),
       onLogin: handleLogin,
       cs: cs,
       tt: tt,
@@ -109,8 +147,10 @@ class _LoginView extends StatelessWidget {
     required this.emailController,
     required this.passwordController,
     required this.obscurePassword,
+    required this.rememberMe,
     required this.isLoading,
     required this.onToggleObscure,
+    required this.onToggleRememberMe,
     required this.onLogin,
     required this.cs,
     required this.tt,
@@ -120,8 +160,10 @@ class _LoginView extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final bool obscurePassword;
+  final bool rememberMe;
   final bool isLoading;
   final VoidCallback onToggleObscure;
+  final ValueChanged<bool> onToggleRememberMe;
   final VoidCallback onLogin;
   final ColorScheme cs;
   final TextTheme tt;
@@ -225,23 +267,49 @@ class _LoginView extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            spacing: 5.w,
-                            children: [
-                              SizedBox(
-                                width: 20.w,
-                                height: 20.h,
-                                child: Checkbox(
-                                  value: true,
-                                  onChanged: (value) {},
-                                ),
+                          GestureDetector(
+                            onTap: () => onToggleRememberMe(!rememberMe),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Row(
+                                spacing: 8.w,
+                                children: [
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.easeInOut,
+                                    width: 20.w,
+                                    height: 20.w,
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                      color: rememberMe ? cs.primary : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(6.r),
+                                      border: Border.all(
+                                        color: rememberMe ? cs.primary : cs.outline.withValues(alpha: 0.6),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 150),
+                                      child: rememberMe
+                                          ? Icon(
+                                              Icons.check,
+                                              key: const ValueKey('check'),
+                                              size: 14.sp,
+                                              color: Colors.white,
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Remember Me',
+                                    style: tt.bodySmall?.copyWith(
+                                      color: rememberMe ? cs.primary : cs.onSurfaceVariant,
+                                      fontWeight: rememberMe ? FontWeight.w600 : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                'Remember Me',
-                                style: tt.bodySmall
-                                    ?.copyWith(color: cs.onSurfaceVariant),
-                              ),
-                            ],
+                            ),
                           ),
                           TextButton(
                             style: TextButton.styleFrom(

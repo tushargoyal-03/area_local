@@ -247,6 +247,15 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push(AppRoutes.createActivity),
+        shape: const CircleBorder(),
+        backgroundColor: cs.primary,
+        child: Icon(
+          IconsaxPlusLinear.add,
+          color: cs.onPrimary,
+        ),
+      ),
     );
   }
 
@@ -478,9 +487,13 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                   GestureDetector(
                     onTap: () {
                       if (type == 'complaint') {
-                        context.read<SocietyFeedBloc>().add(UpvoteComplaint(postId: post.id));
+                        context
+                            .read<SocietyFeedBloc>()
+                            .add(UpvoteComplaint(postId: post.id));
                       } else if (type != 'poll') {
-                        context.read<SocietyFeedBloc>().add(LikePost(postId: post.id));
+                        context
+                            .read<SocietyFeedBloc>()
+                            .add(LikePost(postId: post.id));
                       }
                     },
                     child: Row(
@@ -488,7 +501,9 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                         Icon(
                           type == 'poll'
                               ? IconsaxPlusLinear.box_1
-                              : (type == 'complaint' ? IconsaxPlusLinear.arrow_up_1 : IconsaxPlusLinear.like_1),
+                              : (type == 'complaint'
+                                  ? IconsaxPlusLinear.arrow_up_1
+                                  : IconsaxPlusLinear.like_1),
                           size: 14.w,
                           color: cs.onSurfaceVariant,
                         ),
