@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import '../../domain/repositories/posts_repository.dart';
@@ -29,16 +30,19 @@ class CreatePostRequested extends PostsEvent {
   final String title;
   final String content;
   final List<double> coordinates;
+  final File? image;
+
   const CreatePostRequested({
     required this.context,
     required this.category,
     required this.title,
     required this.content,
     required this.coordinates,
+    this.image,
   });
 
   @override
-  List<Object?> get props => [category, title, content, coordinates];
+  List<Object?> get props => [category, title, content, coordinates, image];
 }
 
 class ToggleInterestRequested extends PostsEvent {
@@ -151,11 +155,25 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
   ) async {
     emit(state.copyWith(isCreating: true, createSuccess: false));
 
+    final List<String> mediaUrls = [];
+    if (event.image != null) {
+      final uploadRes = await _repository.uploadImage(event.image!);
+      uploadRes.fold(
+        (_) {
+          mediaUrls.add(event.image!.path);
+        },
+        (url) {
+          mediaUrls.add(url);
+        },
+      );
+    }
+
     final result = await _repository.createPost(
       category: event.category,
       title: event.title,
       content: event.content,
       coordinates: event.coordinates,
+      mediaUrls: mediaUrls,
     );
 
     result.fold(
@@ -164,13 +182,22 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
         showGlobalToast(message: failure.message, status: 'error');
       },
       (newPost) {
+        final currentUser = event.context.read<SessionBloc>().state.user;
+        final finalPost = newPost.copyWith(
+          authorName: currentUser?.name ?? 'You',
+          authorAvatar: currentUser?.photoUrl,
+          authorRole: currentUser?.role ?? 'User',
+        );
+
         emit(state.copyWith(
           isCreating: false,
           createSuccess: true,
-          posts: [newPost, ...state.posts],
+          posts: [finalPost, ...state.posts],
         ));
         showGlobalToast(
-            message: 'Hyperlocal activity published successfully!',
+            message: event.category.toLowerCase() == 'advertisement'
+                ? 'Business advertisement published successfully!'
+                : 'Hyperlocal activity published successfully!',
             status: 'success');
 
         if (event.context.mounted) {

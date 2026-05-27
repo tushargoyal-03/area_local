@@ -135,7 +135,10 @@ class ChatService {
     );
 
     // Dynamic Connection Listeners
-    _socket?.onConnect((_) {});
+    _socket?.onConnect((_) {
+      debugPrint('[ChatService] Socket connected. Publishing presence status...');
+      updatePresenceStatus(true);
+    });
 
     _socket?.onDisconnect((_) {});
 

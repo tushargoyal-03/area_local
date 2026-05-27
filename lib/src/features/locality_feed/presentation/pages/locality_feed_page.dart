@@ -102,6 +102,7 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
     return Scaffold(
       backgroundColor: widget.cs.surface,
       appBar: AppTopBar(
+        showbackbutton: false,
         title: '',
         titleWidget: ListTile(
           contentPadding: EdgeInsets.zero,

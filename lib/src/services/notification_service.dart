@@ -78,7 +78,8 @@ class NotificationService {
     // 3. Check if app was opened from a terminated state via a notification
     FirebaseMessaging.instance.getInitialMessage().then((initialMessage) {
       if (initialMessage != null) {
-        debugPrint('FCM message clicked from terminated: ${initialMessage.messageId}');
+        debugPrint(
+            'FCM message clicked from terminated: ${initialMessage.messageId}');
         Future.delayed(const Duration(seconds: 1), () {
           _handleNotificationPayloadRedirect(initialMessage.data);
         });
@@ -129,9 +130,11 @@ class NotificationService {
   void _handleNotificationPayloadRedirect(Map<String, dynamic> data) {
     try {
       final typeStr = data['type']?.toString();
-      final relatedId = data['relatedId']?.toString() ?? data['postId']?.toString();
+      final relatedId =
+          data['relatedId']?.toString() ?? data['postId']?.toString();
       final senderName = data['senderName']?.toString();
-      final senderId = data['senderId']?.toString() ?? data['actorId']?.toString();
+      final senderId =
+          data['senderId']?.toString() ?? data['actorId']?.toString();
 
       final context = rootContext;
       if (context == null) {
@@ -532,7 +535,8 @@ class NotificationService {
       debugPrint('Retrieved FCM Token: $token');
 
       // 3. Fetch platform metadata
-      final String platform = Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'web');
+      final String platform =
+          Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'web');
 
       // 4. Retrieve deviceId (using existing DeviceInfoService if possible)
       String? deviceId;
@@ -558,7 +562,8 @@ class NotificationService {
       }
 
       // 6. Register token with backend
-      final registerRes = await NotificationsService.instance.registerDeviceToken(
+      final registerRes =
+          await NotificationsService.instance.registerDeviceToken(
         token: token,
         platform: platform,
         deviceId: deviceId,
@@ -566,8 +571,10 @@ class NotificationService {
       );
 
       registerRes.fold(
-        (failure) => debugPrint('Failed to register device token on backend: ${failure.message}'),
-        (_) => debugPrint('FCM device token registered successfully on backend!'),
+        (failure) => debugPrint(
+            'Failed to register device token on backend: ${failure.message}'),
+        (_) =>
+            debugPrint('FCM device token registered successfully on backend!'),
       );
     } catch (e) {
       debugPrint('Error registering FCM token: $e');
@@ -585,10 +592,13 @@ class NotificationService {
       }
 
       // 1. Remove from backend
-      final removeRes = await NotificationsService.instance.removeDeviceToken(token);
+      final removeRes =
+          await NotificationsService.instance.removeDeviceToken(token);
       removeRes.fold(
-        (failure) => debugPrint('Failed to remove device token from backend: ${failure.message}'),
-        (_) => debugPrint('FCM device token removed successfully from backend!'),
+        (failure) => debugPrint(
+            'Failed to remove device token from backend: ${failure.message}'),
+        (_) =>
+            debugPrint('FCM device token removed successfully from backend!'),
       );
 
       // 2. Delete the token locally on device (critical for iOS)

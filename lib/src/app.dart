@@ -21,6 +21,12 @@ class App extends StatelessWidget {
         Widget current = child!;
         current = SkeletonWrapper(child: current);
         current = SessionListenerWrapper(child: current);
+        current = Listener(
+          onPointerDown: (_) => PresenceManager.instance.handleUserInteraction(),
+          onPointerMove: (_) => PresenceManager.instance.handleUserInteraction(),
+          behavior: HitTestBehavior.translucent,
+          child: current,
+        );
         return current;
       },
     );

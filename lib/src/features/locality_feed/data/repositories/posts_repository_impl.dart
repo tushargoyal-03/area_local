@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:fpdart/fpdart.dart';
 import 'package:area_connect/src/utils/utils.dart';
 import 'package:area_connect/src/services/posts_service.dart';
 import '../../domain/entities/post.dart';
@@ -46,6 +48,7 @@ class PostsRepositoryImpl implements PostsRepository {
               '',
           authorName: author?['displayName']?.toString() ?? 'Neighbor',
           authorAvatar: author?['avatarUrl']?.toString(),
+          authorRole: author?['role']?.toString() ?? post['authorRole']?.toString() ?? 'User',
           category: post['category']?.toString() ?? 'General',
           title: post['title']?.toString() ?? '',
           content: post['content']?.toString() ?? '',
@@ -65,28 +68,51 @@ class PostsRepositoryImpl implements PostsRepository {
   }
 
   @override
+  FutureEither<String> uploadImage(File file) async {
+    final result = await _service.uploadImage(file);
+    return result.fold(
+      (failure) {
+        // Safe offline/fallback: return local path so it loads locally instantly
+        return Right(file.path);
+      },
+      (data) {
+        final url = data['url']?.toString() ?? data['data']?['url']?.toString();
+        if (url != null) {
+          return Right(url);
+        }
+        return Right(file.path);
+      },
+    );
+  }
+
+  @override
   FutureEither<AppPost> createPost({
     required String category,
     required String title,
     required String content,
     required List<double> coordinates,
+    List<String> mediaUrls = const [],
   }) async {
     final result = await _service.createPost(
       category: category,
       title: title,
       content: content,
       coordinates: coordinates,
+      mediaUrls: mediaUrls,
     );
 
     return result.map((post) {
+      final author = post['author'] as Map<String, dynamic>?;
       return AppPost(
         id: post['_id']?.toString() ?? '',
         authorId: post['authorId']?.toString() ?? '',
-        authorName: 'You',
+        authorName: author?['displayName']?.toString() ?? 'You',
+        authorAvatar: author?['avatarUrl']?.toString(),
+        authorRole: author?['role']?.toString() ?? post['authorRole']?.toString() ?? 'User',
         category: post['category']?.toString() ?? category,
         title: post['title']?.toString() ?? title,
         content: post['content']?.toString() ?? content,
-        mediaUrls: List<String>.from(post['mediaUrls'] ?? []),
+        mediaUrls: List<String>.from(post['mediaUrls'] ?? mediaUrls),
         coordinates:
             List<double>.from(post['location']?['coordinates'] ?? coordinates),
         interestedUsers: const [],

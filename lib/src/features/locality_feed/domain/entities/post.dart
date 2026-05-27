@@ -45,6 +45,7 @@ class AppPost extends Equatable {
   final String authorId;
   final String authorName;
   final String? authorAvatar;
+  final String authorRole;
   final String category;
   final String title;
   final String content;
@@ -62,6 +63,7 @@ class AppPost extends Equatable {
     required this.authorId,
     required this.authorName,
     this.authorAvatar,
+    this.authorRole = 'User',
     required this.category,
     required this.title,
     required this.content,
@@ -80,6 +82,7 @@ class AppPost extends Equatable {
     String? authorId,
     String? authorName,
     String? authorAvatar,
+    String? authorRole,
     String? category,
     String? title,
     String? content,
@@ -97,6 +100,7 @@ class AppPost extends Equatable {
       authorId: authorId ?? this.authorId,
       authorName: authorName ?? this.authorName,
       authorAvatar: authorAvatar ?? this.authorAvatar,
+      authorRole: authorRole ?? this.authorRole,
       category: category ?? this.category,
       title: title ?? this.title,
       content: content ?? this.content,
@@ -117,6 +121,7 @@ class AppPost extends Equatable {
         authorId,
         authorName,
         authorAvatar,
+        authorRole,
         category,
         title,
         content,

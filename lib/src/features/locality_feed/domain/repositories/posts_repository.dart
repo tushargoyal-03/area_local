@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:area_connect/src/utils/utils.dart';
 import '../entities/post.dart';
 
@@ -16,7 +17,10 @@ abstract class PostsRepository {
     required String title,
     required String content,
     required List<double> coordinates,
+    List<String> mediaUrls = const [],
   });
+
+  FutureEither<String> uploadImage(File file);
 
   FutureEither<AppPost> toggleInterest({
     required String postId,

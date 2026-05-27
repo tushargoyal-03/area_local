@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:area_connect/src/imports/imports.dart';
 
 class PostsService {
@@ -34,12 +35,40 @@ class PostsService {
     });
   }
 
+  /// Upload a post media/image to the backend.
+  FutureEither<Map<String, dynamic>> uploadImage(File file) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          file.path,
+          filename: file.path.split('/').last,
+        ),
+      });
+
+      final result = await DioService.instance.post(
+        'upload',
+        data: formData,
+      );
+
+      return result.map((response) {
+        try {
+          return response.data as Map<String, dynamic>;
+        } catch (e) {
+          throw Exception('Failed to parse upload response: $e');
+        }
+      });
+    } catch (e) {
+      throw Exception('Failed to prepare upload form: $e');
+    }
+  }
+
   /// Create a new hyperlocal activity post.
   FutureEither<Map<String, dynamic>> createPost({
     required String category,
     required String title,
     required String content,
     required List<double> coordinates, // [lng, lat]
+    List<String> mediaUrls = const [],
   }) async {
     final result = await DioService.instance.post(
       'posts/activity',
@@ -48,6 +77,7 @@ class PostsService {
         'title': title,
         'content': content,
         'coordinates': coordinates,
+        'mediaUrls': mediaUrls,
       },
     );
 

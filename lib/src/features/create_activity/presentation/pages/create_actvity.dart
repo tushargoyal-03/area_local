@@ -14,7 +14,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
 
-  final List<String> categories = [
+  List<String> categories = [
     'Sports',
     'Events',
     'Help',
@@ -32,6 +32,18 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   int _capacityCount = 2;
 
   File? _selectedImage;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = context.read<SessionBloc>().state.user;
+    if (user?.role == 'BusinessOwner') {
+      categories = ['Advertisement', ...categories];
+      selectedIndex = 0;
+      _titleController.text = user?.name ?? '';
+      _locationName = user?.name != null ? "${user!.name}'s Shop" : 'Local Shop';
+    }
+  }
 
   Future<void> _pickImageFromCamera() async {
     final result =
@@ -306,6 +318,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
               title: title,
               content: content,
               coordinates: coordinates,
+              image: _selectedImage,
             ),
           );
     }
@@ -319,8 +332,10 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         context.select((PostsBloc bloc) => bloc.state.isCreating);
 
     return Scaffold(
-      appBar: const AppTopBar(
-        title: 'New activity',
+      appBar: AppTopBar(
+        title: categories[selectedIndex] == 'Advertisement'
+            ? 'New Advertisement'
+            : 'New activity',
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -382,7 +397,9 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                 SizedBox(height: AppSpacing.lg.h),
 
                 // Title section
-                const _SectionLabel('Title'),
+                _SectionLabel(categories[selectedIndex] == 'Advertisement'
+                    ? 'Business / Shop Name'
+                    : 'Title'),
                 SizedBox(height: AppSpacing.sm.h),
                 TextFormField(
                   controller: _titleController,
@@ -391,7 +408,9 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                     fontWeight: FontWeight.w700,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Need a pickleball partner...',
+                    hintText: categories[selectedIndex] == 'Advertisement'
+                        ? "e.g. Priya's Cozy Cafe..."
+                        : 'Need a pickleball partner...',
                     hintStyle: tt.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                       color: cs.onSurfaceVariant.withValues(alpha: 0.4),
@@ -411,7 +430,9 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                 SizedBox(height: AppSpacing.lg.h),
 
                 // Description section
-                const _SectionLabel('Description'),
+                _SectionLabel(categories[selectedIndex] == 'Advertisement'
+                    ? 'Advertisement Description'
+                    : 'Description'),
                 SizedBox(height: AppSpacing.sm.h),
                 Container(
                   width: double.infinity,
@@ -427,8 +448,9 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                     maxLines: 5,
                     style: tt.bodyMedium,
                     decoration: InputDecoration(
-                      hintText:
-                          'Describe details, skill level, date/time, and exact location...',
+                      hintText: categories[selectedIndex] == 'Advertisement'
+                          ? 'Describe your shop, special discount deals, active promo code, products or store hours...'
+                          : 'Describe details, skill level, date/time, and exact location...',
                       hintStyle: tt.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
                       border: InputBorder.none,
@@ -445,7 +467,9 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                 SizedBox(height: AppSpacing.lg.h),
 
                 // Dynamic options labels
-                const _SectionLabel('Activity Details (Tap to customize)'),
+                _SectionLabel(categories[selectedIndex] == 'Advertisement'
+                    ? 'Promotion Details (Tap to customize)'
+                    : 'Activity Details (Tap to customize)'),
                 SizedBox(height: AppSpacing.sm.h),
 
                 // Dynamic Meta details Grid
@@ -566,7 +590,9 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                               ),
                               SizedBox(height: 8.h),
                               Text(
-                                'Add a photo (optional)',
+                                categories[selectedIndex] == 'Advertisement'
+                                    ? 'Add business cover banner (Highly recommended)'
+                                    : 'Add a photo (optional)',
                                 style: tt.bodySmall?.copyWith(
                                   color: cs.onSurfaceVariant,
                                 ),
@@ -580,7 +606,9 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
 
                 // Post button
                 AppButton(
-                  label: 'Post Activity',
+                  label: categories[selectedIndex] == 'Advertisement'
+                      ? 'Publish Advertisement'
+                      : 'Post Activity',
                   isLoading: isCreating,
                   onPressed: isCreating ? null : _handlePost,
                   isFullWidth: true,
