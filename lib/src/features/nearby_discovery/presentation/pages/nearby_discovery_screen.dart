@@ -1,9 +1,7 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import '../providers/nearby_discovery_bloc.dart';
-import 'package:area_connect/src/features/locality_feed/presentation/providers/posts_bloc.dart';
 import 'package:area_connect/src/features/business/presentation/providers/business_bloc.dart';
-import 'package:area_connect/src/shared/widgets/activity_card.dart';
 
 class NearbyDiscoveryScreen extends StatefulWidget {
   const NearbyDiscoveryScreen({super.key});
@@ -45,8 +43,10 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                 lat: position.latitude,
               ),
             );
-        context.read<PostsBloc>().add(LoadNearbyPostsRequested(lng: position.longitude, lat: position.latitude));
-        context.read<BusinessBloc>().add(LoadNearbyPromotions(lng: position.longitude, lat: position.latitude));
+        context.read<PostsBloc>().add(LoadNearbyPostsRequested(
+            lng: position.longitude, lat: position.latitude));
+        context.read<BusinessBloc>().add(LoadNearbyPromotions(
+            lng: position.longitude, lat: position.latitude));
       },
     );
   }
@@ -167,19 +167,19 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                 SizedBox(height: 14.h),
 
                 /// People List via Bloc
-                if (_activeTabIndex == 0)
-                  _buildPeopleList(cs, tt),
-                
-                if (_activeTabIndex == 1)
-                  _buildActivitiesList(cs, tt),
-                  
-                if (_activeTabIndex == 2)
-                  _buildBusinessList(cs, tt),
+                if (_activeTabIndex == 0) _buildPeopleList(cs, tt),
+
+                if (_activeTabIndex == 1) _buildActivitiesList(cs, tt),
+
+                if (_activeTabIndex == 2) _buildBusinessList(cs, tt),
 
                 if (_activeTabIndex == 3 || _activeTabIndex == 4)
-                  Center(child: Padding(
+                  Center(
+                      child: Padding(
                     padding: EdgeInsets.only(top: 20.h),
-                    child: Text('Coming soon...', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                    child: Text('Coming soon...',
+                        style: tt.bodyMedium
+                            ?.copyWith(color: cs.onSurfaceVariant)),
                   )),
               ],
             ),
@@ -192,18 +192,25 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
   Widget _buildPeopleList(ColorScheme cs, TextTheme tt) {
     return BlocBuilder<NearbyDiscoveryBloc, NearbyDiscoveryState>(
       builder: (context, state) {
-        if (state.isLoading) return const Center(child: CircularProgressIndicator());
+        if (state.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
         if (state.error != null) return Center(child: Text(state.error!));
-        if (state.neighbors.isEmpty) return const Center(child: Text('No neighbors found nearby.'));
+        if (state.neighbors.isEmpty) {
+          return const Center(child: Text('No neighbors found nearby.'));
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(IconsaxPlusLinear.trend_up, size: 16.sp, color: cs.primary),
+                Icon(IconsaxPlusLinear.trend_up,
+                    size: 16.sp, color: cs.primary),
                 SizedBox(width: 6.w),
-                Text('${state.neighbors.length} active nearby right now', style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text('${state.neighbors.length} active nearby right now',
+                    style:
+                        tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
               ],
             ),
             SizedBox(height: 14.h),
@@ -214,7 +221,8 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
               final dist = neighbor['distanceInMeters'] ?? 0.0;
 
               String interest = 'connecting';
-              if (profile['lookingFor'] != null && (profile['lookingFor'] as List).isNotEmpty) {
+              if (profile['lookingFor'] != null &&
+                  (profile['lookingFor'] as List).isNotEmpty) {
                 interest = profile['lookingFor'].join(', ');
               }
 
@@ -236,8 +244,12 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
   Widget _buildActivitiesList(ColorScheme cs, TextTheme tt) {
     return BlocBuilder<PostsBloc, PostsState>(
       builder: (context, state) {
-        if (state.isLoading && state.posts.isEmpty) return const Center(child: CircularProgressIndicator());
-        if (state.posts.isEmpty) return const Center(child: Text('No nearby activities found.'));
+        if (state.isLoading && state.posts.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state.posts.isEmpty) {
+          return const Center(child: Text('No nearby activities found.'));
+        }
 
         return Column(
           children: state.posts.map((post) {
@@ -254,8 +266,12 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
   Widget _buildBusinessList(ColorScheme cs, TextTheme tt) {
     return BlocBuilder<BusinessBloc, BusinessState>(
       builder: (context, state) {
-        if (state.isLoadingNearby) return const Center(child: CircularProgressIndicator());
-        if (state.nearbyPromotions.isEmpty) return const Center(child: Text('No nearby business promotions.'));
+        if (state.isLoadingNearby) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state.nearbyPromotions.isEmpty) {
+          return const Center(child: Text('No nearby business promotions.'));
+        }
 
         return Column(
           children: state.nearbyPromotions.map((promo) {
@@ -265,16 +281,22 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
               decoration: BoxDecoration(
                 color: cs.surfaceContainerLow,
                 borderRadius: BorderRadius.circular(16.r),
-                border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(promo['businessName'] ?? 'Business', style: tt.labelSmall?.copyWith(color: cs.primary)),
+                  Text(promo['businessName'] ?? 'Business',
+                      style: tt.labelSmall?.copyWith(color: cs.primary)),
                   SizedBox(height: 4.h),
-                  Text(promo['title'] ?? 'Promotion', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text(promo['title'] ?? 'Promotion',
+                      style: tt.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold)),
                   SizedBox(height: 8.h),
-                  Text(promo['description'] ?? '', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(promo['description'] ?? '',
+                      style:
+                          tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
                 ],
               ),
             );
