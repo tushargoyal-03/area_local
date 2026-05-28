@@ -59,6 +59,9 @@ dependencies:
   # Media
   image_picker: ^1.2.1
   file_picker: ^11.0.2
+  record: ^5.2.0
+  audioplayers: ^6.1.0
+  video_player: ^2.9.2
 
   # Utilities
   path_provider: ^2.1.4

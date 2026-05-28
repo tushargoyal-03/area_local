@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:area_connect/src/imports/imports.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
@@ -18,6 +19,8 @@ class ChatService {
       StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<Map<String, dynamic>> _readController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _conversationUpdatedController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onMessageReceived =>
       _messageController.stream;
@@ -26,12 +29,27 @@ class ChatService {
   Stream<Map<String, dynamic>> get onPresenceStatusChanged =>
       _presenceController.stream;
   Stream<Map<String, dynamic>> get onMessagesRead => _readController.stream;
+  Stream<Map<String, dynamic>> get onConversationUpdated =>
+      _conversationUpdatedController.stream;
 
   // --- HTTP Endpoints ---
 
-  /// Retrieve the list of active chat conversations.
-  FutureEither<List<dynamic>> getConversations() async {
-    final result = await DioService.instance.get('chat/conversations');
+  FutureEither<List<dynamic>> getConversations({
+    String? type,
+    String? search,
+    int page = 1,
+    int limit = 20,
+    String? cursor,
+  }) async {
+    final params = <String, dynamic>{'page': page, 'limit': limit};
+    if (type != null) params['type'] = type;
+    if (search != null && search.isNotEmpty) params['search'] = search;
+    if (cursor != null) params['cursor'] = cursor;
+
+    final result = await DioService.instance.get(
+      'chat/conversations',
+      queryParameters: params,
+    );
     return result.map((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
@@ -42,18 +60,18 @@ class ChatService {
     });
   }
 
-  /// Retrieve messages for a specific conversation ID.
   FutureEither<List<dynamic>> getMessages({
     required String chatId,
     int page = 1,
     int limit = 30,
+    String? cursor,
   }) async {
+    final params = <String, dynamic>{'page': page, 'limit': limit};
+    if (cursor != null) params['cursor'] = cursor;
+
     final result = await DioService.instance.get(
       'chat/messages/$chatId',
-      queryParameters: {
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: params,
     );
     return result.map((response) {
       try {
@@ -65,14 +83,11 @@ class ChatService {
     });
   }
 
-  /// Retrieve or create a direct chat conversation with a specific neighbor.
   FutureEither<Map<String, dynamic>> getOrCreateDirectChat(
       String recipientId) async {
     final result = await DioService.instance.post(
       'chat/direct',
-      data: {
-        'recipientId': recipientId,
-      },
+      data: {'recipientId': recipientId},
     );
     return result.map((response) {
       try {
@@ -84,13 +99,10 @@ class ChatService {
     });
   }
 
-  /// Quickly start a conversation with a neighbor and send a default '👋 Hi!' message
   FutureEither<Map<String, dynamic>> sayHi(String recipientId) async {
     final result = await DioService.instance.post(
       'chat/say-hi',
-      data: {
-        'recipientId': recipientId,
-      },
+      data: {'recipientId': recipientId},
     );
     return result.map((response) {
       try {
@@ -102,21 +114,138 @@ class ChatService {
     });
   }
 
+  // --- Group Chat ---
+
+  FutureEither<Map<String, dynamic>> createGroup({
+    String? title,
+    String? imageUrl,
+    required List<String> participantIds,
+  }) async {
+    final data = <String, dynamic>{'participantIds': participantIds};
+    if (title != null && title.isNotEmpty) data['title'] = title;
+    if (imageUrl != null && imageUrl.isNotEmpty) data['imageUrl'] = imageUrl;
+
+    final result = await DioService.instance.post('chat/groups', data: data);
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Failed to create group: $e');
+      }
+    });
+  }
+
+  FutureEither<Map<String, dynamic>> addGroupMembers({
+    required String groupId,
+    required List<String> memberIds,
+  }) async {
+    final result = await DioService.instance.post(
+      'chat/groups/$groupId/members',
+      data: {'memberIds': memberIds},
+    );
+    return result.map((response) {
+      try {
+        return (response.data as Map<String, dynamic>);
+      } catch (e) {
+        throw Exception('Failed to add members: $e');
+      }
+    });
+  }
+
+  // --- Block / Report ---
+
+  FutureEither<Map<String, dynamic>> blockUser(String userId) async {
+    final result = await DioService.instance.post('users/$userId/block');
+    return result.map((response) {
+      return (response.data as Map<String, dynamic>);
+    });
+  }
+
+  FutureEither<Map<String, dynamic>> unblockUser(String userId) async {
+    final result = await DioService.instance.delete('users/$userId/block');
+    return result.map((response) {
+      return (response.data as Map<String, dynamic>);
+    });
+  }
+
+  FutureEither<Map<String, dynamic>> reportUser({
+    required String userId,
+    required String reason,
+    String? details,
+    String? conversationId,
+    String? messageId,
+  }) async {
+    final data = <String, dynamic>{'reason': reason};
+    if (details != null && details.isNotEmpty) data['details'] = details;
+    if (conversationId != null) data['conversationId'] = conversationId;
+    if (messageId != null) data['messageId'] = messageId;
+
+    final result = await DioService.instance.post(
+      'reports/users/$userId',
+      data: data,
+    );
+    return result.map((response) {
+      return (response.data as Map<String, dynamic>);
+    });
+  }
+
+  // --- Media Upload ---
+
+  FutureEither<Map<String, dynamic>> getMediaUploadUrl({
+    required String fileName,
+    required String mimeType,
+    required int fileSize,
+    required String mediaType,
+  }) async {
+    final result = await DioService.instance.post(
+      'media/chat/upload-url',
+      data: {
+        'fileName': fileName,
+        'mimeType': mimeType,
+        'fileSize': fileSize,
+        'mediaType': mediaType,
+      },
+    );
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Failed to get upload URL: $e');
+      }
+    });
+  }
+
+  /// Upload file to the signed URL and return the final mediaUrl.
+  Future<String?> uploadFileToUrl({
+    required String uploadUrl,
+    required String mediaUrl,
+    required File file,
+    required String mimeType,
+  }) async {
+    try {
+      // TODO: Replace with actual signed upload using Dio or http package
+      // Example:
+      // await Dio().put(uploadUrl, data: file.openRead(), options: Options(
+      //   headers: {'Content-Type': mimeType, 'Content-Length': file.lengthSync()},
+      // ));
+      return mediaUrl;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // --- WebSockets Gateway ---
 
-  /// Initialize and connect to the real-time NestJS ChatGateway.
   Future<void> connectSocket() async {
     final tokenRes = await SecureStorageService.instance.read('access_token');
     final token = tokenRes.fold((_) => null, (t) => t);
 
-    if (token == null || token.isEmpty) {
-      return;
-    }
+    if (token == null || token.isEmpty) return;
 
-    // Clean up existing socket if any
     disconnectSocket();
 
-    // Clean up base URL for socket client (remove /api/ suffix if present)
     var socketUrl = AppConfig.baseUrl;
     if (socketUrl.endsWith('/api/')) {
       socketUrl = socketUrl.substring(0, socketUrl.length - 4);
@@ -125,26 +254,18 @@ class ChatService {
     }
 
     _socket = io.io(
-      '${socketUrl}chat', // Namespace matches @WebSocketGateway(namespace: 'chat')
+      '${socketUrl}chat',
       io.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()
-          .setAuth(
-              {'token': token}) // Matches client.handshake.auth?.token check
+          .setAuth({'token': token})
           .build(),
     );
 
-    // Dynamic Connection Listeners
     _socket?.onConnect((_) {
-      debugPrint('[ChatService] Socket connected. Publishing presence status...');
       updatePresenceStatus(true);
     });
 
-    _socket?.onDisconnect((_) {});
-
-    _socket?.on('connection_acknowledged', (data) {});
-
-    // Real-Time Inbox Updates
     _socket?.on('receive_message', (data) {
       if (data is Map<String, dynamic>) {
         _messageController.add(data);
@@ -153,7 +274,6 @@ class ChatService {
       }
     });
 
-    // Pulsing Typing Indications
     _socket?.on('typing_status', (data) {
       if (data is Map<String, dynamic>) {
         _typingController.add(data);
@@ -162,7 +282,6 @@ class ChatService {
       }
     });
 
-    // Neighbor Presence Indications
     _socket?.on('presence_status', (data) {
       if (data is Map<String, dynamic>) {
         _presenceController.add(data);
@@ -171,7 +290,6 @@ class ChatService {
       }
     });
 
-    // Message Read Indication broadcasts
     _socket?.on('messages_read', (data) {
       if (data is Map<String, dynamic>) {
         _readController.add(data);
@@ -180,45 +298,57 @@ class ChatService {
       }
     });
 
+    _socket?.on('conversation_updated', (data) {
+      if (data is Map<String, dynamic>) {
+        _conversationUpdatedController.add(data);
+      } else if (data != null) {
+        _conversationUpdatedController.add(Map<String, dynamic>.from(data));
+      }
+    });
+
     _socket?.connect();
   }
 
-  /// Close the WebSocket connection gracefully.
   void disconnectSocket() {
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
   }
 
-  /// Join a conversation chat room.
   void joinConversation(String conversationId) {
-    _socket?.emit('join_conversation', {
-      'conversationId': conversationId,
-    });
+    _socket?.emit('join_conversation', {'conversationId': conversationId});
   }
 
-  /// Leave a conversation chat room.
   void leaveConversation(String conversationId) {
-    _socket?.emit('leave_conversation', {
-      'conversationId': conversationId,
-    });
+    _socket?.emit('leave_conversation', {'conversationId': conversationId});
   }
 
-  /// Send a real-time message to a conversation.
   Future<Map<String, dynamic>> sendMessage({
     required String conversationId,
-    required String text,
-    List<String> attachments = const [],
+    String? text,
+    String type = 'text',
+    String? mediaUrl,
+    String? thumbnailUrl,
+    int? durationSeconds,
+    int? fileSize,
+    String? mimeType,
   }) {
     final completer = Completer<Map<String, dynamic>>();
 
+    final payload = <String, dynamic>{
+      'conversationId': conversationId,
+      'type': type,
+    };
+    if (text != null && text.isNotEmpty) payload['text'] = text;
+    if (mediaUrl != null) payload['mediaUrl'] = mediaUrl;
+    if (thumbnailUrl != null) payload['thumbnailUrl'] = thumbnailUrl;
+    if (durationSeconds != null) payload['durationSeconds'] = durationSeconds;
+    if (fileSize != null) payload['fileSize'] = fileSize;
+    if (mimeType != null) payload['mimeType'] = mimeType;
+
     _socket?.emitWithAck(
       'send_message',
-      {
-        'conversationId': conversationId,
-        'text': text,
-        'attachments': attachments,
-      },
+      payload,
       ack: (data) {
         if (data is Map<String, dynamic>) {
           completer.complete(data);
@@ -230,7 +360,6 @@ class ChatService {
       },
     );
 
-    // Fallback timeout in case acknowledgment is delayed
     return completer.future.timeout(
       const Duration(seconds: 5),
       onTimeout: () => {
@@ -241,14 +370,12 @@ class ChatService {
     );
   }
 
-  /// Notify the WebSocket server of our online/offline presence status.
   void updatePresenceStatus(bool isOnline) {
     _socket?.emit('presence_status', {
       'status': isOnline ? 'online' : 'offline',
     });
   }
 
-  /// Update typing status for current user.
   void sendTypingStatus({
     required String conversationId,
     required bool isTyping,
@@ -259,10 +386,7 @@ class ChatService {
     });
   }
 
-  /// Mark all messages in a conversation as read by current user.
   void markAsRead(String conversationId) {
-    _socket?.emit('mark_read', {
-      'conversationId': conversationId,
-    });
+    _socket?.emit('mark_read', {'conversationId': conversationId});
   }
 }

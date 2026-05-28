@@ -14,6 +14,7 @@ import 'package:area_connect/src/features/auth/presentation/screens/signup_scree
 import 'package:area_connect/src/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:area_connect/src/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:area_connect/src/features/home/presentation/screens/chat_room_screen.dart';
+import 'package:area_connect/src/features/home/presentation/screens/new_group_screen.dart';
 
 import 'package:area_connect/src/features/locality_feed/domain/entities/post.dart';
 
@@ -72,8 +73,14 @@ final GoRouter appRouter = GoRouter(
           chatId: params['chatId'] as String,
           recipientName: params['recipientName'] as String,
           recipientId: params['recipientId'] as String,
+          conversationType: params['conversationType'] as String?,
         );
       },
+    ),
+    GoRoute(
+      path: '/new-group',
+      name: 'newGroup',
+      builder: (context, state) => const NewGroupScreen(),
     ),
     GoRoute(
       path: AppRoutes.home,
