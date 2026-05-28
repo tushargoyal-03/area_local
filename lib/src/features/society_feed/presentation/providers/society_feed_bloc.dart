@@ -178,13 +178,15 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
     // Optimistic update
     final updated = state.posts.map((p) {
       if (p.id == event.postId && p.type == 'complaint') {
-        return p.copyWith(likesCount: p.likesCount + 1); // using likesCount for upvotes
+        return p.copyWith(
+            likesCount: p.likesCount + 1); // using likesCount for upvotes
       }
       return p;
     }).toList();
     emit(state.copyWith(posts: updated));
 
-    final result = await SocietiesService.instance.upvoteComplaint(event.postId);
+    final result =
+        await SocietiesService.instance.upvoteComplaint(event.postId);
     result.fold(
       (failure) => showGlobalToast(message: failure.message, status: 'error'),
       (_) {},

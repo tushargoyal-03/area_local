@@ -78,6 +78,7 @@ class UsersService {
       }
     });
   }
+
   FutureEither<List<dynamic>> searchUsers({
     required String query,
     int page = 1,

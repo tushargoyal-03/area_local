@@ -81,8 +81,9 @@ class AppConversation extends Equatable {
     this.imageUrl,
   });
 
-  String get displayName => title?.isNotEmpty == true ? title! : recipientName;
-  String? get displayAvatar => imageUrl?.isNotEmpty == true ? imageUrl : recipientAvatar;
+  String get displayName => title?.isNotEmpty ?? false ? title! : recipientName;
+  String? get displayAvatar =>
+      imageUrl?.isNotEmpty ?? false ? imageUrl : recipientAvatar;
 
   AppConversation copyWith({
     String? id,

@@ -7,7 +7,7 @@ class PresenceManager with WidgetsBindingObserver {
   static final PresenceManager instance = PresenceManager._();
 
   final ChatService _chatService = ChatService.instance;
-  
+
   Timer? _idleTimer;
   bool _isOnline = false;
   bool _isInitialized = false;
@@ -20,7 +20,7 @@ class PresenceManager with WidgetsBindingObserver {
     if (_isInitialized) return;
     WidgetsBinding.instance.addObserver(this);
     _isInitialized = true;
-    
+
     // Set initial status to online
     setOnline();
   }
@@ -39,7 +39,7 @@ class PresenceManager with WidgetsBindingObserver {
     if (!_isInitialized) return;
     _idleTimer?.cancel();
     _startIdleTimer();
-    
+
     if (!_isOnline) {
       _isOnline = true;
       _chatService.updatePresenceStatus(true);
@@ -71,7 +71,8 @@ class PresenceManager with WidgetsBindingObserver {
 
   void _startIdleTimer() {
     _idleTimer = Timer(_idleDuration, () {
-      debugPrint('[PresenceManager] Idle timeout reached. Setting user offline.');
+      debugPrint(
+          '[PresenceManager] Idle timeout reached. Setting user offline.');
       setOffline();
     });
   }

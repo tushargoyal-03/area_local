@@ -66,13 +66,11 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
 
   void _createGroup() {
     if (_selectedIds.isEmpty) {
-      showGlobalToast(
-          message: 'Select at least one member', status: 'error');
+      showGlobalToast(message: 'Select at least one member', status: 'error');
       return;
     }
 
-    final currentUserId =
-        context.read<SessionBloc>().state.user?.id ?? '';
+    final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
 
     context.read<ChatBloc>().add(
           CreateGroupRequested(
@@ -98,8 +96,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         actions: [
           BlocBuilder<ChatBloc, ChatState>(
             builder: (context, state) => TextButton(
-              onPressed:
-                  state.isConversationsLoading ? null : _createGroup,
+              onPressed: state.isConversationsLoading ? null : _createGroup,
               child: Text(
                 _selectedIds.isEmpty
                     ? 'Select Members'
@@ -117,8 +114,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         children: [
           // Group image + name
           Padding(
-            padding:
-                EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
             child: Row(
               children: [
                 GestureDetector(
@@ -130,8 +126,8 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                         ? NetworkImage(_groupImageUrl)
                         : null,
                     child: _groupImageUrl.isEmpty
-                        ? Icon(IconsaxPlusLinear.camera, size: 24.sp,
-                            color: cs.onSurfaceVariant)
+                        ? Icon(IconsaxPlusLinear.camera,
+                            size: 24.sp, color: cs.onSurfaceVariant)
                         : null,
                   ),
                 ),
@@ -141,12 +137,11 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                     controller: _titleController,
                     decoration: InputDecoration(
                       hintText: 'Group name (optional)',
-                      hintStyle: tt.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant),
+                      hintStyle:
+                          tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12.r),
-                        borderSide:
-                            BorderSide(color: cs.outlineVariant),
+                        borderSide: BorderSide(color: cs.outlineVariant),
                       ),
                       contentPadding: EdgeInsets.symmetric(
                           horizontal: 14.w, vertical: 12.h),
@@ -168,8 +163,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                 itemBuilder: (_, i) {
                   final user = _selectedUsers.values.elementAt(i);
                   final id = user['userId']?.toString() ?? '';
-                  final name =
-                      user['displayName']?.toString() ?? 'User';
+                  final name = user['displayName']?.toString() ?? 'User';
                   return Padding(
                     padding: EdgeInsets.only(right: 8.w),
                     child: Chip(
@@ -185,24 +179,23 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                 },
               ),
             ),
-            Divider(height: 1.h, color: cs.outlineVariant.withValues(alpha: 0.2)),
+            Divider(
+                height: 1.h, color: cs.outlineVariant.withValues(alpha: 0.2)),
           ],
 
           // Search
           Padding(
-            padding:
-                EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
             child: TextField(
               controller: _searchController,
               onChanged: _onSearch,
               decoration: InputDecoration(
                 hintText: 'Search connections...',
-                prefixIcon: Icon(IconsaxPlusLinear.search_normal,
-                    size: 18.sp),
+                prefixIcon: Icon(IconsaxPlusLinear.search_normal, size: 18.sp),
                 filled: true,
                 fillColor: cs.surfaceContainerHigh,
-                contentPadding: EdgeInsets.symmetric(
-                    vertical: 10.h, horizontal: 16.w),
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24.r),
                   borderSide: BorderSide.none,
@@ -221,23 +214,19 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                           _searchController.text.isEmpty
                               ? 'Search for people to add'
                               : 'No results',
-                          style: tt.bodyMedium?.copyWith(
-                              color: cs.onSurfaceVariant),
+                          style: tt.bodyMedium
+                              ?.copyWith(color: cs.onSurfaceVariant),
                         ),
                       )
                     : ListView.builder(
                         itemCount: _searchResults.length,
                         itemBuilder: (_, i) {
                           final user = _searchResults[i];
-                          final id =
-                              user['userId']?.toString() ?? '';
-                          final name = user['displayName']
-                                  ?.toString() ??
-                              'User';
-                          final avatar =
-                              user['avatarUrl']?.toString();
-                          final isSelected =
-                              _selectedIds.contains(id);
+                          final id = user['userId']?.toString() ?? '';
+                          final name =
+                              user['displayName']?.toString() ?? 'User';
+                          final avatar = user['avatarUrl']?.toString();
+                          final isSelected = _selectedIds.contains(id);
 
                           return ListTile(
                             onTap: () => _toggleUser(user),
@@ -247,11 +236,10 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                               imageUrl: avatar,
                             ),
                             title: Text(name,
-                                style: tt.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.w600)),
+                                style: tt.bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.w600)),
                             trailing: isSelected
-                                ? Icon(Icons.check_circle,
-                                    color: cs.primary)
+                                ? Icon(Icons.check_circle, color: cs.primary)
                                 : Icon(
                                     Icons.radio_button_unchecked,
                                     color: cs.onSurfaceVariant,
@@ -269,11 +257,10 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      // TODO: upload image and set _groupImageUrl
-      // For now just show a toast
+      // TODO: upload to storage, then set the returned URL
+      setState(() => _groupImageUrl = picked.path);
       showGlobalToast(
-          message: 'Image upload not yet connected to storage',
-          status: 'info');
+          message: 'Image upload not yet connected to storage', status: 'info');
     }
   }
 }

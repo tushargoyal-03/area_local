@@ -63,6 +63,7 @@ class BusinessService {
       }
     });
   }
+
   FutureEither<List<dynamic>> getMyPromotions({
     int page = 1,
     int limit = 20,

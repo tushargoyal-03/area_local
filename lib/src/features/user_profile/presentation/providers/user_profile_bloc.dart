@@ -120,9 +120,10 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
   ) async {
     emit(state.copyWith(isLoading: true, clearError: true));
     final result = await UsersService.instance.getMe();
-    
+
     result.fold(
-      (failure) => emit(state.copyWith(isLoading: false, error: failure.message)),
+      (failure) =>
+          emit(state.copyWith(isLoading: false, error: failure.message)),
       (profile) => emit(state.copyWith(isLoading: false, myProfile: profile)),
     );
   }
@@ -133,10 +134,12 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
   ) async {
     emit(state.copyWith(isLoading: true, clearError: true));
     final result = await UsersService.instance.getPublicProfile(event.userId);
-    
+
     result.fold(
-      (failure) => emit(state.copyWith(isLoading: false, error: failure.message)),
-      (profile) => emit(state.copyWith(isLoading: false, currentViewedProfile: profile)),
+      (failure) =>
+          emit(state.copyWith(isLoading: false, error: failure.message)),
+      (profile) =>
+          emit(state.copyWith(isLoading: false, currentViewedProfile: profile)),
     );
   }
 
@@ -144,22 +147,25 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
     UpdateProfileRequested event,
     Emitter<UserProfileState> emit,
   ) async {
-    emit(state.copyWith(isUpdating: true, clearError: true, updateSuccess: false));
+    emit(state.copyWith(
+        isUpdating: true, clearError: true, updateSuccess: false));
     final result = await UsersService.instance.updateProfile(
       displayName: event.displayName,
       avatarUrl: event.avatarUrl,
       coordinates: event.coordinates,
       lookingFor: event.lookingFor,
     );
-    
+
     result.fold(
       (failure) {
         emit(state.copyWith(isUpdating: false, error: failure.message));
         showGlobalToast(message: failure.message, status: 'error');
       },
       (profile) {
-        emit(state.copyWith(isUpdating: false, myProfile: profile, updateSuccess: true));
-        showGlobalToast(message: 'Profile updated successfully!', status: 'success');
+        emit(state.copyWith(
+            isUpdating: false, myProfile: profile, updateSuccess: true));
+        showGlobalToast(
+            message: 'Profile updated successfully!', status: 'success');
       },
     );
   }
@@ -174,10 +180,12 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
       page: event.page,
       limit: event.limit,
     );
-    
+
     result.fold(
-      (failure) => emit(state.copyWith(isLoading: false, error: failure.message)),
-      (results) => emit(state.copyWith(isLoading: false, searchResults: results)),
+      (failure) =>
+          emit(state.copyWith(isLoading: false, error: failure.message)),
+      (results) =>
+          emit(state.copyWith(isLoading: false, searchResults: results)),
     );
   }
 

@@ -4,8 +4,6 @@ import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:video_player/video_player.dart';
-import 'package:path_provider/path_provider.dart';
 
 class ChatRoomScreen extends StatefulWidget {
   final String chatId;
@@ -33,13 +31,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   Timer? _typingTimer;
   bool _isTyping = false;
   bool _isRecording = false;
-  String? _recordingPath;
+  late String? _recordingPath;
   Timer? _recordingTimer;
   int _recordingSeconds = 0;
 
   @override
   void initState() {
     super.initState();
+    _recordingPath = null;
     final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
     context.read<ChatBloc>().add(
           LoadMessagesRequested(
@@ -99,9 +98,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     context.read<ChatBloc>().add(
           SendTextMessageRequested(
-              chatId: widget.chatId,
-              text: text,
-              currentUserId: currentUserId),
+              chatId: widget.chatId, text: text, currentUserId: currentUserId),
         );
 
     _msgController.clear();
@@ -109,7 +106,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   void _showAttachmentSheet() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: context.theme.colorScheme.surface,
       shape: RoundedRectangleBorder(
@@ -147,21 +144,21 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final picked = await picker.pickImage(source: source, imageQuality: 85);
     if (picked == null) return;
 
+    if (!mounted) return;
+
     final file = File(picked.path);
     final mimeType = picked.mimeType ?? 'image/jpeg';
     final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
 
-    if (context.mounted) {
-      context.read<ChatBloc>().add(
-            SendMediaMessageRequested(
-              chatId: widget.chatId,
-              currentUserId: currentUserId,
-              file: file,
-              messageType: mediaType,
-              mimeType: mimeType,
-            ),
-          );
-    }
+    context.read<ChatBloc>().add(
+          SendMediaMessageRequested(
+            chatId: widget.chatId,
+            currentUserId: currentUserId,
+            file: file,
+            messageType: mediaType,
+            mimeType: mimeType,
+          ),
+        );
   }
 
   Future<void> _pickVideo(ImageSource source) async {
@@ -169,20 +166,20 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     final picked = await picker.pickVideo(source: source);
     if (picked == null) return;
 
+    if (!mounted) return;
+
     final file = File(picked.path);
     final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
 
-    if (context.mounted) {
-      context.read<ChatBloc>().add(
-            SendMediaMessageRequested(
-              chatId: widget.chatId,
-              currentUserId: currentUserId,
-              file: file,
-              messageType: 'video',
-              mimeType: 'video/mp4',
-            ),
-          );
-    }
+    context.read<ChatBloc>().add(
+          SendMediaMessageRequested(
+            chatId: widget.chatId,
+            currentUserId: currentUserId,
+            file: file,
+            messageType: 'video',
+            mimeType: 'video/mp4',
+          ),
+        );
   }
 
   Future<void> _startVoiceRecording() async {
@@ -221,21 +218,21 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     if (path == null) return;
 
+    if (!mounted) return;
+
     final file = File(path);
     final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
 
-    if (context.mounted) {
-      context.read<ChatBloc>().add(
-            SendMediaMessageRequested(
-              chatId: widget.chatId,
-              currentUserId: currentUserId,
-              file: file,
-              messageType: 'voice',
-              mimeType: 'audio/aac',
-              durationSeconds: _recordingSeconds,
-            ),
-          );
-    }
+    context.read<ChatBloc>().add(
+          SendMediaMessageRequested(
+            chatId: widget.chatId,
+            currentUserId: currentUserId,
+            file: file,
+            messageType: 'voice',
+            mimeType: 'audio/aac',
+            durationSeconds: _recordingSeconds,
+          ),
+        );
   }
 
   void _cancelVoiceRecording() async {
@@ -249,7 +246,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   void _showUserMenu() {
     if (widget.recipientId.isEmpty) return;
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: context.theme.colorScheme.surface,
       shape: RoundedRectangleBorder(
@@ -272,7 +269,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   void _showBlockDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (_) => _BlockDialog(
         recipientName: widget.recipientName,
@@ -288,7 +285,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   }
 
   void _showReportDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (_) => _ReportDialog(
         recipientName: widget.recipientName,
@@ -353,8 +350,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       Text(
                         widget.recipientName,
                         overflow: TextOverflow.ellipsis,
-                        style: tt.bodyLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style:
+                            tt.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       if (!isGroup)
                         Row(
@@ -363,9 +360,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                               width: 6.w,
                               height: 6.w,
                               decoration: BoxDecoration(
-                                color: isOnline
-                                    ? Colors.green
-                                    : Colors.grey,
+                                color: isOnline ? Colors.green : Colors.grey,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -373,8 +368,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                             Text(
                               isOnline ? 'Online' : 'Offline',
                               style: tt.bodySmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
-                                  fontSize: 10.sp),
+                                  color: cs.onSurfaceVariant, fontSize: 10.sp),
                             ),
                           ],
                         ),
@@ -404,10 +398,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         itemCount: state.activeRoomMessages.length,
                         itemBuilder: (context, index) {
                           final msg = state.activeRoomMessages[index];
-                          final prevMsg = index <
-                                  state.activeRoomMessages.length - 1
-                              ? state.activeRoomMessages[index + 1]
-                              : null;
+                          final prevMsg =
+                              index < state.activeRoomMessages.length - 1
+                                  ? state.activeRoomMessages[index + 1]
+                                  : null;
 
                           final showDateSep = prevMsg == null ||
                               !_sameDay(msg.createdAt, prevMsg.createdAt);
@@ -433,8 +427,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(
-                        horizontal: 20.w, vertical: 8.h),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
                     child: Row(
                       spacing: 4.w,
                       children: [
@@ -453,17 +447,17 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
               // Media upload progress
               if (state.isSendingMedia)
-                LinearProgressIndicator(
-                    color: cs.primary, minHeight: 2.h),
+                LinearProgressIndicator(color: cs.primary, minHeight: 2.h),
 
               // Voice recording bar
-              if (_isRecording) _RecordingBar(
-                seconds: _recordingSeconds,
-                onCancel: _cancelVoiceRecording,
-                onStop: _stopVoiceRecording,
-                cs: cs,
-                tt: tt,
-              ),
+              if (_isRecording)
+                _RecordingBar(
+                  seconds: _recordingSeconds,
+                  onCancel: _cancelVoiceRecording,
+                  onStop: _stopVoiceRecording,
+                  cs: cs,
+                  tt: tt,
+                ),
 
               // Input bar
               if (!_isRecording)
@@ -491,8 +485,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       // Text input
                       Expanded(
                         child: Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 12.w),
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
                           child: TextField(
                             controller: _msgController,
                             onChanged: _onTextChanged,
@@ -518,12 +511,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                           final hasText = value.text.trim().isNotEmpty;
                           return GestureDetector(
                             onTap: hasText ? _handleSend : null,
-                            onLongPressStart: hasText
-                                ? null
-                                : (_) => _startVoiceRecording(),
-                            onLongPressEnd: hasText
-                                ? null
-                                : (_) => _stopVoiceRecording(),
+                            onLongPressStart:
+                                hasText ? null : (_) => _startVoiceRecording(),
+                            onLongPressEnd:
+                                hasText ? null : (_) => _stopVoiceRecording(),
                             child: Container(
                               width: 44.w,
                               height: 44.w,
@@ -588,15 +579,14 @@ class _MessageBubble extends StatelessWidget {
         return Center(
           child: Container(
             margin: EdgeInsets.symmetric(vertical: 8.h),
-            padding:
-                EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
             decoration: BoxDecoration(
               color: cs.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(12.r),
             ),
             child: Text(msg.text,
-                style: tt.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant, fontSize: 11.sp)),
+                style: tt.bodySmall
+                    ?.copyWith(color: cs.onSurfaceVariant, fontSize: 11.sp)),
           ),
         );
       default:
@@ -616,10 +606,8 @@ class _MessageBubble extends StatelessWidget {
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(16.r),
             topRight: Radius.circular(16.r),
-            bottomLeft:
-                isMe ? Radius.circular(16.r) : Radius.circular(4.r),
-            bottomRight:
-                isMe ? Radius.circular(4.r) : Radius.circular(16.r),
+            bottomLeft: isMe ? Radius.circular(16.r) : Radius.circular(4.r),
+            bottomRight: isMe ? Radius.circular(4.r) : Radius.circular(16.r),
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -651,8 +639,7 @@ class _TextContent extends StatelessWidget {
           Text(
             msg.text,
             style: TextStyle(
-                color: isMe ? cs.onPrimary : cs.onSurface,
-                fontSize: 14.sp),
+                color: isMe ? cs.onPrimary : cs.onSurface, fontSize: 14.sp),
           ),
           SizedBox(height: 4.h),
           _TimeAndStatus(msg: msg, cs: cs, isMe: isMe),
@@ -678,16 +665,16 @@ class _ImageBubble extends StatelessWidget {
             width: 220.w,
             height: 200.h,
             fit: BoxFit.cover,
-            errorWidget: (_, __, ___) => _PlaceholderMedia(
-                icon: IconsaxPlusLinear.image, cs: cs),
+            errorWidget: (_, __, ___) =>
+                _PlaceholderMedia(icon: IconsaxPlusLinear.image, cs: cs),
           )
         else
           _PlaceholderMedia(icon: IconsaxPlusLinear.image, cs: cs),
         Positioned(
           bottom: 6.h,
           right: 8.w,
-          child: _TimeAndStatus(msg: msg, cs: cs, isMe: msg.isMe,
-              textColor: Colors.white),
+          child: _TimeAndStatus(
+              msg: msg, cs: cs, isMe: msg.isMe, textColor: Colors.white),
         ),
       ],
     );
@@ -699,8 +686,7 @@ class _VideoBubble extends StatelessWidget {
   final ColorScheme cs;
   final TextTheme tt;
 
-  const _VideoBubble(
-      {required this.msg, required this.cs, required this.tt});
+  const _VideoBubble({required this.msg, required this.cs, required this.tt});
 
   @override
   Widget build(BuildContext context) {
@@ -719,7 +705,7 @@ class _VideoBubble extends StatelessWidget {
         Container(
           width: 48.w,
           height: 48.w,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.black45,
             shape: BoxShape.circle,
           ),
@@ -729,8 +715,8 @@ class _VideoBubble extends StatelessWidget {
         Positioned(
           bottom: 6.h,
           right: 8.w,
-          child: _TimeAndStatus(msg: msg, cs: cs, isMe: msg.isMe,
-              textColor: Colors.white),
+          child: _TimeAndStatus(
+              msg: msg, cs: cs, isMe: msg.isMe, textColor: Colors.white),
         ),
       ],
     );
@@ -767,8 +753,7 @@ class _VoiceBubbleState extends State<_VoiceBubble> {
     if (_isPlaying) {
       await _player.stop();
       setState(() => _isPlaying = false);
-    } else if (widget.msg.mediaUrl != null &&
-        widget.msg.mediaUrl!.isNotEmpty) {
+    } else if (widget.msg.mediaUrl != null && widget.msg.mediaUrl!.isNotEmpty) {
       setState(() => _isPlaying = true);
       await _player.play(UrlSource(widget.msg.mediaUrl!));
       _player.onPlayerComplete.listen((_) {
@@ -814,8 +799,7 @@ class _VoiceBubbleState extends State<_VoiceBubble> {
               Text(
                 '🎙 Voice message',
                 style: TextStyle(
-                    color: isMe ? cs.onPrimary : cs.onSurface,
-                    fontSize: 13.sp),
+                    color: isMe ? cs.onPrimary : cs.onSurface, fontSize: 13.sp),
               ),
               if (durationLabel.isNotEmpty)
                 Text(
@@ -863,9 +847,7 @@ class _TimeAndStatus extends StatelessWidget {
         if (isMe) ...[
           SizedBox(width: 4.w),
           Icon(
-            msg.isOptimistic
-                ? Icons.done_rounded
-                : Icons.done_all_rounded,
+            msg.isOptimistic ? Icons.done_rounded : Icons.done_all_rounded,
             size: 13.sp,
             color: msg.readBy.length > 1
                 ? const Color(0xFF34B7F1)
@@ -877,9 +859,8 @@ class _TimeAndStatus extends StatelessWidget {
   }
 
   String _formatMsgTime(DateTime time) {
-    final h = time.hour > 12
-        ? time.hour - 12
-        : (time.hour == 0 ? 12 : time.hour);
+    final h =
+        time.hour > 12 ? time.hour - 12 : (time.hour == 0 ? 12 : time.hour);
     final m = time.minute.toString().padLeft(2, '0');
     final ampm = time.hour >= 12 ? 'PM' : 'AM';
     return '$h:$m $ampm';
@@ -898,8 +879,7 @@ class _PlaceholderMedia extends StatelessWidget {
       width: 220.w,
       height: 150.h,
       color: cs.surfaceContainerHigh,
-      child: Center(
-          child: Icon(icon, size: 40.sp, color: cs.onSurfaceVariant)),
+      child: Center(child: Icon(icon, size: 40.sp, color: cs.onSurfaceVariant)),
     );
   }
 }
@@ -960,8 +940,7 @@ class _TypingDots extends StatelessWidget {
             decoration:
                 BoxDecoration(color: cs.primary, shape: BoxShape.circle),
           )
-              .animate(
-                  onPlay: (controller) => controller.repeat(reverse: true))
+              .animate(onPlay: (controller) => controller.repeat(reverse: true))
               .scale(
                 begin: const Offset(1, 1),
                 end: const Offset(1.6, 1.6),
@@ -1005,19 +984,19 @@ class _RecordingBar extends StatelessWidget {
           SizedBox(width: 8.w),
           Text(
             'Recording... ${_formatDuration(seconds)}',
-            style: tt.bodyMedium
-                ?.copyWith(color: cs.onErrorContainer, fontWeight: FontWeight.bold),
+            style: tt.bodyMedium?.copyWith(
+                color: cs.onErrorContainer, fontWeight: FontWeight.bold),
           ),
           const Spacer(),
           TextButton(
             onPressed: onCancel,
-            child: Text('Cancel',
-                style: tt.bodySmall?.copyWith(color: cs.error)),
+            child:
+                Text('Cancel', style: tt.bodySmall?.copyWith(color: cs.error)),
           ),
           ElevatedButton.icon(
             onPressed: onStop,
             icon: Icon(Icons.stop_rounded, size: 16.sp),
-            label: Text('Send'),
+            label: const Text('Send'),
             style: ElevatedButton.styleFrom(
               backgroundColor: cs.primary,
               foregroundColor: cs.onPrimary,
@@ -1092,7 +1071,7 @@ class _AttachmentSheet extends StatelessWidget {
               onTap: onPickVideo,
             ),
             _AttachOption(
-              icon: IconsaxPlusLinear.video_record,
+              icon: IconsaxPlusLinear.record,
               label: 'Record Video',
               color: Colors.red,
               onTap: onRecordVideo,
@@ -1120,7 +1099,6 @@ class _AttachOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
 
     return ListTile(
@@ -1191,8 +1169,7 @@ class _UserMenuSheet extends StatelessWidget {
               onTap: onBlock,
               leading: Icon(Icons.block_rounded, color: cs.error),
               title: Text('Block User',
-                  style:
-                      tt.bodyMedium?.copyWith(color: cs.error)),
+                  style: tt.bodyMedium?.copyWith(color: cs.error)),
               contentPadding: EdgeInsets.zero,
             ),
             SizedBox(height: 8.h),
@@ -1209,8 +1186,7 @@ class _BlockDialog extends StatelessWidget {
   final String recipientName;
   final VoidCallback onConfirm;
 
-  const _BlockDialog(
-      {required this.recipientName, required this.onConfirm});
+  const _BlockDialog({required this.recipientName, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
@@ -1232,8 +1208,8 @@ class _BlockDialog extends StatelessWidget {
         ElevatedButton(
           onPressed: onConfirm,
           style: ElevatedButton.styleFrom(backgroundColor: cs.error),
-          child: Text('Block',
-              style: tt.bodyMedium?.copyWith(color: cs.onError)),
+          child:
+              Text('Block', style: tt.bodyMedium?.copyWith(color: cs.onError)),
         ),
       ],
     );
@@ -1244,8 +1220,7 @@ class _ReportDialog extends StatefulWidget {
   final String recipientName;
   final void Function(String reason, String? details) onSubmit;
 
-  const _ReportDialog(
-      {required this.recipientName, required this.onSubmit});
+  const _ReportDialog({required this.recipientName, required this.onSubmit});
 
   @override
   State<_ReportDialog> createState() => _ReportDialogState();
@@ -1285,7 +1260,9 @@ class _ReportDialogState extends State<_ReportDialog> {
             ..._reasons.map(
               (r) => RadioListTile<String>(
                 value: r.$1,
+                // ignore: deprecated_member_use
                 groupValue: _selectedReason,
+                // ignore: deprecated_member_use
                 onChanged: (v) => setState(() => _selectedReason = v),
                 title: Text(r.$2, style: tt.bodyMedium),
                 contentPadding: EdgeInsets.zero,
@@ -1299,8 +1276,7 @@ class _ReportDialogState extends State<_ReportDialog> {
               maxLength: 1000,
               decoration: InputDecoration(
                 hintText: 'Additional details (optional)',
-                hintStyle:
-                    tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                hintStyle: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r)),
                 contentPadding: EdgeInsets.all(10.w),

@@ -360,8 +360,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       final conv = item as Map<String, dynamic>;
       final participants = List<String>.from(
           conv['participants']?.map((e) => e.toString()) ?? []);
-      final convType =
-          ConversationTypeX.fromString(conv['type']?.toString());
+      final convType = ConversationTypeX.fromString(conv['type']?.toString());
 
       final otherUser =
           (conv['participantProfiles'] as List<dynamic>?)?.firstWhere(
@@ -380,8 +379,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         lastMessageText: lastMsg?['preview']?.toString() ?? '',
         lastMessagePreview: lastPreview,
         lastMessageType: lastMsgType,
-        lastMessageTime:
-            DateTime.tryParse(conv['updatedAt']?.toString() ?? ''),
+        lastMessageTime: DateTime.tryParse(conv['updatedAt']?.toString() ?? ''),
         recipientName: otherUser?['displayName']?.toString() ??
             otherUser?['emailOrPhone']?.toString() ??
             'Neighbor',
@@ -450,11 +448,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         fileSize: (msg['fileSize'] as num?)?.toInt(),
         mimeType: msg['mimeType']?.toString(),
         attachments: List<String>.from(msg['attachments'] ?? []),
-        readBy: List<String>.from(
-            msg['readBy']?.map((e) => e.toString()) ?? []),
-        createdAt:
-            DateTime.tryParse(msg['createdAt']?.toString() ?? '') ??
-                DateTime.now(),
+        readBy:
+            List<String>.from(msg['readBy']?.map((e) => e.toString()) ?? []),
+        createdAt: DateTime.tryParse(msg['createdAt']?.toString() ?? '') ??
+            DateTime.now(),
         isMe: senderId == currentUserId,
       );
     }).toList();
@@ -496,9 +493,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           text: event.text,
           attachments: const [],
           readBy: [event.currentUserId],
-          createdAt:
-              DateTime.tryParse(ack['createdAt']?.toString() ?? '') ??
-                  optimisticMsg.createdAt,
+          createdAt: DateTime.tryParse(ack['createdAt']?.toString() ?? '') ??
+              optimisticMsg.createdAt,
           isMe: true,
         );
       }
@@ -509,9 +505,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       if (c.id == event.chatId) {
         return c.copyWith(
           lastMessageText: event.text,
-          lastMessagePreview: event.text.length > 80
-              ? event.text.substring(0, 80)
-              : event.text,
+          lastMessagePreview:
+              event.text.length > 80 ? event.text.substring(0, 80) : event.text,
           lastMessageTime: DateTime.now(),
         );
       }
@@ -672,8 +667,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final result = await _service.blockUser(event.targetUserId);
 
     result.fold(
-      (failure) =>
-          emit(state.copyWith(errorMessage: failure.message)),
+      (failure) => emit(state.copyWith(errorMessage: failure.message)),
       (_) => emit(state.copyWith(successMessage: 'User blocked')),
     );
   }
@@ -690,8 +684,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     );
 
     result.fold(
-      (failure) =>
-          emit(state.copyWith(errorMessage: failure.message)),
+      (failure) => emit(state.copyWith(errorMessage: failure.message)),
       (_) => emit(state.copyWith(successMessage: 'Report submitted')),
     );
   }
@@ -719,9 +712,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       mimeType: msg['mimeType']?.toString(),
       attachments: List<String>.from(msg['attachments'] ?? []),
       readBy: const [],
-      createdAt:
-          DateTime.tryParse(msg['createdAt']?.toString() ?? '') ??
-              DateTime.now(),
+      createdAt: DateTime.tryParse(msg['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
       isMe: senderId == event.currentUserId,
     );
 
@@ -743,8 +735,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
     final updatedConvs = state.conversations.map((c) {
       if (c.id == chatId) {
-        final isUnread = state.activeRoomChatId != chatId &&
-            senderId != event.currentUserId;
+        final isUnread =
+            state.activeRoomChatId != chatId && senderId != event.currentUserId;
         return c.copyWith(
           lastMessageText: preview,
           lastMessagePreview: preview,

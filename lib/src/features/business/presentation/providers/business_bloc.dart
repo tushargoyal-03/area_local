@@ -43,7 +43,8 @@ class CreatePromotionRequested extends BusinessEvent {
   });
 
   @override
-  List<Object?> get props => [businessName, title, description, coordinates, discountCode, expiryDate];
+  List<Object?> get props =>
+      [businessName, title, description, coordinates, discountCode, expiryDate];
 }
 
 // --- State ---
@@ -119,8 +120,10 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(isLoadingNearby: false, error: failure.message)),
-      (promotions) => emit(state.copyWith(isLoadingNearby: false, nearbyPromotions: promotions)),
+      (failure) =>
+          emit(state.copyWith(isLoadingNearby: false, error: failure.message)),
+      (promotions) => emit(
+          state.copyWith(isLoadingNearby: false, nearbyPromotions: promotions)),
     );
   }
 
@@ -132,8 +135,10 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     final result = await BusinessService.instance.getMyPromotions();
 
     result.fold(
-      (failure) => emit(state.copyWith(isLoadingMine: false, error: failure.message)),
-      (promotions) => emit(state.copyWith(isLoadingMine: false, myPromotions: promotions)),
+      (failure) =>
+          emit(state.copyWith(isLoadingMine: false, error: failure.message)),
+      (promotions) =>
+          emit(state.copyWith(isLoadingMine: false, myPromotions: promotions)),
     );
   }
 
@@ -141,7 +146,8 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     CreatePromotionRequested event,
     Emitter<BusinessState> emit,
   ) async {
-    emit(state.copyWith(isCreating: true, createSuccess: false, clearError: true));
+    emit(state.copyWith(
+        isCreating: true, createSuccess: false, clearError: true));
     final result = await BusinessService.instance.createPromotion(
       businessName: event.businessName,
       title: event.title,
@@ -162,7 +168,8 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
           createSuccess: true,
           myPromotions: [newPromotion, ...state.myPromotions],
         ));
-        showGlobalToast(message: 'Promotion created successfully!', status: 'success');
+        showGlobalToast(
+            message: 'Promotion created successfully!', status: 'success');
       },
     );
   }

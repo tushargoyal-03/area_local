@@ -48,7 +48,9 @@ class PostsRepositoryImpl implements PostsRepository {
               '',
           authorName: author?['displayName']?.toString() ?? 'Neighbor',
           authorAvatar: author?['avatarUrl']?.toString(),
-          authorRole: author?['role']?.toString() ?? post['authorRole']?.toString() ?? 'User',
+          authorRole: author?['role']?.toString() ??
+              post['authorRole']?.toString() ??
+              'User',
           category: post['category']?.toString() ?? 'General',
           title: post['title']?.toString() ?? '',
           content: post['content']?.toString() ?? '',
@@ -108,7 +110,9 @@ class PostsRepositoryImpl implements PostsRepository {
         authorId: post['authorId']?.toString() ?? '',
         authorName: author?['displayName']?.toString() ?? 'You',
         authorAvatar: author?['avatarUrl']?.toString(),
-        authorRole: author?['role']?.toString() ?? post['authorRole']?.toString() ?? 'User',
+        authorRole: author?['role']?.toString() ??
+            post['authorRole']?.toString() ??
+            'User',
         category: post['category']?.toString() ?? category,
         title: post['title']?.toString() ?? title,
         content: post['content']?.toString() ?? content,

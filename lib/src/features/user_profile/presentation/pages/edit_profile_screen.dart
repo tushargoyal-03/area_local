@@ -13,10 +13,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _displayNameController;
   late TextEditingController _bioController;
-  
-  // To keep it simple, we'll store tags as a single comma-separated string 
+
+  // To keep it simple, we'll store tags as a single comma-separated string
   // or manage them as a list. For now, simple text controller.
-  late TextEditingController _lookingForController; 
+  late TextEditingController _lookingForController;
 
   @override
   void initState() {
@@ -24,7 +24,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _displayNameController = TextEditingController();
     _bioController = TextEditingController();
     _lookingForController = TextEditingController();
-    
+
     // Load current profile
     context.read<UserProfileBloc>().add(LoadMyProfile());
   }
@@ -46,9 +46,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           .toList();
 
       context.read<UserProfileBloc>().add(UpdateProfileRequested(
-        displayName: _displayNameController.text.trim(),
-        lookingFor: tags.isNotEmpty ? tags : null,
-      ));
+            displayName: _displayNameController.text.trim(),
+            lookingFor: tags.isNotEmpty ? tags : null,
+          ));
     }
   }
 
@@ -65,13 +65,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       },
       builder: (context, state) {
         if (state.isLoading && state.myProfile == null) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
         }
 
         if (state.myProfile != null && _displayNameController.text.isEmpty) {
           _displayNameController.text = state.myProfile!['displayName'] ?? '';
           if (state.myProfile!['lookingFor'] != null) {
-             _lookingForController.text = (state.myProfile!['lookingFor'] as List).join(', ');
+            _lookingForController.text =
+                (state.myProfile!['lookingFor'] as List).join(', ');
           }
         }
 
@@ -94,11 +96,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           CircleAvatar(
                             radius: 50.r,
                             backgroundColor: cs.surfaceContainerHigh,
-                            backgroundImage: state.myProfile?['avatarUrl'] != null 
+                            backgroundImage: state.myProfile?['avatarUrl'] !=
+                                    null
                                 ? NetworkImage(state.myProfile!['avatarUrl'])
                                 : null,
-                            child: state.myProfile?['avatarUrl'] == null 
-                                ? Icon(Icons.person, size: 50.r, color: cs.onSurfaceVariant)
+                            child: state.myProfile?['avatarUrl'] == null
+                                ? Icon(Icons.person,
+                                    size: 50.r, color: cs.onSurfaceVariant)
                                 : null,
                           ),
                           Positioned(
@@ -110,7 +114,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                 color: cs.primary,
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.camera_alt, color: cs.onPrimary, size: 16.r),
+                              child: Icon(Icons.camera_alt,
+                                  color: cs.onPrimary, size: 16.r),
                             ),
                           ),
                         ],
@@ -123,7 +128,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       controller: _displayNameController,
                       hint: 'Enter your name',
                       validator: (v) {
-                        if (v == null || v.trim().isEmpty) return 'Name is required';
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Name is required';
+                        }
                         return null;
                       },
                     ),

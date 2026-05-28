@@ -82,7 +82,7 @@ class LocationService {
     return runTask(() async {
       final dio = Dio();
       dio.options.headers['User-Agent'] = 'AreaConnect/1.0';
-      
+
       final response = await dio.get<Map<String, dynamic>>(
         'https://nominatim.openstreetmap.org/reverse',
         queryParameters: {
@@ -92,13 +92,19 @@ class LocationService {
           'accept-language': 'en',
         },
       );
-      
+
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         final address = data['address'] as Map<String, dynamic>?;
         if (address != null) {
-          final suburb = address['suburb'] ?? address['neighbourhood'] ?? address['residential'] ?? address['village'] ?? address['subdistrict'] ?? '';
-          final city = address['city'] ?? address['town'] ?? address['county'] ?? '';
+          final suburb = address['suburb'] ??
+              address['neighbourhood'] ??
+              address['residential'] ??
+              address['village'] ??
+              address['subdistrict'] ??
+              '';
+          final city =
+              address['city'] ?? address['town'] ?? address['county'] ?? '';
           if (suburb.isNotEmpty && city.isNotEmpty) {
             return '$suburb, $city';
           } else if (suburb.isNotEmpty) {
