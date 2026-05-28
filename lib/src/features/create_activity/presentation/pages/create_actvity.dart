@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:area_connect/src/imports/imports.dart';
+import 'package:area_connect/src/features/create_activity/presentation/widgets/custom_calendar.dart';
 
 class CreateActivityScreen extends StatefulWidget {
   const CreateActivityScreen({super.key});
@@ -41,7 +42,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       categories = ['Advertisement', ...categories];
       selectedIndex = 0;
       _titleController.text = user?.name ?? '';
-      _locationName = user?.name != null ? "${user!.name}'s Shop" : 'Local Shop';
+      _locationName =
+          user?.name != null ? "${user!.name}'s Shop" : 'Local Shop';
     }
   }
 
@@ -139,39 +141,30 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
     return '${formatTimeOfDay(start)} – ${formatTimeOfDay(end)}';
   }
 
-  Future<void> _selectDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+  Widget _buildTimePickerColumn(
+      String label, TimeOfDay time, ValueChanged<TimeOfDay> onChanged) {
+    final cs = context.theme.colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label,
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: cs.onSurfaceVariant.withValues(alpha: 0.6))),
+        SizedBox(height: 8.h),
+        SizedBox(
+          height: 120.h,
+          width: 100.w,
+          child: CupertinoDatePicker(
+            mode: CupertinoDatePickerMode.time,
+            initialDateTime: DateTime(0, 0, 0, time.hour, time.minute),
+            onDateTimeChanged: (newTime) {
+              onChanged(TimeOfDay.fromDateTime(newTime));
+            },
+          ),
+        ),
+      ],
     );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
-
-  Future<void> _selectTimeRange() async {
-    final startPicked = await showTimePicker(
-      context: context,
-      initialTime: _startTime,
-      helpText: 'SELECT START TIME',
-    );
-    if (startPicked == null) return;
-
-    if (!mounted) return;
-
-    final endPicked = await showTimePicker(
-      context: context,
-      initialTime: _endTime,
-      helpText: 'SELECT END TIME',
-    );
-    if (endPicked != null) {
-      setState(() {
-        _startTime = startPicked;
-        _endTime = endPicked;
-      });
-    }
   }
 
   Future<void> _selectLocation() async {
@@ -466,41 +459,78 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
 
                 SizedBox(height: AppSpacing.lg.h),
 
+                // Date Picker Inline
+                const _SectionLabel('Select Date'),
+                SizedBox(height: AppSpacing.sm.h),
+                CustomCalendarWidget(
+                  initialDate: _selectedDate,
+                  onDateSelected: (date) {
+                    setState(() => _selectedDate = date);
+                  },
+                ),
+                SizedBox(height: AppSpacing.lg.h),
+
+                // Time Picker Inline
+                const _SectionLabel('Select Time'),
+                SizedBox(height: AppSpacing.sm.h),
+                Container(
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius: BorderRadius.circular(24.r),
+                    border:
+                        Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildTimePickerColumn('Start Time', _startTime, (time) {
+                        setState(() => _startTime = time);
+                      }),
+                      Container(
+                        width: 1,
+                        height: 60.h,
+                        color: Colors.grey.withValues(alpha: 0.2),
+                      ),
+                      _buildTimePickerColumn('End Time', _endTime, (time) {
+                        setState(() => _endTime = time);
+                      }),
+                    ],
+                  ),
+                ),
+                SizedBox(height: AppSpacing.lg.h),
+
                 // Dynamic options labels
                 _SectionLabel(categories[selectedIndex] == 'Advertisement'
-                    ? 'Promotion Details (Tap to customize)'
-                    : 'Activity Details (Tap to customize)'),
+                    ? 'Promotion Location & Capacity'
+                    : 'Activity Location & Capacity'),
                 SizedBox(height: AppSpacing.sm.h),
 
-                // Dynamic Meta details Grid
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10.w,
-                  mainAxisSpacing: 10.h,
-                  childAspectRatio: 2.5,
+                // Location and Capacity
+                Row(
                   children: [
-                    _FormRow(
-                      icon: IconsaxPlusLinear.calendar,
-                      label: _formatDateDisplay(_selectedDate),
-                      onTap: _selectDate,
+                    Expanded(
+                      child: _FormRow(
+                        icon: IconsaxPlusLinear.map,
+                        label: _locationName,
+                        onTap: _selectLocation,
+                      ),
                     ),
-                    _FormRow(
-                      icon: IconsaxPlusLinear.clock,
-                      label: _formatTimeDisplay(_startTime, _endTime),
-                      onTap: _selectTimeRange,
-                    ),
-                    _FormRow(
-                      icon: IconsaxPlusLinear.map,
-                      label: _locationName,
-                      onTap: _selectLocation,
-                    ),
-                    _FormRow(
-                      icon: IconsaxPlusLinear.user,
-                      label:
-                          '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
-                      onTap: _selectCapacity,
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: _FormRow(
+                        icon: IconsaxPlusLinear.user,
+                        label:
+                            '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
+                        onTap: _selectCapacity,
+                      ),
                     ),
                   ],
                 ),

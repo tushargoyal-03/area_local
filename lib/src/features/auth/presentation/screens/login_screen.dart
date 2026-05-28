@@ -25,7 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final rememberMe = StorageService.instance.getBool('remember_me') ?? false;
     if (rememberMe) {
       final savedEmail = StorageService.instance.getString('saved_email') ?? '';
-      final savedPassword = StorageService.instance.getString('saved_password') ?? '';
+      final savedPassword =
+          StorageService.instance.getString('saved_password') ?? '';
       setState(() {
         _rememberMe = true;
         _emailController.text = savedEmail;
@@ -84,8 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
       isLoading: isLoading,
       onToggleObscure: () =>
           setState(() => _obscurePassword = !_obscurePassword),
-      onToggleRememberMe: (value) =>
-          setState(() => _rememberMe = value),
+      onToggleRememberMe: (value) => setState(() => _rememberMe = value),
       onLogin: handleLogin,
       cs: cs,
       tt: tt,
@@ -281,15 +281,20 @@ class _LoginView extends StatelessWidget {
                                     height: 20.w,
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                      color: rememberMe ? cs.primary : Colors.transparent,
+                                      color: rememberMe
+                                          ? cs.primary
+                                          : Colors.transparent,
                                       borderRadius: BorderRadius.circular(6.r),
                                       border: Border.all(
-                                        color: rememberMe ? cs.primary : cs.outline.withValues(alpha: 0.6),
+                                        color: rememberMe
+                                            ? cs.primary
+                                            : cs.outline.withValues(alpha: 0.6),
                                         width: 1.5,
                                       ),
                                     ),
                                     child: AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 150),
+                                      duration:
+                                          const Duration(milliseconds: 150),
                                       child: rememberMe
                                           ? Icon(
                                               Icons.check,
@@ -303,8 +308,12 @@ class _LoginView extends StatelessWidget {
                                   Text(
                                     'Remember Me',
                                     style: tt.bodySmall?.copyWith(
-                                      color: rememberMe ? cs.primary : cs.onSurfaceVariant,
-                                      fontWeight: rememberMe ? FontWeight.w600 : FontWeight.normal,
+                                      color: rememberMe
+                                          ? cs.primary
+                                          : cs.onSurfaceVariant,
+                                      fontWeight: rememberMe
+                                          ? FontWeight.w600
+                                          : FontWeight.normal,
                                     ),
                                   ),
                                 ],
@@ -334,16 +343,6 @@ class _LoginView extends StatelessWidget {
                         onPressed: isLoading ? null : onLogin,
                         width: ButtonSize.large,
                         isFullWidth: false,
-                      ),
-                      SizedBox(height: 20.h),
-                      const AppDivider(),
-                      TextButton(
-                        onPressed: () {
-                          context.go(AppRoutes.signup);
-                        },
-                        child: Text("Don't have an Account? sign up",
-                            style: tt.bodyMedium
-                                ?.copyWith(color: cs.onSurfaceVariant)),
                       ),
                     ],
                   ),

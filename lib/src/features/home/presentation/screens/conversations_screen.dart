@@ -69,104 +69,124 @@ class _ConversationsScreenState extends State<ConversationsScreen>
   Widget build(BuildContext context) {
     final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
+    final searchBarController = TextEditingController();
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Messages',
             style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
         actions: [
-          if (_tabController.index == 1)
-            IconButton(
-              tooltip: 'New Group',
-              onPressed: _openNewGroup,
-              icon: Icon(IconsaxPlusLinear.add_circle, color: cs.primary),
-            ),
           IconButton(
-            onPressed: _loadConversations,
+            onPressed: () {
+              final currentUserId =
+                  context.read<SessionBloc>().state.user?.id ?? '';
+              context.read<ChatBloc>().add(
+                  LoadConversationsRequested(currentUserId: currentUserId));
+            },
             icon: Icon(IconsaxPlusLinear.refresh, color: cs.onSurface),
           ),
         ],
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(100.h),
-          child: Column(
-            children: [
-              // Search bar
-              Padding(
-                padding:
-                    EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: _onSearchChanged,
-                  decoration: InputDecoration(
-                    hintText: 'Search conversations...',
-                    prefixIcon: Icon(IconsaxPlusLinear.search_normal,
-                        size: 18.sp),
-                    filled: true,
-                    fillColor: cs.surfaceContainerHigh,
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24.r),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-              ),
-              // Tabs
-              TabBar(
-                controller: _tabController,
-                tabs: _tabs
-                    .map((t) => Tab(text: t.label))
-                    .toList(),
-                indicatorColor: cs.primary,
-                labelColor: cs.primary,
-                unselectedLabelColor: cs.onSurfaceVariant,
-              ),
-            ],
-          ),
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: _tabs
-            .map((_) => BlocBuilder<ChatBloc, ChatState>(
-                  builder: (context, state) {
-                    if (state.isConversationsLoading &&
-                        state.conversations.isEmpty) {
-                      return _buildSkeletonLoader();
-                    }
+      body: BlocBuilder<ChatBloc, ChatState>(
+        builder: (context, state) {
+          if (state.isConversationsLoading && state.conversations.isEmpty) {
+            return _buildSkeletonLoader();
+          }
 
-                    if (state.conversations.isEmpty) {
-                      return AppEmptyState(
-                        icon: IconsaxPlusLinear.message,
-                        title: 'No conversations yet',
-                        subtitle: _tabController.index == 0
-                            ? 'Select "I\'m Available" on posts to start a chat'
-                            : _tabController.index == 1
-                                ? 'Tap + to create a group chat'
-                                : 'No event chats yet',
-                      );
-                    }
+          if (state.conversations.isEmpty) {
+            return const AppEmptyState(
+              icon: IconsaxPlusLinear.message,
+              title: 'No conversations yet',
+              subtitle:
+                  'Select "I\'m Available" on neighborhood posts to initiate chats with residents!',
+            );
+          }
 
-                    return RefreshIndicator(
-                      onRefresh: () async => _loadConversations(),
-                      child: ListView.separated(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: AppSpacing.xs),
-                        itemCount: state.conversations.length,
-                        separatorBuilder: (_, __) => Divider(
-                          color: cs.outlineVariant.withValues(alpha: 0.2),
-                          height: 1.h,
-                        ),
-                        itemBuilder: (context, index) =>
-                            _ConversationTile(
-                          conv: state.conversations[index],
-                        ),
-                      ),
+          return RefreshIndicator(
+            onRefresh: () async {
+              final currentUserId =
+                  context.read<SessionBloc>().state.user?.id ?? '';
+              context.read<ChatBloc>().add(
+                  LoadConversationsRequested(currentUserId: currentUserId));
+            },
+            child: ListView.separated(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              itemCount: state.conversations.length,
+              separatorBuilder: (_, __) => Divider(
+                color: cs.outlineVariant.withValues(alpha: 0.2),
+                height: 1.h,
+              ),
+              itemBuilder: (context, index) {
+                final conv = state.conversations[index];
+
+                return ListTile(
+                  onTap: () {
+                    // Reset unread count locally
+                    context
+                        .read<ChatBloc>()
+                        .add(MarkMessagesAsReadRequested(chatId: conv.id));
+
+                    context.push(
+                      '/chat-room',
+                      extra: {
+                        'chatId': conv.id,
+                        'recipientName': conv.recipientName,
+                        'recipientId': conv.recipientId,
+                      },
                     );
                   },
-                ))
-            .toList(),
+                  leading: Badge(
+                    isLabelVisible: conv.isRecipientOnline,
+                    child: Avatar(
+                      name: conv.recipientName,
+                      size: 42,
+                      imageUrl: conv.recipientAvatar,
+                    ),
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    conv.recipientName,
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15.sp,
+                    ),
+                  ),
+                  subtitle: Text(
+                    conv.lastMessageText ?? 'No messages yet',
+                    overflow: TextOverflow.ellipsis,
+                    style: tt.bodyMedium?.copyWith(
+                      color: conv.unreadCount > 0
+                          ? cs.onSurface
+                          : cs.onSurfaceVariant,
+                      fontWeight: conv.unreadCount > 0
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      fontSize: 13.sp,
+                    ),
+                  ),
+                  trailing: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatTime(conv.lastMessageTime ?? DateTime.now()),
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Badge(
+                        isLabelVisible: conv.unreadCount > 0,
+                        label: Text(conv.unreadCount.toString()),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }
