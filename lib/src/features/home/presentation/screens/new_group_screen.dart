@@ -257,7 +257,6 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      // TODO: upload to storage, then set the returned URL
       setState(() => _groupImageUrl = picked.path);
       showGlobalToast(
           message: 'Image upload not yet connected to storage', status: 'info');

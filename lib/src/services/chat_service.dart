@@ -225,11 +225,16 @@ class ChatService {
     required String mimeType,
   }) async {
     try {
-      // TODO: Replace with actual signed upload using Dio or http package
-      // Example:
-      // await Dio().put(uploadUrl, data: file.openRead(), options: Options(
-      //   headers: {'Content-Type': mimeType, 'Content-Length': file.lengthSync()},
-      // ));
+      await Dio().put<void>(
+        uploadUrl,
+        data: file.openRead(),
+        options: Options(
+          headers: {
+            'Content-Type': mimeType,
+            'Content-Length': file.lengthSync(),
+          },
+        ),
+      );
       return mediaUrl;
     } catch (_) {
       return null;
