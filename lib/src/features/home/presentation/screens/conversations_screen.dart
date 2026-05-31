@@ -256,6 +256,7 @@ class _ConversationTile extends StatelessWidget {
           },
         );
       },
+      onLongPress: () => _showConvMenu(context, conv),
       leading: Badge(
         isLabelVisible:
             conv.type == ConversationType.direct && conv.isRecipientOnline,
@@ -301,6 +302,57 @@ class _ConversationTile extends StatelessWidget {
             label: Text(conv.unreadCount.toString()),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showConvMenu(BuildContext context, AppConversation conv) {
+    final cs = context.theme.colorScheme;
+    final tt = context.theme.textTheme;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36.w,
+                height: 4.h,
+                margin: EdgeInsets.only(bottom: 12.h),
+                decoration: BoxDecoration(
+                    color: cs.outlineVariant,
+                    borderRadius: BorderRadius.circular(2.r)),
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline_rounded, color: cs.error),
+                title: Text(
+                  conv.type == ConversationType.group
+                      ? 'Leave Group'
+                      : 'Delete Conversation',
+                  style: tt.bodyMedium?.copyWith(color: cs.error),
+                ),
+                contentPadding: EdgeInsets.zero,
+                onTap: () {
+                  Navigator.pop(context);
+                  if (conv.type == ConversationType.group) {
+                    context
+                        .read<ChatBloc>()
+                        .add(LeaveGroupRequested(conversationId: conv.id));
+                  } else {
+                    context.read<ChatBloc>().add(
+                        DeleteConversationRequested(conversationId: conv.id));
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

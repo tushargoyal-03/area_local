@@ -63,6 +63,9 @@ class AppConversation extends Equatable {
   // Group-only fields
   final String? title;
   final String? imageUrl;
+  // Rich member data (populated from participantProfiles aggregation)
+  final List<Map<String, dynamic>> memberProfiles;
+  final List<String> admins;
 
   const AppConversation({
     required this.id,
@@ -79,6 +82,8 @@ class AppConversation extends Equatable {
     this.isRecipientOnline = false,
     this.title,
     this.imageUrl,
+    this.memberProfiles = const [],
+    this.admins = const [],
   });
 
   String get displayName => title?.isNotEmpty ?? false ? title! : recipientName;
@@ -100,6 +105,8 @@ class AppConversation extends Equatable {
     bool? isRecipientOnline,
     String? title,
     String? imageUrl,
+    List<Map<String, dynamic>>? memberProfiles,
+    List<String>? admins,
   }) {
     return AppConversation(
       id: id ?? this.id,
@@ -116,6 +123,8 @@ class AppConversation extends Equatable {
       isRecipientOnline: isRecipientOnline ?? this.isRecipientOnline,
       title: title ?? this.title,
       imageUrl: imageUrl ?? this.imageUrl,
+      memberProfiles: memberProfiles ?? this.memberProfiles,
+      admins: admins ?? this.admins,
     );
   }
 
@@ -135,6 +144,8 @@ class AppConversation extends Equatable {
         isRecipientOnline,
         title,
         imageUrl,
+        memberProfiles,
+        admins,
       ];
 }
 
@@ -155,6 +166,10 @@ class AppChatMessage extends Equatable {
   final bool isMe;
   final bool isFailed;
 
+  final String? replyToId;
+  final String? replyToPreview;
+  final String? replyToSenderName;
+
   const AppChatMessage({
     required this.id,
     required this.conversationId,
@@ -171,6 +186,9 @@ class AppChatMessage extends Equatable {
     required this.createdAt,
     this.isMe = false,
     this.isFailed = false,
+    this.replyToId,
+    this.replyToPreview,
+    this.replyToSenderName,
   });
 
   bool get isOptimistic => id.startsWith('optimistic_');
@@ -192,5 +210,8 @@ class AppChatMessage extends Equatable {
         createdAt,
         isMe,
         isFailed,
+        replyToId,
+        replyToPreview,
+        replyToSenderName,
       ];
 }

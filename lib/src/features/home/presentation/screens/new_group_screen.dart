@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
@@ -257,9 +258,9 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() => _groupImageUrl = picked.path);
-      showGlobalToast(
-          message: 'Image upload not yet connected to storage', status: 'info');
+      final seed = Random().nextInt(9999);
+      setState(
+          () => _groupImageUrl = 'https://picsum.photos/seed/$seed/400/400');
     }
   }
 }

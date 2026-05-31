@@ -15,6 +15,7 @@ import 'package:area_connect/src/features/auth/presentation/screens/forgot_passw
 import 'package:area_connect/src/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:area_connect/src/features/home/presentation/screens/chat_room_screen.dart';
 import 'package:area_connect/src/features/home/presentation/screens/new_group_screen.dart';
+import 'package:area_connect/src/features/home/presentation/screens/group_info_screen.dart';
 
 import 'package:area_connect/src/features/locality_feed/domain/entities/post.dart';
 
@@ -81,6 +82,22 @@ final GoRouter appRouter = GoRouter(
       path: '/new-group',
       name: 'newGroup',
       builder: (context, state) => const NewGroupScreen(),
+    ),
+    GoRoute(
+      path: '/group-info',
+      name: 'groupInfo',
+      builder: (context, state) {
+        final params = state.extra as Map<String, dynamic>;
+        return GroupInfoScreen(
+          conversationId: params['conversationId'] as String,
+          groupName: params['groupName'] as String,
+          groupImageUrl: params['groupImageUrl'] as String?,
+          members:
+              List<Map<String, dynamic>>.from(params['members'] as List? ?? []),
+          currentUserId: params['currentUserId'] as String,
+          isAdmin: params['isAdmin'] as bool? ?? false,
+        );
+      },
     ),
     GoRoute(
       path: AppRoutes.home,

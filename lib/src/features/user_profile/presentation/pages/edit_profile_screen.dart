@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import '../providers/user_profile_bloc.dart';
@@ -13,10 +14,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _displayNameController;
   late TextEditingController _bioController;
-
-  // To keep it simple, we'll store tags as a single comma-separated string
-  // or manage them as a list. For now, simple text controller.
   late TextEditingController _lookingForController;
+  String? _pendingAvatarUrl;
 
   @override
   void initState() {
@@ -24,8 +23,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _displayNameController = TextEditingController();
     _bioController = TextEditingController();
     _lookingForController = TextEditingController();
-
-    // Load current profile
     context.read<UserProfileBloc>().add(LoadMyProfile());
   }
 
@@ -35,6 +32,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _bioController.dispose();
     _lookingForController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAvatar() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
+    // DEV: bypass storage — assign a random picsum URL
+    final seed = Random().nextInt(9999);
+    setState(
+        () => _pendingAvatarUrl = 'https://picsum.photos/seed/$seed/400/400');
   }
 
   void _onSave() {
@@ -47,6 +54,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       context.read<UserProfileBloc>().add(UpdateProfileRequested(
             displayName: _displayNameController.text.trim(),
+            avatarUrl: _pendingAvatarUrl,
             lookingFor: tags.isNotEmpty ? tags : null,
           ));
     }
@@ -77,6 +85,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           }
         }
 
+        final displayedAvatar =
+            _pendingAvatarUrl ?? state.myProfile?['avatarUrl']?.toString();
+
         return Scaffold(
           appBar: const AppTopBar(
             title: 'Edit Profile',
@@ -91,36 +102,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 50.r,
-                            backgroundColor: cs.surfaceContainerHigh,
-                            backgroundImage: state.myProfile?['avatarUrl'] !=
-                                    null
-                                ? NetworkImage(state.myProfile!['avatarUrl'])
-                                : null,
-                            child: state.myProfile?['avatarUrl'] == null
-                                ? Icon(Icons.person,
-                                    size: 50.r, color: cs.onSurfaceVariant)
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: Container(
-                              padding: EdgeInsets.all(8.r),
-                              decoration: BoxDecoration(
-                                color: cs.primary,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(Icons.camera_alt,
-                                  color: cs.onPrimary, size: 16.r),
+                      child: GestureDetector(
+                        onTap: _pickAvatar,
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50.r,
+                              backgroundColor: cs.surfaceContainerHigh,
+                              backgroundImage: displayedAvatar != null
+                                  ? NetworkImage(displayedAvatar)
+                                  : null,
+                              child: displayedAvatar == null
+                                  ? Icon(Icons.person,
+                                      size: 50.r, color: cs.onSurfaceVariant)
+                                  : null,
                             ),
-                          ),
-                        ],
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: EdgeInsets.all(8.r),
+                                decoration: BoxDecoration(
+                                  color: cs.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(Icons.camera_alt,
+                                    color: cs.onPrimary, size: 16.r),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                    if (_pendingAvatarUrl != null)
+                      Center(
+                        child: Padding(
+                          padding: EdgeInsets.only(top: 6.h),
+                          child: Text(
+                            'New photo selected',
+                            style: tt.bodySmall?.copyWith(color: cs.primary),
+                          ),
+                        ),
+                      ),
                     SizedBox(height: AppSpacing.xl.h),
                     Text('Display Name', style: tt.labelLarge),
                     SizedBox(height: AppSpacing.sm.h),

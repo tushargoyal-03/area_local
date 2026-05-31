@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
@@ -38,14 +39,16 @@ class SendTextMessageRequested extends ChatEvent {
   final String chatId;
   final String text;
   final String currentUserId;
+  final String? replyToId;
   const SendTextMessageRequested({
     required this.chatId,
     required this.text,
     required this.currentUserId,
+    this.replyToId,
   });
 
   @override
-  List<Object?> get props => [chatId, text, currentUserId];
+  List<Object?> get props => [chatId, text, currentUserId, replyToId];
 }
 
 // Legacy alias kept for backward compatibility
@@ -59,6 +62,7 @@ class SendMediaMessageRequested extends ChatEvent {
   final String mimeType;
   final String? thumbnailPath;
   final int? durationSeconds;
+  final String? replyToId;
 
   const SendMediaMessageRequested({
     required this.chatId,
@@ -68,6 +72,7 @@ class SendMediaMessageRequested extends ChatEvent {
     required this.mimeType,
     this.thumbnailPath,
     this.durationSeconds,
+    this.replyToId,
   });
 
   @override
@@ -193,6 +198,52 @@ class RealtimeMessagesRead extends ChatEvent {
   List<Object?> get props => [readInfo];
 }
 
+class DeleteMessageRequested extends ChatEvent {
+  final String messageId;
+  final String conversationId;
+  const DeleteMessageRequested(
+      {required this.messageId, required this.conversationId});
+  @override
+  List<Object?> get props => [messageId, conversationId];
+}
+
+class DeleteConversationRequested extends ChatEvent {
+  final String conversationId;
+  const DeleteConversationRequested({required this.conversationId});
+  @override
+  List<Object?> get props => [conversationId];
+}
+
+class LeaveGroupRequested extends ChatEvent {
+  final String conversationId;
+  const LeaveGroupRequested({required this.conversationId});
+  @override
+  List<Object?> get props => [conversationId];
+}
+
+class DeleteGroupRequested extends ChatEvent {
+  final String conversationId;
+  const DeleteGroupRequested({required this.conversationId});
+  @override
+  List<Object?> get props => [conversationId];
+}
+
+class RemoveMemberRequested extends ChatEvent {
+  final String conversationId;
+  final String targetUserId;
+  const RemoveMemberRequested(
+      {required this.conversationId, required this.targetUserId});
+  @override
+  List<Object?> get props => [conversationId, targetUserId];
+}
+
+class RealtimeMessageDeleted extends ChatEvent {
+  final Map<String, dynamic> data;
+  const RealtimeMessageDeleted({required this.data});
+  @override
+  List<Object?> get props => [data];
+}
+
 class DisconnectChatRequested extends ChatEvent {
   const DisconnectChatRequested();
 }
@@ -274,6 +325,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   StreamSubscription<Map<String, dynamic>>? _typingSub;
   StreamSubscription<Map<String, dynamic>>? _readSub;
   StreamSubscription<Map<String, dynamic>>? _convUpdatedSub;
+  StreamSubscription<Map<String, dynamic>>? _msgDeletedSub;
 
   ChatBloc() : super(const ChatState()) {
     on<LoadConversationsRequested>(_onLoadConversations);
@@ -284,7 +336,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<CreateGroupRequested>(_onCreateGroup);
     on<BlockUserRequested>(_onBlockUser);
     on<ReportUserRequested>(_onReportUser);
+    on<DeleteMessageRequested>(_onDeleteMessage);
+    on<DeleteConversationRequested>(_onDeleteConversation);
+    on<LeaveGroupRequested>(_onLeaveGroup);
+    on<DeleteGroupRequested>(_onDeleteGroup);
+    on<RemoveMemberRequested>(_onRemoveMember);
     on<RealtimeMessageReceived>(_onRealtimeMessageReceived);
+    on<RealtimeMessageDeleted>(_onRealtimeMessageDeleted);
     on<RealtimeConversationUpdated>(_onRealtimeConversationUpdated);
     on<RealtimePresenceStatusChanged>(_onRealtimePresenceStatusChanged);
     on<RealtimeTypingStatusChanged>(_onRealtimeTypingStatusChanged);
@@ -319,6 +377,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     });
     _convUpdatedSub = _service.onConversationUpdated.listen((update) {
       add(RealtimeConversationUpdated(update: update));
+    });
+    _msgDeletedSub = _service.onMessageDeleted.listen((data) {
+      add(RealtimeMessageDeleted(data: data));
     });
 
     // Determine type filter from tab
@@ -362,11 +423,24 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           conv['participants']?.map((e) => e.toString()) ?? []);
       final convType = ConversationTypeX.fromString(conv['type']?.toString());
 
-      final otherUser =
-          (conv['participantProfiles'] as List<dynamic>?)?.firstWhere(
-        (p) => p is Map && p['userId']?.toString() != currentUserId,
-        orElse: () => null,
-      ) as Map<String, dynamic>?;
+      final rawProfiles = (conv['participantProfiles'] as List<dynamic>?) ?? [];
+      final rawAdmins = (conv['admins'] as List<dynamic>?) ?? [];
+      final adminIds = rawAdmins.map((a) => a.toString()).toSet();
+
+      // Build rich member list with isAdmin flag for group info screen
+      final memberProfiles = rawProfiles.map((p) {
+        final m = Map<String, dynamic>.from(p as Map);
+        m['isAdmin'] = adminIds.contains(m['userId']?.toString());
+        return m;
+      }).toList();
+
+      final otherUser = rawProfiles.cast<Map<String, dynamic>>().firstWhere(
+            (p) => p['userId']?.toString() != currentUserId,
+            orElse: () => {
+              'displayName': 'Group',
+              'avatarUrl': null,
+            },
+          ) as Map<String, dynamic>?;
 
       final lastMsg = conv['lastMessage'] as Map<String, dynamic>?;
       final lastPreview = lastMsg?['preview']?.toString();
@@ -389,6 +463,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         isRecipientOnline: (otherUser?['isOnline'] as bool?) ?? false,
         title: conv['title']?.toString(),
         imageUrl: conv['imageUrl']?.toString(),
+        memberProfiles: memberProfiles,
+        admins: adminIds.toList(),
       );
     }).toList();
   }
@@ -453,6 +529,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         createdAt: DateTime.tryParse(msg['createdAt']?.toString() ?? '') ??
             DateTime.now(),
         isMe: senderId == currentUserId,
+        replyToId: msg['replyToId']?.toString(),
+        replyToPreview: msg['replyToPreview']?.toString(),
+        replyToSenderName: msg['replyToSenderName']?.toString(),
       );
     }).toList();
   }
@@ -471,6 +550,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       readBy: [event.currentUserId],
       createdAt: DateTime.now(),
       isMe: true,
+      replyToId: event.replyToId,
     );
 
     emit(state.copyWith(
@@ -481,6 +561,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       conversationId: event.chatId,
       text: event.text,
       type: 'text',
+      replyToId: event.replyToId,
     );
 
     final finalMessages = state.activeRoomMessages.map((m) {
@@ -525,71 +606,59 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) async {
     emit(state.copyWith(isSendingMedia: true));
 
-    final fileName = event.file.path.split('/').last;
     final fileStat = await event.file.stat();
+    // DEV: bypass real upload — use publicly accessible placeholder URLs
+    final mediaUrl = _devMediaUrl(event.messageType);
 
-    final urlResult = await _service.getMediaUploadUrl(
-      fileName: fileName,
-      mimeType: event.mimeType,
+    final optimisticMsg = AppChatMessage(
+      id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
+      conversationId: event.chatId,
+      senderId: event.currentUserId,
+      type: MessageTypeX.fromString(event.messageType),
+      text: '',
+      mediaUrl: mediaUrl,
+      durationSeconds: event.durationSeconds,
+      attachments: const [],
+      readBy: [event.currentUserId],
+      createdAt: DateTime.now(),
+      isMe: true,
+    );
+
+    emit(state.copyWith(
+      isSendingMedia: false,
+      activeRoomMessages: [optimisticMsg, ...state.activeRoomMessages],
+    ));
+
+    await _service.sendMessage(
+      conversationId: event.chatId,
+      type: event.messageType,
+      mediaUrl: mediaUrl,
+      durationSeconds: event.durationSeconds,
       fileSize: fileStat.size,
-      mediaType: event.messageType,
+      mimeType: event.mimeType,
     );
+  }
 
-    await urlResult.fold(
-      (failure) async {
-        emit(state.copyWith(
-          isSendingMedia: false,
-          errorMessage: 'Failed to upload media: ${failure.message}',
-        ));
-      },
-      (urlData) async {
-        final uploadUrl = urlData['uploadUrl'] as String? ?? '';
-        final mediaUrl = urlData['mediaUrl'] as String? ?? '';
-
-        final finalUrl = await _service.uploadFileToUrl(
-          uploadUrl: uploadUrl,
-          mediaUrl: mediaUrl,
-          file: event.file,
-          mimeType: event.mimeType,
-        );
-
-        if (finalUrl == null) {
-          emit(state.copyWith(
-            isSendingMedia: false,
-            errorMessage: 'Media upload failed',
-          ));
-          return;
-        }
-
-        final optimisticMsg = AppChatMessage(
-          id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
-          conversationId: event.chatId,
-          senderId: event.currentUserId,
-          type: MessageTypeX.fromString(event.messageType),
-          text: '',
-          mediaUrl: finalUrl,
-          durationSeconds: event.durationSeconds,
-          attachments: const [],
-          readBy: [event.currentUserId],
-          createdAt: DateTime.now(),
-          isMe: true,
-        );
-
-        emit(state.copyWith(
-          isSendingMedia: false,
-          activeRoomMessages: [optimisticMsg, ...state.activeRoomMessages],
-        ));
-
-        await _service.sendMessage(
-          conversationId: event.chatId,
-          type: event.messageType,
-          mediaUrl: finalUrl,
-          durationSeconds: event.durationSeconds,
-          fileSize: fileStat.size,
-          mimeType: event.mimeType,
-        );
-      },
-    );
+  static String _devMediaUrl(String type) {
+    final seed = Random().nextInt(9999);
+    switch (type) {
+      case 'video':
+        const videos = [
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+        ];
+        return videos[seed % videos.length];
+      case 'voice':
+        const audios = [
+          'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+          'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+          'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+        ];
+        return audios[seed % audios.length];
+      default:
+        return 'https://picsum.photos/seed/$seed/600/400';
+    }
   }
 
   Future<void> _onStartDirectChat(
@@ -651,8 +720,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
             '/chat-room',
             extra: {
               'chatId': chatId,
-              'recipientName': groupTitle,
+              'recipientName': groupTitle.isEmpty ? 'New Group' : groupTitle,
               'recipientId': '',
+              'conversationType': 'group',
             },
           );
         }
@@ -715,6 +785,9 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       createdAt: DateTime.tryParse(msg['createdAt']?.toString() ?? '') ??
           DateTime.now(),
       isMe: senderId == event.currentUserId,
+      replyToId: msg['replyToId']?.toString(),
+      replyToPreview: msg['replyToPreview']?.toString(),
+      replyToSenderName: msg['replyToSenderName']?.toString(),
     );
 
     if (state.activeRoomChatId == chatId) {
@@ -875,12 +948,127 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(const ChatState());
   }
 
+  Future<void> _onDeleteMessage(
+    DeleteMessageRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    _service.deleteMessageViaSocket(
+      messageId: event.messageId,
+      conversationId: event.conversationId,
+    );
+    // Optimistically mark as deleted in UI
+    final updated = state.activeRoomMessages.map((m) {
+      if (m.id == event.messageId) {
+        return AppChatMessage(
+          id: m.id,
+          conversationId: m.conversationId,
+          senderId: m.senderId,
+          type: MessageType.system,
+          text: 'This message was deleted',
+          attachments: const [],
+          readBy: m.readBy,
+          createdAt: m.createdAt,
+          isMe: m.isMe,
+        );
+      }
+      return m;
+    }).toList();
+    emit(state.copyWith(activeRoomMessages: updated));
+  }
+
+  void _onRealtimeMessageDeleted(
+    RealtimeMessageDeleted event,
+    Emitter<ChatState> emit,
+  ) {
+    final messageId = event.data['messageId']?.toString() ?? '';
+    final updated = state.activeRoomMessages.map((m) {
+      if (m.id == messageId) {
+        return AppChatMessage(
+          id: m.id,
+          conversationId: m.conversationId,
+          senderId: m.senderId,
+          type: MessageType.system,
+          text: 'This message was deleted',
+          attachments: const [],
+          readBy: m.readBy,
+          createdAt: m.createdAt,
+          isMe: m.isMe,
+        );
+      }
+      return m;
+    }).toList();
+    emit(state.copyWith(activeRoomMessages: updated));
+  }
+
+  Future<void> _onDeleteConversation(
+    DeleteConversationRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    final result = await _service.deleteConversation(event.conversationId);
+    result.fold(
+      (f) => emit(state.copyWith(errorMessage: f.message)),
+      (_) {
+        final updated = state.conversations
+            .where((c) => c.id != event.conversationId)
+            .toList();
+        emit(state.copyWith(conversations: updated));
+      },
+    );
+  }
+
+  Future<void> _onLeaveGroup(
+    LeaveGroupRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    final result = await _service.leaveGroup(event.conversationId);
+    result.fold(
+      (f) => emit(state.copyWith(errorMessage: f.message)),
+      (_) {
+        final updated = state.conversations
+            .where((c) => c.id != event.conversationId)
+            .toList();
+        emit(state.copyWith(conversations: updated));
+      },
+    );
+  }
+
+  Future<void> _onRemoveMember(
+    RemoveMemberRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    final result = await _service.removeGroupMember(
+      groupId: event.conversationId,
+      userId: event.targetUserId,
+    );
+    result.fold(
+      (f) => emit(state.copyWith(errorMessage: f.message)),
+      (_) => emit(state.copyWith(successMessage: 'Member removed')),
+    );
+  }
+
+  Future<void> _onDeleteGroup(
+    DeleteGroupRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    final result = await _service.deleteGroup(event.conversationId);
+    result.fold(
+      (f) => emit(state.copyWith(errorMessage: f.message)),
+      (_) {
+        final updated = state.conversations
+            .where((c) => c.id != event.conversationId)
+            .toList();
+        emit(state.copyWith(conversations: updated));
+      },
+    );
+  }
+
   void _cancelStreamSubscriptions() {
     _msgSub?.cancel();
     _presenceSub?.cancel();
     _typingSub?.cancel();
     _readSub?.cancel();
     _convUpdatedSub?.cancel();
+    _msgDeletedSub?.cancel();
   }
 
   @override

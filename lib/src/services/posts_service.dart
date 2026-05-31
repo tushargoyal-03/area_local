@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:area_connect/src/imports/imports.dart';
 
 class PostsService {
@@ -35,31 +36,11 @@ class PostsService {
     });
   }
 
-  /// Upload a post media/image to the backend.
+  /// DEV: bypass real storage — return a random picsum placeholder URL.
   FutureEither<Map<String, dynamic>> uploadImage(File file) async {
-    try {
-      final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          file.path,
-          filename: file.path.split('/').last,
-        ),
-      });
-
-      final result = await DioService.instance.post(
-        'upload',
-        data: formData,
-      );
-
-      return result.map((response) {
-        try {
-          return response.data as Map<String, dynamic>;
-        } catch (e) {
-          throw Exception('Failed to parse upload response: $e');
-        }
-      });
-    } catch (e) {
-      throw Exception('Failed to prepare upload form: $e');
-    }
+    final seed = Random().nextInt(9999);
+    final url = 'https://picsum.photos/seed/$seed/800/600';
+    return Right({'url': url, 'data': null});
   }
 
   /// Create a new hyperlocal activity post.

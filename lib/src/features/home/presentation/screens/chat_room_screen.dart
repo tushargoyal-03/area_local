@@ -34,6 +34,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   late String? _recordingPath;
   Timer? _recordingTimer;
   int _recordingSeconds = 0;
+  AppChatMessage? _replyingTo;
 
   @override
   void initState() {
@@ -98,10 +99,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
     context.read<ChatBloc>().add(
           SendTextMessageRequested(
-              chatId: widget.chatId, text: text, currentUserId: currentUserId),
+            chatId: widget.chatId,
+            text: text,
+            currentUserId: currentUserId,
+            replyToId: _replyingTo?.id,
+          ),
         );
 
     _msgController.clear();
+    setState(() => _replyingTo = null);
     Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
   }
 
@@ -244,6 +250,91 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
     });
   }
 
+  void _showMessageMenu(AppChatMessage msg) {
+    final cs = context.theme.colorScheme;
+    final tt = context.theme.textTheme;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: cs.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36.w,
+                height: 4.h,
+                margin: EdgeInsets.only(bottom: 16.h),
+                decoration: BoxDecoration(
+                  color: cs.outlineVariant,
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+              ListTile(
+                leading: Icon(Icons.reply_rounded, color: cs.primary),
+                title: Text('Reply', style: tt.bodyMedium),
+                contentPadding: EdgeInsets.zero,
+                onTap: () {
+                  Navigator.pop(context);
+                  setState(() => _replyingTo = msg);
+                },
+              ),
+              if (msg.type == MessageType.text && msg.text.isNotEmpty)
+                ListTile(
+                  leading: Icon(Icons.copy_rounded, color: cs.onSurface),
+                  title: Text('Copy', style: tt.bodyMedium),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Clipboard.setData(ClipboardData(text: msg.text));
+                    showGlobalToast(message: 'Copied', status: 'success');
+                  },
+                ),
+              if (msg.isMe && !msg.isOptimistic)
+                ListTile(
+                  leading: Icon(Icons.delete_outline_rounded, color: cs.error),
+                  title: Text('Delete',
+                      style: tt.bodyMedium?.copyWith(color: cs.error)),
+                  contentPadding: EdgeInsets.zero,
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.read<ChatBloc>().add(DeleteMessageRequested(
+                        messageId: msg.id, conversationId: widget.chatId));
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _navigateToGroupInfo(BuildContext context, ChatState state) {
+    final conversation = state.conversations.firstWhere(
+      (c) => c.id == widget.chatId,
+      orElse: () => AppConversation(
+        id: widget.chatId,
+        participants: const [],
+        recipientName: widget.recipientName,
+        recipientId: widget.recipientId,
+      ),
+    );
+    final currentUserId = context.read<SessionBloc>().state.user?.id ?? '';
+
+    context.push('/group-info', extra: {
+      'conversationId': widget.chatId,
+      'groupName': widget.recipientName,
+      'groupImageUrl': conversation.displayAvatar,
+      'members': conversation.memberProfiles,
+      'currentUserId': currentUserId,
+      'isAdmin': conversation.admins.contains(currentUserId),
+    });
+  }
+
   void _showUserMenu() {
     if (widget.recipientId.isEmpty) return;
     showModalBottomSheet<void>(
@@ -378,7 +469,12 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               ],
             ),
             actions: [
-              if (!isGroup && widget.recipientId.isNotEmpty)
+              if (isGroup)
+                IconButton(
+                  icon: Icon(IconsaxPlusLinear.people, color: cs.onSurface),
+                  onPressed: () => _navigateToGroupInfo(context, state),
+                )
+              else if (widget.recipientId.isNotEmpty)
                 IconButton(
                   icon: Icon(IconsaxPlusLinear.more, color: cs.onSurface),
                   onPressed: _showUserMenu,
@@ -410,11 +506,16 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                             children: [
                               if (showDateSep)
                                 _DateSeparator(date: msg.createdAt),
-                              _MessageBubble(
-                                msg: msg,
-                                recipientId: widget.recipientId,
-                                cs: cs,
-                                tt: tt,
+                              GestureDetector(
+                                onLongPress: msg.type == MessageType.system
+                                    ? null
+                                    : () => _showMessageMenu(msg),
+                                child: _MessageBubble(
+                                  msg: msg,
+                                  recipientId: widget.recipientId,
+                                  cs: cs,
+                                  tt: tt,
+                                ),
                               ),
                             ],
                           );
@@ -443,6 +544,15 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       ],
                     ),
                   ),
+                ),
+
+              // Reply preview bar
+              if (_replyingTo != null)
+                _ReplyPreviewBar(
+                  msg: _replyingTo!,
+                  cs: cs,
+                  tt: tt,
+                  onDismiss: () => setState(() => _replyingTo = null),
                 ),
 
               // Media upload progress
@@ -636,6 +746,13 @@ class _TextContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (msg.replyToId != null && msg.replyToPreview != null)
+            _ReplyQuote(
+                senderName: msg.replyToSenderName ?? 'User',
+                preview: msg.replyToPreview!,
+                isMe: isMe,
+                cs: cs,
+                tt: tt),
           Text(
             msg.text,
             style: TextStyle(
@@ -880,6 +997,122 @@ class _PlaceholderMedia extends StatelessWidget {
       height: 150.h,
       color: cs.surfaceContainerHigh,
       child: Center(child: Icon(icon, size: 40.sp, color: cs.onSurfaceVariant)),
+    );
+  }
+}
+
+class _ReplyQuote extends StatelessWidget {
+  final String senderName;
+  final String preview;
+  final bool isMe;
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  const _ReplyQuote({
+    required this.senderName,
+    required this.preview,
+    required this.isMe,
+    required this.cs,
+    required this.tt,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = isMe
+        ? Colors.white.withValues(alpha: 0.2)
+        : cs.primary.withValues(alpha: 0.1);
+    final borderColor = isMe ? Colors.white54 : cs.primary;
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 6.h),
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border(left: BorderSide(color: borderColor, width: 3.w)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            senderName,
+            style: TextStyle(
+              color: isMe ? cs.onPrimary : cs.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 11.sp,
+            ),
+          ),
+          Text(
+            preview,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color:
+                  (isMe ? cs.onPrimary : cs.onSurface).withValues(alpha: 0.75),
+              fontSize: 12.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReplyPreviewBar extends StatelessWidget {
+  final AppChatMessage msg;
+  final ColorScheme cs;
+  final TextTheme tt;
+  final VoidCallback onDismiss;
+
+  const _ReplyPreviewBar({
+    required this.msg,
+    required this.cs,
+    required this.tt,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final preview = msg.type == MessageType.text
+        ? (msg.text.length > 60 ? '${msg.text.substring(0, 60)}…' : msg.text)
+        : msg.type.preview;
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        border: Border(
+          top: BorderSide(color: cs.primary.withValues(alpha: 0.3)),
+          left: BorderSide(color: cs.primary, width: 3.w),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Replying to ${msg.isMe ? 'yourself' : 'message'}',
+                  style: tt.bodySmall?.copyWith(
+                      color: cs.primary, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  preview,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: Icon(Icons.close, size: 18.sp, color: cs.onSurfaceVariant),
+            onPressed: onDismiss,
+          ),
+        ],
+      ),
     );
   }
 }

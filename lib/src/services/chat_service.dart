@@ -21,6 +21,8 @@ class ChatService {
       StreamController<Map<String, dynamic>>.broadcast();
   final StreamController<Map<String, dynamic>> _conversationUpdatedController =
       StreamController<Map<String, dynamic>>.broadcast();
+  final StreamController<Map<String, dynamic>> _messageDeletedController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get onMessageReceived =>
       _messageController.stream;
@@ -31,6 +33,8 @@ class ChatService {
   Stream<Map<String, dynamic>> get onMessagesRead => _readController.stream;
   Stream<Map<String, dynamic>> get onConversationUpdated =>
       _conversationUpdatedController.stream;
+  Stream<Map<String, dynamic>> get onMessageDeleted =>
+      _messageDeletedController.stream;
 
   // --- HTTP Endpoints ---
 
@@ -190,6 +194,37 @@ class ChatService {
     });
   }
 
+  // --- Message / Conversation Actions ---
+
+  FutureEither<Map<String, dynamic>> deleteMessage(String messageId) async {
+    final result = await DioService.instance.delete('chat/messages/$messageId');
+    return result.map((r) => r.data as Map<String, dynamic>);
+  }
+
+  FutureEither<Map<String, dynamic>> deleteConversation(
+      String conversationId) async {
+    final result =
+        await DioService.instance.delete('chat/conversations/$conversationId');
+    return result.map((r) => r.data as Map<String, dynamic>);
+  }
+
+  FutureEither<Map<String, dynamic>> removeGroupMember(
+      {required String groupId, required String userId}) async {
+    final result = await DioService.instance
+        .delete('chat/groups/$groupId/members/$userId');
+    return result.map((r) => r.data as Map<String, dynamic>);
+  }
+
+  FutureEither<Map<String, dynamic>> leaveGroup(String groupId) async {
+    final result = await DioService.instance.post('chat/groups/$groupId/leave');
+    return result.map((r) => r.data as Map<String, dynamic>);
+  }
+
+  FutureEither<Map<String, dynamic>> deleteGroup(String groupId) async {
+    final result = await DioService.instance.delete('chat/groups/$groupId');
+    return result.map((r) => r.data as Map<String, dynamic>);
+  }
+
   // --- Media Upload ---
 
   FutureEither<Map<String, dynamic>> getMediaUploadUrl({
@@ -225,18 +260,21 @@ class ChatService {
     required String mimeType,
   }) async {
     try {
+      final bytes = await file.readAsBytes();
       await Dio().put<void>(
         uploadUrl,
-        data: file.openRead(),
+        data: bytes,
         options: Options(
           headers: {
             'Content-Type': mimeType,
-            'Content-Length': file.lengthSync(),
+            'Content-Length': bytes.length.toString(),
           },
         ),
       );
       return mediaUrl;
-    } catch (_) {
+    } catch (e) {
+      if (e is DioException) {
+      } else {}
       return null;
     }
   }
@@ -311,6 +349,14 @@ class ChatService {
       }
     });
 
+    _socket?.on('message_deleted', (data) {
+      if (data is Map<String, dynamic>) {
+        _messageDeletedController.add(data);
+      } else if (data != null) {
+        _messageDeletedController.add(Map<String, dynamic>.from(data));
+      }
+    });
+
     _socket?.connect();
   }
 
@@ -337,6 +383,7 @@ class ChatService {
     int? durationSeconds,
     int? fileSize,
     String? mimeType,
+    String? replyToId,
   }) {
     final completer = Completer<Map<String, dynamic>>();
 
@@ -350,6 +397,7 @@ class ChatService {
     if (durationSeconds != null) payload['durationSeconds'] = durationSeconds;
     if (fileSize != null) payload['fileSize'] = fileSize;
     if (mimeType != null) payload['mimeType'] = mimeType;
+    if (replyToId != null) payload['replyToId'] = replyToId;
 
     _socket?.emitWithAck(
       'send_message',
@@ -393,5 +441,11 @@ class ChatService {
 
   void markAsRead(String conversationId) {
     _socket?.emit('mark_read', {'conversationId': conversationId});
+  }
+
+  void deleteMessageViaSocket(
+      {required String messageId, required String conversationId}) {
+    _socket?.emit('delete_message',
+        {'messageId': messageId, 'conversationId': conversationId});
   }
 }

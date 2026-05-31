@@ -96,7 +96,13 @@ class UsersService {
     return result.map((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as List<dynamic>;
+        final dataObj = responseData['data'];
+        if (dataObj is Map) {
+          return (dataObj['results'] as List?) ?? [];
+        } else if (dataObj is List) {
+          return dataObj;
+        }
+        return [];
       } catch (e) {
         throw Exception('Failed to search users: $e');
       }
