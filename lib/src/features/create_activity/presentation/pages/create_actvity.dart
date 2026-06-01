@@ -16,6 +16,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   final TextEditingController _contentController = TextEditingController();
 
   List<String> categories = [
+    'Society',
     'Sports',
     'Events',
     'Help',

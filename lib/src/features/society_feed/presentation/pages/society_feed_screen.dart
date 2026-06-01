@@ -358,7 +358,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                   AppTextField(controller: titleCtrl, hint: 'Title'),
                   SizedBox(height: 12.h),
                   AppTextField(
-                      controller: contentCtrl, hint: 'Details…', maxLines: 4),
+                      controller: contentCtrl, hint: 'Details…', maxLines: 2),
                   SizedBox(height: 20.h),
                   BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
                     builder: (context, state) => SizedBox(

@@ -83,6 +83,8 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
   // UI filter categories mapping to backend categories
   final List<String> _categories = [
     'For you',
+    'Society',
+    'Advertisements',
     'Sports',
     'Meetups',
     'Needs',
@@ -90,10 +92,13 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
   ];
 
   String? _getBackendCategoryFilter(int index) {
-    if (index == 0) return null; // 'For you' shows all
-    if (index == 1) return 'Sports';
-    if (index == 2) return 'Meetup';
-    if (index == 3) return 'Need';
+    final cat = _categories[index];
+    if (cat == 'For you') return null;
+    if (cat == 'Society') return 'Society';
+    if (cat == 'Advertisements') return 'Advertisement';
+    if (cat == 'Sports') return 'Sports';
+    if (cat == 'Meetups') return 'Meetup';
+    if (cat == 'Needs') return 'Need';
     return 'General';
   }
 
