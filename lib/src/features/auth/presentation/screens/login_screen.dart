@@ -344,6 +344,28 @@ class _LoginView extends StatelessWidget {
                         width: ButtonSize.large,
                         isFullWidth: false,
                       ),
+                      SizedBox(height: AppSpacing.sm.h),
+                      InkWell(
+                        onTap: () {
+                          context.push(AppRoutes.signup);
+                        },
+                        child: RichText(
+                          text: TextSpan(
+                            text: 'Don\'t have an account? ',
+                            style: tt.bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                            children: [
+                              TextSpan(
+                                text: 'Sign Up',
+                                style: TextStyle(
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -410,28 +432,28 @@ class _LoginView extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: AppSpacing.xxl.h),
-                InkWell(
-                  onTap: () {
-                    context.push(AppRoutes.signup);
-                  },
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'Don\'t have an account? ',
-                      style:
-                          tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                      children: [
-                        TextSpan(
-                          text: 'Sign Up',
-                          style: TextStyle(
-                            color: cs.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // SizedBox(height: AppSpacing.xxl.h),
+                // InkWell(
+                //   onTap: () {
+                //     context.push(AppRoutes.signup);
+                //   },
+                //   child: RichText(
+                //     text: TextSpan(
+                //       text: 'Don\'t have an account? ',
+                //       style:
+                //           tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                //       children: [
+                //         TextSpan(
+                //           text: 'Sign Up',
+                //           style: TextStyle(
+                //             color: cs.primary,
+                //             fontWeight: FontWeight.bold,
+                //           ),
+                //         ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
