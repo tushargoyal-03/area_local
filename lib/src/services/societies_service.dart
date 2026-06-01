@@ -146,4 +146,65 @@ class SocietiesService {
       }
     });
   }
+
+  FutureEither<List<dynamic>> getJoinRequests({
+    required String societyId,
+    String? status,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final Map<String, dynamic> query = {
+      'page': page,
+      'limit': limit,
+    };
+    if (status != null) query['status'] = status;
+
+    final result = await DioService.instance.get(
+      'societies/$societyId/join-requests',
+      queryParameters: query,
+    );
+
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as List<dynamic>;
+      } catch (e) {
+        throw Exception('Failed to load join requests: $e');
+      }
+    });
+  }
+
+  FutureEither<Map<String, dynamic>> approveJoinRequest({
+    required String societyId,
+    required String requestId,
+  }) async {
+    final result = await DioService.instance.post(
+      'societies/$societyId/join-requests/$requestId/approve',
+    );
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Failed to approve join request: $e');
+      }
+    });
+  }
+
+  FutureEither<Map<String, dynamic>> rejectJoinRequest({
+    required String societyId,
+    required String requestId,
+  }) async {
+    final result = await DioService.instance.post(
+      'societies/$societyId/join-requests/$requestId/reject',
+    );
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Failed to reject join request: $e');
+      }
+    });
+  }
 }

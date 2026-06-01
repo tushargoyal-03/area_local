@@ -136,6 +136,33 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                 ),
         ),
         actions: [
+          BlocBuilder<SessionBloc, SessionState>(
+            builder: (context, sessionState) {
+              if (sessionState.user?.role == 'SocietyAdmin') {
+                return Padding(
+                  padding: EdgeInsets.only(right: AppSpacing.sm.w),
+                  child: CircleAvatar(
+                    radius: 20.r,
+                    backgroundColor: cs.surfaceContainerLow,
+                    child: IconButton(
+                      onPressed: () {
+                        final societyId = context.read<SocietyFeedBloc>().state.societyId;
+                        if (societyId.isNotEmpty) {
+                          context.push('/society-requests/$societyId');
+                        }
+                      },
+                      icon: Icon(
+                        IconsaxPlusLinear.profile_2user,
+                        size: 18.w,
+                        color: cs.onSurface,
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           Padding(
             padding: EdgeInsets.only(right: AppSpacing.lg.w),
             child: CircleAvatar(

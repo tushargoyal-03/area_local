@@ -14,6 +14,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ForgotPasswordRequested>(_onForgotPasswordRequested);
     on<VerifyOtpRequested>(_onVerifyOtpRequested);
     on<ResendOtpRequested>(_onResendOtpRequested);
+    on<ResetPasswordRequested>(_onResetPasswordRequested);
   }
 
   Future<void> _onLoginRequested(
@@ -83,7 +84,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (success) {
         emit(state.copyWith(isLoading: false));
         showGlobalToast(
-            message: 'Password reset link sent successfully',
+            message: 'OTP sent to your email successfully',
+            status: 'success');
+        if (event.context.mounted) {
+          event.context.go(AppRoutes.resetPassword, extra: event.email);
+        }
+      },
+    );
+  }
+
+  Future<void> _onResetPasswordRequested(
+    ResetPasswordRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
+
+    final result = await _repository.resetPassword(
+      email: event.email,
+      otp: event.otp,
+      newPassword: event.newPassword,
+    );
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isLoading: false));
+        showGlobalToast(message: failure.message, status: 'error');
+      },
+      (_) {
+        emit(state.copyWith(isLoading: false));
+        showGlobalToast(
+            message: 'Password reset successful. Please login.',
             status: 'success');
         if (event.context.mounted) {
           event.context.go(AppRoutes.login);
@@ -193,6 +223,23 @@ class ResendOtpRequested extends AuthEvent {
 
   @override
   List<Object> get props => [email];
+}
+
+class ResetPasswordRequested extends AuthEvent {
+  final BuildContext context;
+  final String email;
+  final String otp;
+  final String newPassword;
+
+  const ResetPasswordRequested({
+    required this.context,
+    required this.email,
+    required this.otp,
+    required this.newPassword,
+  });
+
+  @override
+  List<Object> get props => [email, otp, newPassword];
 }
 
 class AuthState extends Equatable {

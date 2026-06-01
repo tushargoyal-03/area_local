@@ -216,20 +216,19 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
             SizedBox(height: 14.h),
             ...List.generate(state.neighbors.length, (i) {
               final neighbor = state.neighbors[i];
-              final profile = neighbor['profile'] ?? <String, dynamic>{};
-              final name = profile['displayName'] ?? 'Neighbor';
-              final dist = neighbor['distanceInMeters'] ?? 0.0;
+              final name = neighbor['displayName'] ?? 'Neighbor';
+              final dist = neighbor['distanceInKm'] ?? 0.0;
 
               String interest = 'connecting';
-              if (profile['lookingFor'] != null &&
-                  (profile['lookingFor'] as List).isNotEmpty) {
-                interest = profile['lookingFor'].join(', ');
+              if (neighbor['lookingFor'] != null &&
+                  (neighbor['lookingFor'] as List).isNotEmpty) {
+                interest = (neighbor['lookingFor'] as List).join(', ');
               }
 
               return _NearbyCard(
                 userId: neighbor['userId'] ?? '',
                 name: name,
-                distance: (dist / 1000.0).toStringAsFixed(1),
+                distance: dist is num ? dist.toStringAsFixed(1) : dist.toString(),
                 interest: interest,
                 cs: cs,
                 tt: tt,

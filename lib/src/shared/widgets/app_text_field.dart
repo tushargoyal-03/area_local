@@ -35,6 +35,7 @@ class AppTextField extends StatelessWidget {
     this.autofocus = false,
     this.filled,
     this.fillColor,
+    this.inputFormatters,
   });
 
   final String? label;
@@ -57,6 +58,7 @@ class AppTextField extends StatelessWidget {
   final bool autofocus;
   final bool? filled;
   final Color? fillColor;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +80,7 @@ class AppTextField extends StatelessWidget {
       maxLines: obscureText ? 1 : maxLines,
       minLines: minLines,
       autofocus: autofocus,
+      inputFormatters: inputFormatters,
       style: tt.bodyLarge?.copyWith(color: cs.onSurface),
       cursorColor: cs.primary,
       decoration: InputDecoration(

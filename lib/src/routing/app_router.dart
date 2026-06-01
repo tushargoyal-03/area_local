@@ -9,10 +9,12 @@ import 'package:area_connect/src/features/society_feed/presentation/pages/societ
 import 'package:go_router/go_router.dart';
 import 'package:area_connect/src/routing/global_navigator.dart';
 import 'package:area_connect/src/routing/app_routes.dart';
+import 'package:area_connect/src/features/society_requests/presentation/pages/society_requests_screen.dart';
 
 import 'package:area_connect/src/features/auth/presentation/screens/login_screen.dart';
 import 'package:area_connect/src/features/auth/presentation/screens/signup_screen.dart';
 import 'package:area_connect/src/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:area_connect/src/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:area_connect/src/features/auth/presentation/screens/role_selection_screen.dart';
 import 'package:area_connect/src/features/home/presentation/screens/chat_room_screen.dart';
 import 'package:area_connect/src/features/home/presentation/screens/new_group_screen.dart';
@@ -49,6 +51,14 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.forgotPassword,
       name: 'forgotPassword',
       builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.resetPassword,
+      name: 'resetPassword',
+      builder: (context, state) {
+        final email = (state.extra as String?) ?? '';
+        return ResetPasswordScreen(email: email);
+      },
     ),
     GoRoute(
         path: AppRoutes.verifyOtp,
@@ -169,6 +179,14 @@ final GoRouter appRouter = GoRouter(
           postId: params['postId'] as String,
           postTitle: params['postTitle'] as String? ?? 'Activity',
         );
+      },
+    ),
+    GoRoute(
+      path: '/society-requests/:id',
+      name: 'societyRequests',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return SocietyRequestsScreen(societyId: id);
       },
     ),
   ],

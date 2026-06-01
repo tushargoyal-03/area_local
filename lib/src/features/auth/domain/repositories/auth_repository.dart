@@ -25,6 +25,13 @@ abstract class AuthRepository {
     required String email,
   });
 
+  /// Reset password using OTP
+  FutureEither<void> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  });
+
   /// Sign out the current user
   FutureEither<void> logout();
 

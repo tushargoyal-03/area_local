@@ -103,9 +103,29 @@ class AuthService {
   }
 
   FutureEither<void> forgotPassword({required String email}) async {
-    return runTask(() async {
-      await Future<void>.delayed(const Duration(seconds: 1));
-    }, requiresNetwork: true);
+    final result = await DioService.instance.post(
+      'auth/forgot-password',
+      data: {
+        'emailOrPhone': email,
+      },
+    );
+    return result.map((_) {});
+  }
+
+  FutureEither<void> resetPassword({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    final result = await DioService.instance.post(
+      'auth/reset-password',
+      data: {
+        'emailOrPhone': email,
+        'otp': otp,
+        'newPassword': newPassword,
+      },
+    );
+    return result.map((_) {});
   }
 
   FutureEither<void> logout() async {
