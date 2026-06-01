@@ -68,6 +68,7 @@ class AuthService {
     required String name,
     required String email,
     required String password,
+    required String role,
     required List<double> coordinates,
   }) async {
     final result = await DioService.instance.post(
@@ -76,6 +77,7 @@ class AuthService {
         'displayName': name,
         'emailOrPhone': email,
         'password': password,
+        'role': role,
         'coordinates': coordinates,
       },
     );

@@ -16,6 +16,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  String _selectedRole = 'User';
   bool _isChecked = false;
 
   @override
@@ -55,6 +56,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 name: _nameController.text.trim(),
                 email: _emailController.text.trim(),
                 password: _passwordController.text,
+                role: _selectedRole,
                 coordinates: coordinates,
               ),
             );
@@ -79,6 +81,10 @@ class _SignupScreenState extends State<SignupScreen> {
       tt: tt,
       isChecked: _isChecked,
       onChecked: () => setState(() => _isChecked = !_isChecked),
+      selectedRole: _selectedRole,
+      onRoleChanged: (val) {
+        if (val != null) setState(() => _selectedRole = val);
+      },
     );
   }
 }
@@ -100,6 +106,8 @@ class _SignupView extends StatelessWidget {
     required this.tt,
     required this.isChecked,
     required this.onChecked,
+    required this.selectedRole,
+    required this.onRoleChanged,
   });
 
   final GlobalKey<FormState> formKey;
@@ -117,6 +125,8 @@ class _SignupView extends StatelessWidget {
   final TextTheme tt;
   final bool isChecked;
   final VoidCallback onChecked;
+  final String selectedRole;
+  final ValueChanged<String?> onRoleChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -226,6 +236,31 @@ class _SignupView extends StatelessWidget {
                         }
                         return null;
                       },
+                    ),
+                    SizedBox(height: AppSpacing.md.h),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedRole,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: cs.surface,
+                        labelText: 'Role',
+                        prefixIcon: const Icon(IconsaxPlusLinear.user_octagon),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'User', child: Text('User / Resident')),
+                        DropdownMenuItem(
+                            value: 'BusinessOwner',
+                            child: Text('Business Owner')),
+                        DropdownMenuItem(
+                            value: 'SocietyAdmin',
+                            child: Text('Society Admin')),
+                      ],
+                      onChanged: isLoading ? null : onRoleChanged,
                     ),
                     SizedBox(height: AppSpacing.lg.h),
                     Row(

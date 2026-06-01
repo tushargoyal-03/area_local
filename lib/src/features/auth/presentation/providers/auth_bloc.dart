@@ -49,6 +49,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       name: event.name,
       email: event.email,
       password: event.password,
+      role: event.role,
       coordinates: event.coordinates,
     );
 
@@ -159,12 +160,14 @@ class SignUpRequested extends AuthEvent {
   final String name;
   final String email;
   final String password;
+  final String role;
   final List<double> coordinates;
   const SignUpRequested({
     required this.context,
     required this.name,
     required this.email,
     required this.password,
+    required this.role,
     required this.coordinates,
   });
 }

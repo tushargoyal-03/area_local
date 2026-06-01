@@ -611,7 +611,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
     required ColorScheme cs,
     required TextTheme tt,
   }) {
-    final type = post.type;
+    final type = post.type.toLowerCase();
     final String label =
         type.isNotEmpty ? type[0].toUpperCase() + type.substring(1) : '';
 

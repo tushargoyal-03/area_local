@@ -49,12 +49,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required String email,
     required String password,
+    required String role,
     required List<double> coordinates,
   }) async {
     final result = await _authService.signUp(
       name: name,
       email: email,
       password: password,
+      role: role,
       coordinates: coordinates,
     );
 

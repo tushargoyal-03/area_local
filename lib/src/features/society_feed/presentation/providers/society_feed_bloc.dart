@@ -206,7 +206,7 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
   ) async {
     // Optimistic update
     final updated = state.posts.map((p) {
-      if (p.id == event.postId && p.type == 'poll') {
+      if (p.id == event.postId && p.type.toLowerCase() == 'poll') {
         // Can only vote if hasn't voted
         if (p.userVotedOptionIndex == null) {
           final List<PollOption> newOptions = List.from(p.pollOptions!);
@@ -265,7 +265,7 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
     Emitter<SocietyFeedState> emit,
   ) async {
     final updated = state.posts.map((p) {
-      if (p.id == event.postId && p.type == 'complaint') {
+      if (p.id == event.postId && p.type.toLowerCase() == 'complaint') {
         return p.copyWith(likesCount: p.likesCount + 1);
       }
       return p;
