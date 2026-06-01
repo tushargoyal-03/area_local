@@ -26,3 +26,4 @@ export 'package:geolocator/geolocator.dart' hide ServiceStatus;
 export 'package:device_info_plus/device_info_plus.dart';
 export 'package:app_version_update/app_version_update.dart';
 export 'package:flutter_local_notifications/flutter_local_notifications.dart';
+export 'package:local_auth/local_auth.dart';

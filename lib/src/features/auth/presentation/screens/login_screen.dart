@@ -21,17 +21,40 @@ class _LoginScreenState extends State<LoginScreen> {
     _loadSavedCredentials();
   }
 
-  void _loadSavedCredentials() {
+  final LocalAuthentication auth = LocalAuthentication();
+
+  void _loadSavedCredentials() async {
     final rememberMe = StorageService.instance.getBool('remember_me') ?? false;
     if (rememberMe) {
       final savedEmail = StorageService.instance.getString('saved_email') ?? '';
-      final savedPassword =
-          StorageService.instance.getString('saved_password') ?? '';
+      
       setState(() {
         _rememberMe = true;
         _emailController.text = savedEmail;
-        _passwordController.text = savedPassword;
       });
+      
+      final savedPassword = StorageService.instance.getString('saved_password') ?? '';
+      if (savedPassword.isNotEmpty) {
+          try {
+            final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
+            final bool canAuthenticate =
+                canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+
+            if (canAuthenticate) {
+              final bool didAuthenticate = await auth.authenticate(
+                  localizedReason: 'Please authenticate to autofill your password',
+                  biometricOnly: true);
+                  
+              if (didAuthenticate) {
+                setState(() {
+                   _passwordController.text = savedPassword;
+                });
+              }
+            }
+          } catch (e) {
+            print("Authentication error: $e");
+          }
+      }
     }
   }
 

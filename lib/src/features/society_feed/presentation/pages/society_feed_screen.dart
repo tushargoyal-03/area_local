@@ -90,12 +90,14 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                 )
               : BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
                   key: const ValueKey('societyTitle'),
-                  buildWhen: (prev, curr) => prev.societyName != curr.societyName,
+                  buildWhen: (prev, curr) =>
+                      prev.societyName != curr.societyName,
                   builder: (context, feedState) {
                     final name = feedState.societyName.isNotEmpty
                         ? feedState.societyName
                         : 'Society';
-                    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'S';
+                    final initial =
+                        name.isNotEmpty ? name[0].toUpperCase() : 'S';
                     return Row(
                       children: [
                         Container(
@@ -274,7 +276,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                 }
 
                 return ListView.builder(
-                  padding: EdgeInsets.all(AppSpacing.lg.w),
+                  padding: EdgeInsets.all(AppSpacing.xs.w),
                   itemCount: state.posts.length,
                   itemBuilder: (context, index) {
                     final post = state.posts[index];
@@ -293,15 +295,15 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.createActivity),
-        shape: const CircleBorder(),
-        backgroundColor: cs.primary,
-        child: Icon(
-          IconsaxPlusLinear.add,
-          color: cs.onPrimary,
-        ),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () => context.push(AppRoutes.createActivity),
+      //   shape: const CircleBorder(),
+      //   backgroundColor: cs.primary,
+      //   child: Icon(
+      //     IconsaxPlusLinear.add,
+      //     color: cs.onPrimary,
+      //   ),
+      // ),
     );
   }
 
@@ -611,7 +613,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
     required ColorScheme cs,
     required TextTheme tt,
   }) {
-    final type = post.type.toLowerCase();
+    final type = post.type;
     final String label =
         type.isNotEmpty ? type[0].toUpperCase() + type.substring(1) : '';
 
