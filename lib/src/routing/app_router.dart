@@ -1,4 +1,5 @@
 import 'package:area_connect/src/features/activity_details/presentation/pages/activity_page.dart';
+import 'package:area_connect/src/features/activity_details/presentation/pages/interested_users_screen.dart';
 import 'package:area_connect/src/features/auth/presentation/screens/verify_otp_screen.dart';
 import 'package:area_connect/src/features/create_activity/presentation/pages/create_actvity.dart';
 import 'package:area_connect/src/features/locality_feed/presentation/pages/locality_feed_page.dart';
@@ -156,6 +157,18 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final id = state.pathParameters['id']!;
         return ViewProfileScreen(userId: id);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.interestedUsers,
+      name: 'interestedUsers',
+      builder: (context, state) {
+        final params = state.extra as Map<String, dynamic>?;
+        if (params == null) return const HomeDashboardScreen();
+        return InterestedUsersScreen(
+          postId: params['postId'] as String,
+          postTitle: params['postTitle'] as String? ?? 'Activity',
+        );
       },
     ),
   ],

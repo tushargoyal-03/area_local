@@ -127,25 +127,25 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                   label: 'Notice',
                   icon: IconsaxPlusLinear.volume_high,
                   colors: [Colors.lightBlueAccent, Colors.indigo],
-                  onTap: () {},
+                  onTap: () => _showCreatePostSheet(context, 'Notice'),
                 ),
                 _buildQuickAction(
                   label: 'Issue',
                   icon: IconsaxPlusLinear.warning_2,
                   colors: [Colors.redAccent, Colors.orangeAccent],
-                  onTap: () {},
+                  onTap: () => _showCreatePostSheet(context, 'Complaint'),
                 ),
                 _buildQuickAction(
                   label: 'Poll',
                   icon: IconsaxPlusLinear.ranking,
                   colors: [Colors.greenAccent, Colors.teal],
-                  onTap: () {},
+                  onTap: () => _showCreatePollSheet(context),
                 ),
                 _buildQuickAction(
                   label: 'SOS',
                   icon: IconsaxPlusLinear.shield_security,
                   colors: [Colors.purpleAccent, Colors.deepPurple],
-                  onTap: () {},
+                  onTap: () => _showCreatePostSheet(context, 'Alert'),
                 ),
               ],
             ),
@@ -256,6 +256,273 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
           color: cs.onPrimary,
         ),
       ),
+    );
+  }
+
+  void _showCreatePostSheet(BuildContext context, String type) {
+    final titleCtrl = TextEditingController();
+    final contentCtrl = TextEditingController();
+    final societyId = context.read<SocietyFeedBloc>().state.societyId;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return BlocProvider.value(
+          value: context.read<SocietyFeedBloc>(),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            ),
+            child: Container(
+              padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 24.h),
+              decoration: BoxDecoration(
+                color: context.theme.colorScheme.surface,
+                borderRadius:
+                    BorderRadius.vertical(top: Radius.circular(28.r)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: context.theme.colorScheme.outlineVariant,
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  Text(
+                    'New $type',
+                    style: context.theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 16.h),
+                  AppTextField(
+                      controller: titleCtrl, hint: 'Title'),
+                  SizedBox(height: 12.h),
+                  AppTextField(
+                      controller: contentCtrl,
+                      hint: 'Details…',
+                      maxLines: 4),
+                  SizedBox(height: 20.h),
+                  BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
+                    builder: (context, state) => SizedBox(
+                      width: double.infinity,
+                      height: 52.h,
+                      child: ElevatedButton(
+                        onPressed: state.isCreating
+                            ? null
+                            : () {
+                                if (titleCtrl.text.isNotEmpty) {
+                                  context
+                                      .read<SocietyFeedBloc>()
+                                      .add(CreateSocietyPostRequested(
+                                        societyId: societyId.isNotEmpty
+                                            ? societyId
+                                            : '65522e848651a547b7440bd8',
+                                        type: type,
+                                        title: titleCtrl.text,
+                                        content: contentCtrl.text,
+                                        onSuccess: () => Navigator.pop(ctx),
+                                      ));
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              context.theme.colorScheme.primary,
+                          foregroundColor:
+                              context.theme.colorScheme.onPrimary,
+                          shape: const StadiumBorder(),
+                        ),
+                        child: state.isCreating
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2),
+                              )
+                            : const Text('Post',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCreatePollSheet(BuildContext context) {
+    final titleCtrl = TextEditingController();
+    final contentCtrl = TextEditingController();
+    final optionCtrls = [
+      TextEditingController(),
+      TextEditingController(),
+    ];
+    final societyId = context.read<SocietyFeedBloc>().state.societyId;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return BlocProvider.value(
+          value: context.read<SocietyFeedBloc>(),
+          child: StatefulBuilder(
+            builder: (ctx2, setModalState) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx2).viewInsets.bottom,
+                ),
+                child: Container(
+                  padding:
+                      EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 24.h),
+                  decoration: BoxDecoration(
+                    color: context.theme.colorScheme.surface,
+                    borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(28.r)),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40.w,
+                            height: 4.h,
+                            decoration: BoxDecoration(
+                              color: context
+                                  .theme.colorScheme.outlineVariant,
+                              borderRadius: BorderRadius.circular(2.r),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          'Create Poll',
+                          style: context.theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: 16.h),
+                        AppTextField(
+                            controller: titleCtrl, hint: 'Question'),
+                        SizedBox(height: 12.h),
+                        AppTextField(
+                            controller: contentCtrl,
+                            hint: 'Description (optional)'),
+                        SizedBox(height: 16.h),
+                        Text('Options',
+                            style: context.theme.textTheme.bodyMedium
+                                ?.copyWith(
+                                    fontWeight: FontWeight.w600)),
+                        SizedBox(height: 8.h),
+                        ...List.generate(
+                          optionCtrls.length,
+                          (i) => Padding(
+                            padding: EdgeInsets.only(bottom: 8.h),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: AppTextField(
+                                    controller: optionCtrls[i],
+                                    hint: 'Option ${i + 1}',
+                                  ),
+                                ),
+                                if (i >= 2)
+                                  IconButton(
+                                    onPressed: () => setModalState(() =>
+                                        optionCtrls.removeAt(i)),
+                                    icon: Icon(Icons.remove_circle_outline,
+                                        color: Colors.red.shade400),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (optionCtrls.length < 6)
+                          TextButton.icon(
+                            onPressed: () => setModalState(
+                                () => optionCtrls
+                                    .add(TextEditingController())),
+                            icon: const Icon(Icons.add, size: 16),
+                            label: const Text('Add Option'),
+                          ),
+                        SizedBox(height: 12.h),
+                        BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
+                          builder: (context, state) => SizedBox(
+                            width: double.infinity,
+                            height: 52.h,
+                            child: ElevatedButton(
+                              onPressed: state.isCreating
+                                  ? null
+                                  : () {
+                                      final opts = optionCtrls
+                                          .map((c) => c.text.trim())
+                                          .where((t) => t.isNotEmpty)
+                                          .toList();
+                                      if (titleCtrl.text.isNotEmpty &&
+                                          opts.length >= 2) {
+                                        context
+                                            .read<SocietyFeedBloc>()
+                                            .add(CreatePollRequested(
+                                              societyId:
+                                                  societyId.isNotEmpty
+                                                      ? societyId
+                                                      : '65522e848651a547b7440bd8',
+                                              title: titleCtrl.text,
+                                              content: contentCtrl.text,
+                                              options: opts,
+                                              onSuccess: () =>
+                                                  Navigator.pop(ctx),
+                                            ));
+                                      } else {
+                                        showGlobalToast(
+                                            message:
+                                                'Need a question and at least 2 options',
+                                            status: 'error');
+                                      }
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    context.theme.colorScheme.primary,
+                                foregroundColor:
+                                    context.theme.colorScheme.onPrimary,
+                                shape: const StadiumBorder(),
+                              ),
+                              child: state.isCreating
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2),
+                                    )
+                                  : const Text('Create Poll',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

@@ -39,18 +39,58 @@ class UpvoteComplaint extends SocietyFeedEvent {
   List<Object?> get props => [postId];
 }
 
+class CreateSocietyPostRequested extends SocietyFeedEvent {
+  final String societyId;
+  final String type;
+  final String title;
+  final String content;
+  final VoidCallback? onSuccess;
+
+  const CreateSocietyPostRequested({
+    required this.societyId,
+    required this.type,
+    required this.title,
+    required this.content,
+    this.onSuccess,
+  });
+
+  @override
+  List<Object?> get props => [societyId, type, title, content];
+}
+
+class CreatePollRequested extends SocietyFeedEvent {
+  final String societyId;
+  final String title;
+  final String content;
+  final List<String> options;
+  final VoidCallback? onSuccess;
+
+  const CreatePollRequested({
+    required this.societyId,
+    required this.title,
+    required this.content,
+    required this.options,
+    this.onSuccess,
+  });
+
+  @override
+  List<Object?> get props => [societyId, title, content, options];
+}
+
 // --- State ---
 class SocietyFeedState extends Equatable {
   final bool isLoading;
   final List<SocietyPost> posts;
   final String? error;
-  final String societyId; // Current tracking
+  final String societyId;
+  final bool isCreating;
 
   const SocietyFeedState({
     this.isLoading = false,
     this.posts = const [],
     this.error,
     this.societyId = '',
+    this.isCreating = false,
   });
 
   SocietyFeedState copyWith({
@@ -58,6 +98,7 @@ class SocietyFeedState extends Equatable {
     List<SocietyPost>? posts,
     String? error,
     String? societyId,
+    bool? isCreating,
     bool clearError = false,
   }) {
     return SocietyFeedState(
@@ -65,11 +106,12 @@ class SocietyFeedState extends Equatable {
       posts: posts ?? this.posts,
       error: clearError ? null : (error ?? this.error),
       societyId: societyId ?? this.societyId,
+      isCreating: isCreating ?? this.isCreating,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, posts, error, societyId];
+  List<Object?> get props => [isLoading, posts, error, societyId, isCreating];
 }
 
 // --- BLoC ---
@@ -79,6 +121,8 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
     on<VotePoll>(_onVotePoll);
     on<LikePost>(_onLikePost);
     on<UpvoteComplaint>(_onUpvoteComplaint);
+    on<CreateSocietyPostRequested>(_onCreatePost);
+    on<CreatePollRequested>(_onCreatePoll);
   }
 
   Future<void> _onLoadFeed(
@@ -175,11 +219,9 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
     UpvoteComplaint event,
     Emitter<SocietyFeedState> emit,
   ) async {
-    // Optimistic update
     final updated = state.posts.map((p) {
       if (p.id == event.postId && p.type == 'complaint') {
-        return p.copyWith(
-            likesCount: p.likesCount + 1); // using likesCount for upvotes
+        return p.copyWith(likesCount: p.likesCount + 1);
       }
       return p;
     }).toList();
@@ -190,6 +232,57 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
     result.fold(
       (failure) => showGlobalToast(message: failure.message, status: 'error'),
       (_) {},
+    );
+  }
+
+  Future<void> _onCreatePost(
+    CreateSocietyPostRequested event,
+    Emitter<SocietyFeedState> emit,
+  ) async {
+    emit(state.copyWith(isCreating: true));
+    final result = await SocietiesService.instance.createSocietyPost(
+      societyId: event.societyId,
+      type: event.type.toLowerCase(),
+      title: event.title,
+      content: event.content,
+    );
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isCreating: false));
+        showGlobalToast(message: failure.message, status: 'error');
+      },
+      (newPost) {
+        emit(state.copyWith(isCreating: false));
+        showGlobalToast(message: 'Post created!', status: 'success');
+        if (event.onSuccess != null) event.onSuccess!();
+        // Reload feed
+        add(LoadSocietyFeed(event.societyId));
+      },
+    );
+  }
+
+  Future<void> _onCreatePoll(
+    CreatePollRequested event,
+    Emitter<SocietyFeedState> emit,
+  ) async {
+    emit(state.copyWith(isCreating: true));
+    final result = await SocietiesService.instance.createPoll(
+      societyId: event.societyId,
+      title: event.title,
+      content: event.content,
+      options: event.options,
+    );
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isCreating: false));
+        showGlobalToast(message: failure.message, status: 'error');
+      },
+      (_) {
+        emit(state.copyWith(isCreating: false));
+        showGlobalToast(message: 'Poll created!', status: 'success');
+        if (event.onSuccess != null) event.onSuccess!();
+        add(LoadSocietyFeed(event.societyId));
+      },
     );
   }
 }

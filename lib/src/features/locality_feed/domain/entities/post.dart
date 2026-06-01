@@ -58,6 +58,15 @@ class AppPost extends Equatable {
   final bool isInterested; // Computed for current user
   final double? distanceInMeters;
 
+  // New fields
+  final String status; // OPEN / FULL / CLOSED / EXPIRED
+  final String postType; // activity / general / society / business
+  final int? maxParticipants;
+  final int acceptedParticipantsCount;
+  final int interestedCount; // server-side count
+  final DateTime? eventTime;
+  final double? rankScore;
+
   const AppPost({
     required this.id,
     required this.authorId,
@@ -75,6 +84,13 @@ class AppPost extends Equatable {
     required this.createdAt,
     this.isInterested = false,
     this.distanceInMeters,
+    this.status = 'OPEN',
+    this.postType = 'activity',
+    this.maxParticipants,
+    this.acceptedParticipantsCount = 0,
+    this.interestedCount = 0,
+    this.eventTime,
+    this.rankScore,
   });
 
   AppPost copyWith({
@@ -94,6 +110,13 @@ class AppPost extends Equatable {
     DateTime? createdAt,
     bool? isInterested,
     double? distanceInMeters,
+    String? status,
+    String? postType,
+    int? maxParticipants,
+    int? acceptedParticipantsCount,
+    int? interestedCount,
+    DateTime? eventTime,
+    double? rankScore,
   }) {
     return AppPost(
       id: id ?? this.id,
@@ -112,6 +135,14 @@ class AppPost extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       isInterested: isInterested ?? this.isInterested,
       distanceInMeters: distanceInMeters ?? this.distanceInMeters,
+      status: status ?? this.status,
+      postType: postType ?? this.postType,
+      maxParticipants: maxParticipants ?? this.maxParticipants,
+      acceptedParticipantsCount:
+          acceptedParticipantsCount ?? this.acceptedParticipantsCount,
+      interestedCount: interestedCount ?? this.interestedCount,
+      eventTime: eventTime ?? this.eventTime,
+      rankScore: rankScore ?? this.rankScore,
     );
   }
 
@@ -133,6 +164,13 @@ class AppPost extends Equatable {
         createdAt,
         isInterested,
         distanceInMeters,
+        status,
+        postType,
+        maxParticipants,
+        acceptedParticipantsCount,
+        interestedCount,
+        eventTime,
+        rankScore,
       ];
 }
 

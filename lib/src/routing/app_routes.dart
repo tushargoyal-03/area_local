@@ -23,4 +23,5 @@ abstract final class AppRoutes {
   static const String searchUsers = '/search-users';
   static const String editProfile = '/edit-profile';
   static const String viewProfile = '/view-profile';
+  static const String interestedUsers = '/activity-interested';
 }

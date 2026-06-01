@@ -134,4 +134,75 @@ class PostsService {
 
     return result.map((_) {});
   }
+
+  /// Get paginated list of interested users for a post (author only).
+  FutureEither<List<dynamic>> getInterestedUsers(
+    String postId, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final result = await DioService.instance.get(
+      'posts/$postId/interested-users',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    return result.map((response) {
+      final data = response.data as Map<String, dynamic>;
+      return data['data'] as List<dynamic>;
+    });
+  }
+
+  /// Accept a specific user's interest in the post.
+  FutureEither<Map<String, dynamic>> acceptInterest(
+      String postId, String userId) async {
+    final result = await DioService.instance.post(
+      'posts/$postId/interested-users/$userId/accept',
+    );
+    return result.map((response) {
+      final data = response.data as Map<String, dynamic>;
+      return data['data'] as Map<String, dynamic>? ?? data;
+    });
+  }
+
+  /// Reject a specific user's interest in the post.
+  FutureEither<Map<String, dynamic>> rejectInterest(
+      String postId, String userId) async {
+    final result = await DioService.instance.post(
+      'posts/$postId/interested-users/$userId/reject',
+    );
+    return result.map((response) {
+      final data = response.data as Map<String, dynamic>;
+      return data['data'] as Map<String, dynamic>? ?? data;
+    });
+  }
+
+  /// Close the post to new interests.
+  FutureEither<void> closePost(String postId) async {
+    final result = await DioService.instance.patch(
+      'posts/$postId/close',
+    );
+    return result.map((_) {});
+  }
+
+  /// Submit a review for another participant of the activity.
+  FutureEither<Map<String, dynamic>> submitReview({
+    required String postId,
+    required String targetUserId,
+    required int rating,
+    String? comment,
+  }) async {
+    final Map<String, dynamic> body = {
+      'targetUserId': targetUserId,
+      'rating': rating,
+    };
+    if (comment != null && comment.isNotEmpty) body['comment'] = comment;
+
+    final result = await DioService.instance.post(
+      'posts/$postId/reviews',
+      data: body,
+    );
+    return result.map((response) {
+      final data = response.data as Map<String, dynamic>;
+      return data['data'] as Map<String, dynamic>? ?? data;
+    });
+  }
 }

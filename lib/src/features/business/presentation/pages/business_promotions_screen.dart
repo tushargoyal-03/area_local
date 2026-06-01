@@ -58,7 +58,6 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
           ElevatedButton(
             onPressed: () {
               if (nameCtrl.text.isNotEmpty && titleCtrl.text.isNotEmpty) {
-                // Hardcoded coordinates for demo, should ideally use location service
                 context.read<BusinessBloc>().add(CreatePromotionRequested(
                       businessName: nameCtrl.text,
                       title: titleCtrl.text,
@@ -125,12 +124,22 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
   }
 }
 
-class _NearbyPromotionsList extends StatelessWidget {
+class _NearbyPromotionsList extends StatefulWidget {
+  @override
+  State<_NearbyPromotionsList> createState() => _NearbyPromotionsListState();
+}
+
+class _NearbyPromotionsListState extends State<_NearbyPromotionsList> {
+  final Set<String> _tracked = {};
+
+  void _trackImpression(String promoId) {
+    if (_tracked.contains(promoId)) return;
+    _tracked.add(promoId);
+    BusinessService.instance.trackEvent(promoId, 'IMPRESSION');
+  }
+
   @override
   Widget build(BuildContext context) {
-    final cs = context.theme.colorScheme;
-    final tt = context.theme.textTheme;
-
     return BlocBuilder<BusinessBloc, BusinessState>(
       builder: (context, state) {
         if (state.isLoadingNearby) {
@@ -148,8 +157,23 @@ class _NearbyPromotionsList extends StatelessWidget {
           itemCount: state.nearbyPromotions.length,
           separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md.h),
           itemBuilder: (context, index) {
-            final promo = state.nearbyPromotions[index];
-            return _buildPromoCard(promo, cs, tt);
+            final promo =
+                state.nearbyPromotions[index] as Map<String, dynamic>;
+            final promoId = promo['_id']?.toString() ?? '';
+            // Track impression as item becomes visible
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _trackImpression(promoId);
+            });
+            return _PromoCard(
+              promo: promo,
+              showAnalytics: false,
+              onTap: () =>
+                  BusinessService.instance.trackEvent(promoId, 'CLICK'),
+              onSave: () {
+                BusinessService.instance.trackEvent(promoId, 'SAVE');
+                showGlobalToast(message: 'Promotion saved!', status: 'success');
+              },
+            );
           },
         );
       },
@@ -157,12 +181,14 @@ class _NearbyPromotionsList extends StatelessWidget {
   }
 }
 
-class _MyPromotionsList extends StatelessWidget {
+class _MyPromotionsList extends StatefulWidget {
+  @override
+  State<_MyPromotionsList> createState() => _MyPromotionsListState();
+}
+
+class _MyPromotionsListState extends State<_MyPromotionsList> {
   @override
   Widget build(BuildContext context) {
-    final cs = context.theme.colorScheme;
-    final tt = context.theme.textTheme;
-
     return BlocBuilder<BusinessBloc, BusinessState>(
       builder: (context, state) {
         if (state.isLoadingMine) {
@@ -180,51 +206,188 @@ class _MyPromotionsList extends StatelessWidget {
           itemCount: state.myPromotions.length,
           separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md.h),
           itemBuilder: (context, index) {
-            final promo = state.myPromotions[index];
-            return _buildPromoCard(promo, cs, tt);
+            final promo =
+                state.myPromotions[index] as Map<String, dynamic>;
+            final promoId = promo['_id']?.toString() ?? '';
+            return _PromoCard(
+              promo: promo,
+              showAnalytics: true,
+              onAnalytics: () => _showAnalyticsDialog(context, promoId),
+            );
           },
+        );
+      },
+    );
+  }
+
+  Future<void> _showAnalyticsDialog(
+      BuildContext context, String promoId) async {
+    final result = await BusinessService.instance.getAnalytics(promoId);
+    if (!context.mounted) return;
+
+    result.fold(
+      (failure) =>
+          showGlobalToast(message: failure.message, status: 'error'),
+      (analytics) {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Promotion Analytics'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _AnalyticRow(
+                    icon: Icons.visibility_outlined,
+                    label: 'Impressions',
+                    value: analytics['impressionsCount']?.toString() ?? '0'),
+                SizedBox(height: 12.h),
+                _AnalyticRow(
+                    icon: Icons.touch_app_outlined,
+                    label: 'Clicks',
+                    value: analytics['clicksCount']?.toString() ?? '0'),
+                SizedBox(height: 12.h),
+                _AnalyticRow(
+                    icon: Icons.bookmark_outline,
+                    label: 'Saves',
+                    value: analytics['savesCount']?.toString() ?? '0'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Close')),
+            ],
+          ),
         );
       },
     );
   }
 }
 
-Widget _buildPromoCard(
-    Map<String, dynamic> promo, ColorScheme cs, TextTheme tt) {
-  return Container(
-    padding: EdgeInsets.all(AppSpacing.md.w),
-    decoration: BoxDecoration(
-      color: cs.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16.r),
-      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+class _PromoCard extends StatelessWidget {
+  final Map<String, dynamic> promo;
+  final bool showAnalytics;
+  final VoidCallback? onTap;
+  final VoidCallback? onSave;
+  final VoidCallback? onAnalytics;
+
+  const _PromoCard({
+    required this.promo,
+    required this.showAnalytics,
+    this.onTap,
+    this.onSave,
+    this.onAnalytics,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.theme.colorScheme;
+    final tt = context.theme.textTheme;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.all(AppSpacing.md.w),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(16.r),
+          border:
+              Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(promo['businessName'] ?? 'Business',
+                style: tt.labelSmall?.copyWith(color: cs.primary)),
+            SizedBox(height: 4.h),
+            Text(promo['title'] ?? 'Promotion',
+                style:
+                    tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            SizedBox(height: 8.h),
+            Text(promo['description'] ?? '',
+                style: tt.bodyMedium
+                    ?.copyWith(color: cs.onSurfaceVariant)),
+            if (promo['discountCode'] != null) ...[
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: 12.w, vertical: 6.h),
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Text(
+                  'Code: ${promo['discountCode']}',
+                  style: tt.bodySmall?.copyWith(
+                      color: cs.onPrimaryContainer,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                if (!showAnalytics && onSave != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onSave,
+                      icon: const Icon(Icons.bookmark_outline, size: 16),
+                      label: const Text('Save'),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        shape: const StadiumBorder(),
+                      ),
+                    ),
+                  ),
+                if (showAnalytics && onAnalytics != null)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onAnalytics,
+                      icon: const Icon(Icons.bar_chart_outlined, size: 16),
+                      label: const Text('Analytics'),
+                      style: OutlinedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        shape: const StadiumBorder(),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnalyticRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _AnalyticRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.theme.colorScheme;
+    final tt = context.theme.textTheme;
+
+    return Row(
       children: [
-        Text(promo['businessName'] ?? 'Business',
-            style: tt.labelSmall?.copyWith(color: cs.primary)),
-        SizedBox(height: 4.h),
-        Text(promo['title'] ?? 'Promotion',
-            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-        SizedBox(height: 8.h),
-        Text(promo['description'] ?? '',
-            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
-        if (promo['discountCode'] != null) ...[
-          SizedBox(height: 12.h),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-            decoration: BoxDecoration(
-              color: cs.primaryContainer,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Text(
-              'Code: ${promo['discountCode']}',
-              style: tt.bodySmall?.copyWith(
-                  color: cs.onPrimaryContainer, fontWeight: FontWeight.bold),
-            ),
-          )
-        ]
+        Icon(icon, size: 20, color: cs.primary),
+        SizedBox(width: 12.w),
+        Expanded(
+          child: Text(label, style: tt.bodyMedium),
+        ),
+        Text(
+          value,
+          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
       ],
-    ),
-  );
+    );
+  }
 }

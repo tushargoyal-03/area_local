@@ -64,6 +64,15 @@ class PostsRepositoryImpl implements PostsRepository {
               DateTime.now(),
           isInterested: isInterested,
           distanceInMeters: (post['distanceInMeters'] as num?)?.toDouble(),
+          status: post['status']?.toString() ?? 'OPEN',
+          postType: post['postType']?.toString() ?? 'activity',
+          maxParticipants: post['maxParticipants'] as int?,
+          acceptedParticipantsCount:
+              post['acceptedParticipantsCount'] as int? ?? 0,
+          interestedCount: interestedCount,
+          eventTime:
+              DateTime.tryParse(post['eventTime']?.toString() ?? ''),
+          rankScore: (post['rankScore'] as num?)?.toDouble(),
         );
       }).toList();
     });
@@ -125,6 +134,14 @@ class PostsRepositoryImpl implements PostsRepository {
         createdAt: DateTime.tryParse(post['createdAt']?.toString() ?? '') ??
             DateTime.now(),
         isInterested: false,
+        status: post['status']?.toString() ?? 'OPEN',
+        postType: post['postType']?.toString() ?? 'activity',
+        maxParticipants: post['maxParticipants'] as int?,
+        acceptedParticipantsCount:
+            post['acceptedParticipantsCount'] as int? ?? 0,
+        interestedCount: 0,
+        eventTime: DateTime.tryParse(post['eventTime']?.toString() ?? ''),
+        rankScore: (post['rankScore'] as num?)?.toDouble(),
       );
     });
   }

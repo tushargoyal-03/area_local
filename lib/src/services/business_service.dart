@@ -85,4 +85,24 @@ class BusinessService {
       }
     });
   }
+
+  /// Track IMPRESSION, CLICK, or SAVE event on a promotion.
+  FutureEither<void> trackEvent(String promotionId, String event) async {
+    final result = await DioService.instance.post(
+      'business/promotions/$promotionId/track',
+      data: {'event': event},
+    );
+    return result.map((_) {});
+  }
+
+  /// Get analytics for a promotion (owner or SuperAdmin only).
+  FutureEither<Map<String, dynamic>> getAnalytics(String promotionId) async {
+    final result = await DioService.instance.get(
+      'business/promotions/$promotionId/analytics',
+    );
+    return result.map((response) {
+      final data = response.data as Map<String, dynamic>;
+      return data['data'] as Map<String, dynamic>? ?? data;
+    });
+  }
 }
