@@ -80,7 +80,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Map<String, dynamic>? profileData;
         if (state.myProfile != null) {
           if (state.myProfile!['profile'] is Map) {
-            profileData = Map<String, dynamic>.from(state.myProfile!['profile'] as Map);
+            profileData =
+                Map<String, dynamic>.from(state.myProfile!['profile'] as Map);
           } else {
             profileData = state.myProfile;
           }

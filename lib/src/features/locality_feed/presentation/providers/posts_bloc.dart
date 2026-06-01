@@ -405,15 +405,14 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     Emitter<PostsState> emit,
   ) async {
     emit(state.copyWith(isLoadingInterestedUsers: true, interestedUsers: []));
-    final result =
-        await PostsService.instance.getInterestedUsers(event.postId);
+    final result = await PostsService.instance.getInterestedUsers(event.postId);
     result.fold(
       (failure) {
         emit(state.copyWith(isLoadingInterestedUsers: false));
         showGlobalToast(message: failure.message, status: 'error');
       },
-      (users) => emit(
-          state.copyWith(isLoadingInterestedUsers: false, interestedUsers: users)),
+      (users) => emit(state.copyWith(
+          isLoadingInterestedUsers: false, interestedUsers: users)),
     );
   }
 
@@ -422,8 +421,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     Emitter<PostsState> emit,
   ) async {
     emit(state.copyWith(isSubmittingAction: true));
-    final result =
-        await PostsService.instance.acceptInterest(event.postId, event.targetUserId);
+    final result = await PostsService.instance
+        .acceptInterest(event.postId, event.targetUserId);
     result.fold(
       (failure) {
         emit(state.copyWith(isSubmittingAction: false));
@@ -462,8 +461,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     Emitter<PostsState> emit,
   ) async {
     emit(state.copyWith(isSubmittingAction: true));
-    final result =
-        await PostsService.instance.rejectInterest(event.postId, event.targetUserId);
+    final result = await PostsService.instance
+        .rejectInterest(event.postId, event.targetUserId);
     result.fold(
       (failure) {
         emit(state.copyWith(isSubmittingAction: false));
@@ -501,8 +500,7 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
           if (p.id == event.postId) return p.copyWith(status: 'CLOSED');
           return p;
         }).toList();
-        emit(state.copyWith(
-            isSubmittingAction: false, posts: updatedPosts));
+        emit(state.copyWith(isSubmittingAction: false, posts: updatedPosts));
         showGlobalToast(message: 'Activity closed.', status: 'success');
       },
     );

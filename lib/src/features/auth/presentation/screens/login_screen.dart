@@ -27,33 +27,35 @@ class _LoginScreenState extends State<LoginScreen> {
     final rememberMe = StorageService.instance.getBool('remember_me') ?? false;
     if (rememberMe) {
       final savedEmail = StorageService.instance.getString('saved_email') ?? '';
-      
+
       setState(() {
         _rememberMe = true;
         _emailController.text = savedEmail;
       });
-      
-      final savedPassword = StorageService.instance.getString('saved_password') ?? '';
-      if (savedPassword.isNotEmpty) {
-          try {
-            final bool canAuthenticateWithBiometrics = await auth.canCheckBiometrics;
-            final bool canAuthenticate =
-                canAuthenticateWithBiometrics || await auth.isDeviceSupported();
 
-            if (canAuthenticate) {
-              final bool didAuthenticate = await auth.authenticate(
-                  localizedReason: 'Please authenticate to autofill your password',
-                  biometricOnly: true);
-                  
-              if (didAuthenticate) {
-                setState(() {
-                   _passwordController.text = savedPassword;
-                });
-              }
+      final savedPassword =
+          StorageService.instance.getString('saved_password') ?? '';
+      if (savedPassword.isNotEmpty) {
+        try {
+          final bool canAuthenticateWithBiometrics =
+              await auth.canCheckBiometrics;
+          final bool canAuthenticate =
+              canAuthenticateWithBiometrics || await auth.isDeviceSupported();
+
+          if (canAuthenticate) {
+            final bool didAuthenticate = await auth.authenticate(
+                localizedReason:
+                    'Please authenticate to autofill your password',
+                biometricOnly: true);
+
+            if (didAuthenticate) {
+              setState(() {
+                _passwordController.text = savedPassword;
+              });
             }
-          } catch (e) {
-            print("Authentication error: $e");
           }
+          // ignore: empty_catches
+        } catch (e) {}
       }
     }
   }

@@ -146,7 +146,8 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                     backgroundColor: cs.surfaceContainerLow,
                     child: IconButton(
                       onPressed: () {
-                        final societyId = context.read<SocietyFeedBloc>().state.societyId;
+                        final societyId =
+                            context.read<SocietyFeedBloc>().state.societyId;
                         if (societyId.isNotEmpty) {
                           context.push('/society-requests/$societyId');
                         }

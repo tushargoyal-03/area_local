@@ -84,8 +84,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       (success) {
         emit(state.copyWith(isLoading: false));
         showGlobalToast(
-            message: 'OTP sent to your email successfully',
-            status: 'success');
+            message: 'OTP sent to your email successfully', status: 'success');
         if (event.context.mounted) {
           event.context.go(AppRoutes.resetPassword, extra: event.email);
         }

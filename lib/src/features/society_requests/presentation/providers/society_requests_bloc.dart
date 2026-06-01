@@ -1,7 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:area_connect/src/features/society_requests/domain/entities/society_join_request.dart';
-import 'package:area_connect/src/services/societies_service.dart';
 
 // Events
 abstract class SocietyRequestsEvent extends Equatable {
@@ -23,7 +22,10 @@ class ApproveSocietyRequest extends SocietyRequestsEvent {
   final String societyId;
   final String requestId;
   final BuildContext context;
-  const ApproveSocietyRequest({required this.societyId, required this.requestId, required this.context});
+  const ApproveSocietyRequest(
+      {required this.societyId,
+      required this.requestId,
+      required this.context});
 
   @override
   List<Object?> get props => [societyId, requestId, context];
@@ -33,7 +35,10 @@ class RejectSocietyRequest extends SocietyRequestsEvent {
   final String societyId;
   final String requestId;
   final BuildContext context;
-  const RejectSocietyRequest({required this.societyId, required this.requestId, required this.context});
+  const RejectSocietyRequest(
+      {required this.societyId,
+      required this.requestId,
+      required this.context});
 
   @override
   List<Object?> get props => [societyId, requestId, context];
@@ -58,7 +63,8 @@ class SocietyRequestsState extends Equatable {
   }) {
     return SocietyRequestsState(
       isLoading: isLoading ?? this.isLoading,
-      error: error, // Can reset error by passing null explicitly, handled via logic usually, but here we'll just assign it
+      error:
+          error, // Can reset error by passing null explicitly, handled via logic usually, but here we'll just assign it
       requests: requests ?? this.requests,
     );
   }
@@ -68,7 +74,8 @@ class SocietyRequestsState extends Equatable {
 }
 
 // BLoC
-class SocietyRequestsBloc extends Bloc<SocietyRequestsEvent, SocietyRequestsState> {
+class SocietyRequestsBloc
+    extends Bloc<SocietyRequestsEvent, SocietyRequestsState> {
   SocietyRequestsBloc() : super(const SocietyRequestsState()) {
     on<LoadSocietyRequests>(_onLoadRequests);
     on<ApproveSocietyRequest>(_onApproveRequest);
@@ -87,10 +94,12 @@ class SocietyRequestsBloc extends Bloc<SocietyRequestsEvent, SocietyRequestsStat
     );
 
     result.fold(
-      (failure) => emit(state.copyWith(isLoading: false, error: failure.message)),
+      (failure) =>
+          emit(state.copyWith(isLoading: false, error: failure.message)),
       (data) {
         final requests = data
-            .map((json) => SocietyJoinRequest.fromJson(json as Map<String, dynamic>))
+            .map((json) =>
+                SocietyJoinRequest.fromJson(json as Map<String, dynamic>))
             .toList();
         emit(state.copyWith(isLoading: false, requests: requests));
       },
@@ -109,7 +118,8 @@ class SocietyRequestsBloc extends Bloc<SocietyRequestsEvent, SocietyRequestsStat
     result.fold(
       (failure) {
         if (event.context.mounted) {
-          showToast(event.context, message: 'Failed to approve: \${failure.message}');
+          showToast(event.context,
+              message: 'Failed to approve: ${failure.message}');
         }
       },
       (data) {
@@ -148,7 +158,8 @@ class SocietyRequestsBloc extends Bloc<SocietyRequestsEvent, SocietyRequestsStat
     result.fold(
       (failure) {
         if (event.context.mounted) {
-          showToast(event.context, message: 'Failed to reject: \${failure.message}');
+          showToast(event.context,
+              message: 'Failed to reject: ${failure.message}');
         }
       },
       (data) {

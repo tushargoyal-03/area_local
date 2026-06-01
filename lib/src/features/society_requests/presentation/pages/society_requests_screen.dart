@@ -109,7 +109,12 @@ class _RequestItemCard extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                       Text(
-                        DateTime.tryParse(request.createdAt)?.toLocal().toString().split('.').first ?? request.createdAt,
+                        DateTime.tryParse(request.createdAt)
+                                ?.toLocal()
+                                .toString()
+                                .split('.')
+                                .first ??
+                            request.createdAt,
                         style:
                             tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                       ),

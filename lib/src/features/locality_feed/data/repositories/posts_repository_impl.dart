@@ -70,8 +70,7 @@ class PostsRepositoryImpl implements PostsRepository {
           acceptedParticipantsCount:
               post['acceptedParticipantsCount'] as int? ?? 0,
           interestedCount: interestedCount,
-          eventTime:
-              DateTime.tryParse(post['eventTime']?.toString() ?? ''),
+          eventTime: DateTime.tryParse(post['eventTime']?.toString() ?? ''),
           rankScore: (post['rankScore'] as num?)?.toDouble(),
         );
       }).toList();

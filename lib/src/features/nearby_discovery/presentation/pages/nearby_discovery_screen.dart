@@ -228,7 +228,8 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
               return _NearbyCard(
                 userId: neighbor['userId'] ?? '',
                 name: name,
-                distance: dist is num ? dist.toStringAsFixed(1) : dist.toString(),
+                distance:
+                    dist is num ? dist.toStringAsFixed(1) : dist.toString(),
                 interest: interest,
                 cs: cs,
                 tt: tt,

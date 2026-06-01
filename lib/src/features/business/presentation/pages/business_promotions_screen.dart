@@ -157,8 +157,7 @@ class _NearbyPromotionsListState extends State<_NearbyPromotionsList> {
           itemCount: state.nearbyPromotions.length,
           separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md.h),
           itemBuilder: (context, index) {
-            final promo =
-                state.nearbyPromotions[index] as Map<String, dynamic>;
+            final promo = state.nearbyPromotions[index] as Map<String, dynamic>;
             final promoId = promo['_id']?.toString() ?? '';
             // Track impression as item becomes visible
             WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -206,8 +205,7 @@ class _MyPromotionsListState extends State<_MyPromotionsList> {
           itemCount: state.myPromotions.length,
           separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md.h),
           itemBuilder: (context, index) {
-            final promo =
-                state.myPromotions[index] as Map<String, dynamic>;
+            final promo = state.myPromotions[index] as Map<String, dynamic>;
             final promoId = promo['_id']?.toString() ?? '';
             return _PromoCard(
               promo: promo,
@@ -226,8 +224,7 @@ class _MyPromotionsListState extends State<_MyPromotionsList> {
     if (!context.mounted) return;
 
     result.fold(
-      (failure) =>
-          showGlobalToast(message: failure.message, status: 'error'),
+      (failure) => showGlobalToast(message: failure.message, status: 'error'),
       (analytics) {
         showDialog<void>(
           context: context,
@@ -291,8 +288,7 @@ class _PromoCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16.r),
-          border:
-              Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,17 +297,14 @@ class _PromoCard extends StatelessWidget {
                 style: tt.labelSmall?.copyWith(color: cs.primary)),
             SizedBox(height: 4.h),
             Text(promo['title'] ?? 'Promotion',
-                style:
-                    tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             SizedBox(height: 8.h),
             Text(promo['description'] ?? '',
-                style: tt.bodyMedium
-                    ?.copyWith(color: cs.onSurfaceVariant)),
+                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
             if (promo['discountCode'] != null) ...[
               SizedBox(height: 12.h),
               Container(
-                padding: EdgeInsets.symmetric(
-                    horizontal: 12.w, vertical: 6.h),
+                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                 decoration: BoxDecoration(
                   color: cs.primaryContainer,
                   borderRadius: BorderRadius.circular(8.r),

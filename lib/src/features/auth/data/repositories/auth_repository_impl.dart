@@ -137,7 +137,8 @@ class AuthRepositoryImpl implements AuthRepository {
     required String otp,
     required String newPassword,
   }) {
-    return _authService.resetPassword(email: email, otp: otp, newPassword: newPassword);
+    return _authService.resetPassword(
+        email: email, otp: otp, newPassword: newPassword);
   }
 
   @override

@@ -111,8 +111,7 @@ class _ReviewSheetState extends State<ReviewSheet> {
             maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Add a comment (optional)…',
-              hintStyle:
-                  tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              hintStyle: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               filled: true,
               fillColor: cs.surfaceContainerLow,
               border: OutlineInputBorder(
