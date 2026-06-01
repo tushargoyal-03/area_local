@@ -77,16 +77,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               body: Center(child: CircularProgressIndicator()));
         }
 
-        if (state.myProfile != null && _displayNameController.text.isEmpty) {
-          _displayNameController.text = state.myProfile!['displayName'] ?? '';
-          if (state.myProfile!['lookingFor'] != null) {
+        Map<String, dynamic>? profileData;
+        if (state.myProfile != null) {
+          if (state.myProfile!['profile'] is Map) {
+            profileData = Map<String, dynamic>.from(state.myProfile!['profile'] as Map);
+          } else {
+            profileData = state.myProfile;
+          }
+        }
+
+        if (profileData != null && _displayNameController.text.isEmpty) {
+          _displayNameController.text = profileData['displayName'] ?? '';
+          if (profileData['lookingFor'] != null) {
             _lookingForController.text =
-                (state.myProfile!['lookingFor'] as List).join(', ');
+                (profileData['lookingFor'] as List).join(', ');
           }
         }
 
         final displayedAvatar =
-            _pendingAvatarUrl ?? state.myProfile?['avatarUrl']?.toString();
+            _pendingAvatarUrl ?? profileData?['avatarUrl']?.toString();
 
         return Scaffold(
           appBar: const AppTopBar(
