@@ -57,7 +57,7 @@ class SocietyPost extends Equatable {
       id: json['_id'] ?? '',
       societyId: json['societyId'] ?? '',
       authorId: authorMap['userId'] ?? json['authorId'] ?? '',
-      type: json['type'] ?? 'notice',
+      type: (json['type'] as String?)?.toLowerCase() ?? 'notice',
       title: json['title'] ?? '',
       content: json['content'],
       attachments: List<String>.from(json['attachments'] ?? []),
@@ -141,7 +141,7 @@ class PollOption extends Equatable {
   factory PollOption.fromJson(Map<String, dynamic> json) {
     return PollOption(
       text: json['text'] ?? '',
-      votes: json['votes'] ?? 0,
+      votes: json['voteCount'] ?? json['votes'] ?? 0,
     );
   }
 
