@@ -32,18 +32,19 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
   @override
   void initState() {
     super.initState();
-    // Using a valid ObjectId format for the backend ParseObjectIdPipe
-    context
-        .read<SocietyFeedBloc>()
-        .add(const LoadSocietyFeed('65522e848651a547b7440bd8', type: 'All'));
+    // Dynamically fetch the user's societies and load the first one's feed
+    context.read<SocietyFeedBloc>().add(const InitSocietyFeed());
   }
 
   void _onCategoryTapped(int index) {
     setState(() => _selectedCategoryIndex = index);
     final category = _categories[index];
-    context
-        .read<SocietyFeedBloc>()
-        .add(LoadSocietyFeed('65522e848651a547b7440bd8', type: category));
+    final societyId = context.read<SocietyFeedBloc>().state.societyId;
+    if (societyId.isNotEmpty) {
+      context
+          .read<SocietyFeedBloc>()
+          .add(LoadSocietyFeed(societyId, type: category));
+    }
   }
 
   @override
@@ -85,59 +86,51 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(vertical: 10.h),
                     ),
-                    style: tt.bodyLarge?.copyWith(
-                      color: cs.onSurface,
-                    ),
                   ),
                 )
-              : Row(
+              : BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
                   key: const ValueKey('societyTitle'),
-                  children: [
-                    Container(
-                      width: 36.w,
-                      height: 36.h,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [cs.primary, AppPalettes.primary2Light],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                  buildWhen: (prev, curr) => prev.societyName != curr.societyName,
+                  builder: (context, feedState) {
+                    final name = feedState.societyName.isNotEmpty
+                        ? feedState.societyName
+                        : 'Society';
+                    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'S';
+                    return Row(
+                      children: [
+                        Container(
+                          width: 36.w,
+                          height: 36.h,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [cs.primary, AppPalettes.primary2Light],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            initial,
+                            style: tt.titleMedium?.copyWith(
+                              color: cs.onPrimary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        'G',
-                        style: tt.titleMedium?.copyWith(
-                          color: cs.onPrimary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10.w),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Greenwood Heights',
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: Text(
+                            name,
                             style: tt.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
                               color: cs.onSurface,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 2.h),
-                          Text(
-                            '824 residents · Block A',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                              fontSize: 11.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
         ),
         actions: [
@@ -368,13 +361,12 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                         onPressed: state.isCreating
                             ? null
                             : () {
-                                if (titleCtrl.text.isNotEmpty) {
+                                if (titleCtrl.text.isNotEmpty &&
+                                    societyId.isNotEmpty) {
                                   context
                                       .read<SocietyFeedBloc>()
                                       .add(CreateSocietyPostRequested(
-                                        societyId: societyId.isNotEmpty
-                                            ? societyId
-                                            : '65522e848651a547b7440bd8',
+                                        societyId: societyId,
                                         type: type,
                                         title: titleCtrl.text,
                                         content: contentCtrl.text,
@@ -517,9 +509,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                                         context
                                             .read<SocietyFeedBloc>()
                                             .add(CreatePollRequested(
-                                              societyId: societyId.isNotEmpty
-                                                  ? societyId
-                                                  : '65522e848651a547b7440bd8',
+                                              societyId: societyId,
                                               title: titleCtrl.text,
                                               content: contentCtrl.text,
                                               options: opts,

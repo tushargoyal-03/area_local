@@ -35,6 +35,7 @@ class AuthService {
           final token = innerData['accessToken'] as String;
           final refresh = innerData['refreshToken'] as String;
           final user = innerData['user'] as Map<String, dynamic>;
+          final profile = user['profile'] as Map<String, dynamic>? ?? {};
 
           await SecureStorageService.instance.write('access_token', token);
           await SecureStorageService.instance.write('refresh_token', refresh);
@@ -42,9 +43,15 @@ class AuthService {
           _currentUser = {
             'id': user['userId'].toString(),
             'email': user['emailOrPhone'] ?? email,
-            'name': user['displayName'] ?? user['name'] ?? '',
+            'name': profile['displayName'] ??
+                user['displayName'] ??
+                user['name'] ??
+                'User',
             'role': user['role'] ?? 'User',
-            'photoUrl': user['avatarUrl'] ?? user['photoUrl'] ?? '',
+            'photoUrl': profile['avatarUrl'] ??
+                user['avatarUrl'] ??
+                user['photoUrl'] ??
+                '',
           };
 
           _authStateController.add(_currentUser);
@@ -134,6 +141,7 @@ class AuthService {
           final token = innerData['accessToken'] as String;
           final refresh = innerData['refreshToken'] as String;
           final user = innerData['user'] as Map<String, dynamic>;
+          final profile = user['profile'] as Map<String, dynamic>? ?? {};
 
           await SecureStorageService.instance.write('access_token', token);
           await SecureStorageService.instance.write('refresh_token', refresh);
@@ -141,9 +149,15 @@ class AuthService {
           _currentUser = {
             'id': user['userId'].toString(),
             'email': user['emailOrPhone'] ?? email,
-            'name': user['displayName'] ?? user['name'] ?? '',
+            'name': profile['displayName'] ??
+                user['displayName'] ??
+                user['name'] ??
+                'User',
             'role': user['role'] ?? 'User',
-            'photoUrl': user['avatarUrl'] ?? user['photoUrl'] ?? '',
+            'photoUrl': profile['avatarUrl'] ??
+                user['avatarUrl'] ??
+                user['photoUrl'] ??
+                '',
           };
 
           _authStateController.add(_currentUser);
@@ -184,6 +198,7 @@ class AuthService {
           final token = innerData['accessToken'] as String;
           final refresh = innerData['refreshToken'] as String;
           final user = innerData['user'] as Map<String, dynamic>;
+          final profile = user['profile'] as Map<String, dynamic>? ?? {};
 
           await SecureStorageService.instance.write('access_token', token);
           await SecureStorageService.instance.write('refresh_token', refresh);
@@ -191,8 +206,15 @@ class AuthService {
           _currentUser = {
             'id': user['userId'].toString(),
             'email': user['emailOrPhone'],
-            'name': user['displayName'] ?? user['name'] ?? '',
+            'name': profile['displayName'] ??
+                user['displayName'] ??
+                user['name'] ??
+                'User',
             'role': user['role'] ?? role,
+            'photoUrl': profile['avatarUrl'] ??
+                user['avatarUrl'] ??
+                user['photoUrl'] ??
+                '',
           };
 
           _authStateController.add(_currentUser);
@@ -237,6 +259,32 @@ class AuthService {
             'photoUrl': payload['avatarUrl'] ?? '',
           };
           _authStateController.add(_currentUser);
+
+          // Fetch fresh profile data in background
+          try {
+            final result = await DioService.instance.get('users/me');
+            result.fold(
+              (_) {},
+              (response) {
+                final responseData = response.data as Map<String, dynamic>;
+                final data = responseData['data'] as Map<String, dynamic>;
+                final profile = data['profile'] as Map<String, dynamic>? ?? {};
+
+                _currentUser = {
+                  'id': data['userId']?.toString() ?? _currentUser!['id'],
+                  'email': data['emailOrPhone'] ?? _currentUser!['email'],
+                  'name': profile['displayName'] ??
+                      data['displayName'] ??
+                      _currentUser!['name'],
+                  'role': data['role'] ?? _currentUser!['role'],
+                  'photoUrl': profile['avatarUrl'] ??
+                      data['avatarUrl'] ??
+                      _currentUser!['photoUrl'],
+                };
+                _authStateController.add(_currentUser);
+              },
+            );
+          } catch (_) {}
         }
       }
 

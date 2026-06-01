@@ -220,7 +220,12 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
             return AlertDialog(
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24.r)),
-              title: const Text('Required People Limit'),
+              title: Text(
+                'Required People Limit',
+                style: context.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               content: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -479,7 +484,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                       )
                     ],
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  padding: EdgeInsets.zero,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [

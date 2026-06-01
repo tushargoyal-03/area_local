@@ -73,14 +73,13 @@ class ActivityDetailScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: cs.surface,
               border: Border(
-                top: BorderSide(
-                    color: cs.outlineVariant.withValues(alpha: 0.2)),
+                top:
+                    BorderSide(color: cs.outlineVariant.withValues(alpha: 0.2)),
               ),
             ),
             child: isMyPost
                 ? _buildOwnerBar(context, livePost, cs, state)
-                : _buildUserBar(
-                    context, livePost, currentUserId, isInterested,
+                : _buildUserBar(context, livePost, currentUserId, isInterested,
                     isClosed, isFull, cs),
           ),
           body: SafeArea(
@@ -128,8 +127,8 @@ class ActivityDetailScreen extends StatelessWidget {
 
                   // Category chip
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: theme.primaryColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(30),
@@ -279,8 +278,7 @@ class ActivityDetailScreen extends StatelessWidget {
                   ],
 
                   const SizedBox(height: 4),
-                  Divider(
-                      color: cs.outlineVariant.withValues(alpha: 0.15)),
+                  Divider(color: cs.outlineVariant.withValues(alpha: 0.15)),
                   const SizedBox(height: 12),
 
                   /// Comments
@@ -296,8 +294,8 @@ class ActivityDetailScreen extends StatelessWidget {
                     },
                     borderRadius: BorderRadius.circular(16.r),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(
-                          vertical: 8.h, horizontal: 4.w),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 8.h, horizontal: 4.w),
                       child: Row(
                         children: [
                           Icon(IconsaxPlusLinear.message,
@@ -361,7 +359,7 @@ class ActivityDetailScreen extends StatelessWidget {
                       'postTitle': livePost.title,
                     },
                   ),
-                  icon: Icon(IconsaxPlusLinear.people, size: 18),
+                  icon: const Icon(IconsaxPlusLinear.people, size: 18),
                   label: Text(
                     'Interested (${livePost.interestedCount})',
                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -401,7 +399,7 @@ class ActivityDetailScreen extends StatelessWidget {
             height: 48,
             child: ElevatedButton.icon(
               onPressed: () => _showReviewPicker(context, livePost),
-              icon: Icon(Icons.star_outline_rounded, size: 18),
+              icon: const Icon(Icons.star_outline_rounded, size: 18),
               label: const Text('Write Reviews',
                   style: TextStyle(fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
@@ -435,9 +433,7 @@ class ActivityDetailScreen extends StatelessWidget {
     return Row(
       children: [
         _actionButton(
-          icon: isInterested
-              ? IconsaxPlusBold.heart
-              : IconsaxPlusLinear.heart,
+          icon: isInterested ? IconsaxPlusBold.heart : IconsaxPlusLinear.heart,
           color: isInterested ? Colors.red : null,
           backgroundColor: cs.surfaceContainerLow,
           onTap: () {
@@ -478,9 +474,11 @@ class ActivityDetailScreen extends StatelessWidget {
                         ),
                       ),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    isDisabled ? cs.surfaceContainerLow : (isInterested ? const Color(0xFF2E7D32) : cs.primary),
-                foregroundColor: isDisabled ? cs.onSurfaceVariant : Colors.white,
+                backgroundColor: isDisabled
+                    ? cs.surfaceContainerLow
+                    : (isInterested ? const Color(0xFF2E7D32) : cs.primary),
+                foregroundColor:
+                    isDisabled ? cs.onSurfaceVariant : Colors.white,
                 shape: const StadiumBorder(),
               ),
               child: Text(label),
@@ -529,8 +527,18 @@ class ActivityDetailScreen extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     return '${months[date.month - 1]} ${date.day}';
   }

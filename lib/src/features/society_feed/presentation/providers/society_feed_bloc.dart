@@ -9,6 +9,11 @@ abstract class SocietyFeedEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Fetches the user's societies from the API, then loads the first society's feed.
+class InitSocietyFeed extends SocietyFeedEvent {
+  const InitSocietyFeed();
+}
+
 class LoadSocietyFeed extends SocietyFeedEvent {
   final String societyId;
   final String? type; // 'Notice', 'Poll', etc.
@@ -83,6 +88,7 @@ class SocietyFeedState extends Equatable {
   final List<SocietyPost> posts;
   final String? error;
   final String societyId;
+  final String societyName;
   final bool isCreating;
 
   const SocietyFeedState({
@@ -90,6 +96,7 @@ class SocietyFeedState extends Equatable {
     this.posts = const [],
     this.error,
     this.societyId = '',
+    this.societyName = '',
     this.isCreating = false,
   });
 
@@ -98,6 +105,7 @@ class SocietyFeedState extends Equatable {
     List<SocietyPost>? posts,
     String? error,
     String? societyId,
+    String? societyName,
     bool? isCreating,
     bool clearError = false,
   }) {
@@ -106,23 +114,54 @@ class SocietyFeedState extends Equatable {
       posts: posts ?? this.posts,
       error: clearError ? null : (error ?? this.error),
       societyId: societyId ?? this.societyId,
+      societyName: societyName ?? this.societyName,
       isCreating: isCreating ?? this.isCreating,
     );
   }
 
   @override
-  List<Object?> get props => [isLoading, posts, error, societyId, isCreating];
+  List<Object?> get props =>
+      [isLoading, posts, error, societyId, societyName, isCreating];
 }
 
 // --- BLoC ---
 class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
   SocietyFeedBloc() : super(const SocietyFeedState()) {
+    on<InitSocietyFeed>(_onInitFeed);
     on<LoadSocietyFeed>(_onLoadFeed);
     on<VotePoll>(_onVotePoll);
     on<LikePost>(_onLikePost);
     on<UpvoteComplaint>(_onUpvoteComplaint);
     on<CreateSocietyPostRequested>(_onCreatePost);
     on<CreatePollRequested>(_onCreatePoll);
+  }
+
+  Future<void> _onInitFeed(
+    InitSocietyFeed event,
+    Emitter<SocietyFeedState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true, clearError: true));
+
+    final result = await SocietiesService.instance.getMySocieties();
+    result.fold(
+      (failure) =>
+          emit(state.copyWith(isLoading: false, error: failure.message)),
+      (societies) {
+        if (societies.isEmpty) {
+          emit(state.copyWith(
+            isLoading: false,
+            error: 'You are not a member of any society yet.',
+          ));
+          return;
+        }
+        final first = societies[0] as Map<String, dynamic>;
+        final id = (first['_id'] ?? first['id'] ?? '').toString();
+        final name = (first['name'] ?? 'My Society').toString();
+        emit(state.copyWith(societyId: id, societyName: name));
+        // Now load the feed for this society
+        add(LoadSocietyFeed(id, type: 'All'));
+      },
+    );
   }
 
   Future<void> _onLoadFeed(
@@ -132,10 +171,16 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
     emit(state.copyWith(
         isLoading: true, societyId: event.societyId, clearError: true));
 
+    // API expects capitalized singular type: Notice, Alert, Complaint, Event, Poll
+    const typeMapping = {
+      'Notices': 'Notice',
+      'Alerts': 'Alert',
+      'Complaints': 'Complaint',
+      'Events': 'Event',
+      'Polls': 'Poll',
+    };
     final typeParam = (event.type != null && event.type != 'All')
-        ? event.type!
-            .toLowerCase()
-            .replaceAll('s', '') // 'Polls' -> 'poll', 'Notices' -> 'notice'
+        ? typeMapping[event.type!] ?? event.type!
         : null;
 
     final result = await SocietiesService.instance.getSocietyFeed(
@@ -242,7 +287,7 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
     emit(state.copyWith(isCreating: true));
     final result = await SocietiesService.instance.createSocietyPost(
       societyId: event.societyId,
-      type: event.type.toLowerCase(),
+      type: event.type,
       title: event.title,
       content: event.content,
     );

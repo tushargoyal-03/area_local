@@ -4,6 +4,19 @@ class SocietiesService {
   SocietiesService._();
   static final SocietiesService instance = SocietiesService._();
 
+  /// Fetch the list of societies the current user belongs to.
+  FutureEither<List<dynamic>> getMySocieties() async {
+    final result = await DioService.instance.get('societies/my');
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as List<dynamic>;
+      } catch (e) {
+        throw Exception('Failed to load my societies: $e');
+      }
+    });
+  }
+
   FutureEither<List<dynamic>> getSocietyFeed({
     required String societyId,
     String? type,
@@ -73,7 +86,7 @@ class SocietiesService {
       data: {
         'title': title,
         'content': content,
-        'options': options.map((text) => {'text': text}).toList(),
+        'pollOptions': options.map((text) => {'text': text}).toList(),
       },
     );
 

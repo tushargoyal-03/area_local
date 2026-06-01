@@ -814,6 +814,13 @@ class Avatar extends StatelessWidget {
 
   Widget _buildContent(ColorScheme cs) {
     if (imageUrl != null && imageUrl!.isNotEmpty) {
+      if (imageUrl!.toLowerCase().contains('.svg') || imageUrl!.contains('dicebear.com/')) {
+        return SvgPicture.network(
+          imageUrl!,
+          fit: BoxFit.cover,
+          placeholderBuilder: (_) => _initials(cs),
+        );
+      }
       return Image.network(
         imageUrl!,
         fit: BoxFit.cover,

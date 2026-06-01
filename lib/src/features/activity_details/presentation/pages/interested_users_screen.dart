@@ -31,7 +31,7 @@ class _InterestedUsersScreenState extends State<InterestedUsersScreen> {
 
     return Scaffold(
       backgroundColor: cs.surface,
-      appBar: AppTopBar(
+      appBar: const AppTopBar(
         title: 'Interested Users',
         centerTitle: true,
       ),
@@ -54,8 +54,8 @@ class _InterestedUsersScreenState extends State<InterestedUsersScreen> {
                       size: 48.w, color: cs.onSurfaceVariant),
                   SizedBox(height: 12.h),
                   Text('No interested users yet.',
-                      style: tt.bodyMedium
-                          ?.copyWith(color: cs.onSurfaceVariant)),
+                      style:
+                          tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
                 ],
               ),
             );
@@ -66,8 +66,7 @@ class _InterestedUsersScreenState extends State<InterestedUsersScreen> {
             itemCount: state.interestedUsers.length,
             separatorBuilder: (_, __) => SizedBox(height: AppSpacing.sm.h),
             itemBuilder: (context, index) {
-              final item =
-                  state.interestedUsers[index] as Map<String, dynamic>;
+              final item = state.interestedUsers[index] as Map<String, dynamic>;
               return _UserCard(
                 item: item,
                 postId: widget.postId,
@@ -98,8 +97,7 @@ class _UserCard extends StatelessWidget {
     final tt = context.theme.textTheme;
 
     final user = item['user'] as Map<String, dynamic>? ?? item;
-    final userId =
-        item['userId']?.toString() ?? user['_id']?.toString() ?? '';
+    final userId = item['userId']?.toString() ?? user['_id']?.toString() ?? '';
     final displayName =
         user['displayName']?.toString() ?? user['name']?.toString() ?? 'User';
     final avatarUrl = user['avatarUrl']?.toString();
@@ -134,13 +132,11 @@ class _UserCard extends StatelessWidget {
               children: [
                 Text(
                   displayName,
-                  style: tt.bodyLarge
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: tt.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 SizedBox(height: 4.h),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 8.w, vertical: 2.h),
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(100.r),
