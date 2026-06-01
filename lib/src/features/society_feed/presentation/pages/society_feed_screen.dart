@@ -20,6 +20,15 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
     'Events'
   ];
 
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -46,53 +55,90 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
       backgroundColor: cs.surface,
       appBar: AppTopBar(
         title: '',
-        titleWidget: Row(
-          children: [
-            Container(
-              width: 36.w,
-              height: 36.h,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [cs.primary, AppPalettes.primary2Light],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12.r),
+        titleWidget: AnimatedSwitcher(
+          duration: AppDurations.medium,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.05, 0),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
               ),
-              alignment: Alignment.center,
-              child: Text(
-                'G',
-                style: tt.titleMedium?.copyWith(
-                  color: cs.onPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Greenwood Heights',
+            );
+          },
+          child: _isSearching
+              ? Padding(
+                  padding: EdgeInsets.symmetric(vertical: 4.h),
+                  child: TextField(
+                    key: const ValueKey('searchField'),
+                    controller: _searchController,
+                    autofocus: true,
+                    textAlignVertical: TextAlignVertical.center,
+                    decoration: InputDecoration(
+                      hintText: 'Search in society...',
+                      hintStyle: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                    ),
                     style: tt.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
                       color: cs.onSurface,
                     ),
                   ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    '824 residents · Block A',
-                    style: tt.bodySmall?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontSize: 11.sp,
+                )
+              : Row(
+                  key: const ValueKey('societyTitle'),
+                  children: [
+                    Container(
+                      width: 36.w,
+                      height: 36.h,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [cs.primary, AppPalettes.primary2Light],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'G',
+                        style: tt.titleMedium?.copyWith(
+                          color: cs.onPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                    SizedBox(width: 10.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Greenwood Heights',
+                            style: tt.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: cs.onSurface,
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            '824 residents · Block A',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontSize: 11.sp,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
         ),
         actions: [
           Padding(
@@ -101,9 +147,16 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
               radius: 20.r,
               backgroundColor: cs.surfaceContainerLow,
               child: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    _isSearching = !_isSearching;
+                    if (!_isSearching) {
+                      _searchController.clear();
+                    }
+                  });
+                },
                 icon: Icon(
-                  IconsaxPlusLinear.search_normal,
+                  _isSearching ? Icons.close : IconsaxPlusLinear.search_normal,
                   size: 18.w,
                   color: cs.onSurface,
                 ),
@@ -119,7 +172,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
 
           /// Quick Action Grid (Notice, Issue, Poll, SOS)
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs.w),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -158,7 +211,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
             height: 38.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg.w),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs.w),
               itemCount: _categories.length,
               itemBuilder: (context, index) {
                 final isSelected = index == _selectedCategoryIndex;
@@ -279,8 +332,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
               padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 24.h),
               decoration: BoxDecoration(
                 color: context.theme.colorScheme.surface,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(28.r)),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -303,13 +355,10 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 16.h),
-                  AppTextField(
-                      controller: titleCtrl, hint: 'Title'),
+                  AppTextField(controller: titleCtrl, hint: 'Title'),
                   SizedBox(height: 12.h),
                   AppTextField(
-                      controller: contentCtrl,
-                      hint: 'Details…',
-                      maxLines: 4),
+                      controller: contentCtrl, hint: 'Details…', maxLines: 4),
                   SizedBox(height: 20.h),
                   BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
                     builder: (context, state) => SizedBox(
@@ -334,10 +383,8 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                                 }
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              context.theme.colorScheme.primary,
-                          foregroundColor:
-                              context.theme.colorScheme.onPrimary,
+                          backgroundColor: context.theme.colorScheme.primary,
+                          foregroundColor: context.theme.colorScheme.onPrimary,
                           shape: const StadiumBorder(),
                         ),
                         child: state.isCreating
@@ -348,8 +395,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                                     color: Colors.white, strokeWidth: 2),
                               )
                             : const Text('Post',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w600)),
+                                style: TextStyle(fontWeight: FontWeight.w600)),
                       ),
                     ),
                   ),
@@ -385,12 +431,11 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                   bottom: MediaQuery.of(ctx2).viewInsets.bottom,
                 ),
                 child: Container(
-                  padding:
-                      EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 24.h),
+                  padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 24.h),
                   decoration: BoxDecoration(
                     color: context.theme.colorScheme.surface,
-                    borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(28.r)),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(28.r)),
                   ),
                   child: SingleChildScrollView(
                     child: Column(
@@ -402,8 +447,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                             width: 40.w,
                             height: 4.h,
                             decoration: BoxDecoration(
-                              color: context
-                                  .theme.colorScheme.outlineVariant,
+                              color: context.theme.colorScheme.outlineVariant,
                               borderRadius: BorderRadius.circular(2.r),
                             ),
                           ),
@@ -415,8 +459,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height: 16.h),
-                        AppTextField(
-                            controller: titleCtrl, hint: 'Question'),
+                        AppTextField(controller: titleCtrl, hint: 'Question'),
                         SizedBox(height: 12.h),
                         AppTextField(
                             controller: contentCtrl,
@@ -424,8 +467,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                         SizedBox(height: 16.h),
                         Text('Options',
                             style: context.theme.textTheme.bodyMedium
-                                ?.copyWith(
-                                    fontWeight: FontWeight.w600)),
+                                ?.copyWith(fontWeight: FontWeight.w600)),
                         SizedBox(height: 8.h),
                         ...List.generate(
                           optionCtrls.length,
@@ -441,8 +483,8 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                                 ),
                                 if (i >= 2)
                                   IconButton(
-                                    onPressed: () => setModalState(() =>
-                                        optionCtrls.removeAt(i)),
+                                    onPressed: () => setModalState(
+                                        () => optionCtrls.removeAt(i)),
                                     icon: Icon(Icons.remove_circle_outline,
                                         color: Colors.red.shade400),
                                   ),
@@ -453,8 +495,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                         if (optionCtrls.length < 6)
                           TextButton.icon(
                             onPressed: () => setModalState(
-                                () => optionCtrls
-                                    .add(TextEditingController())),
+                                () => optionCtrls.add(TextEditingController())),
                             icon: const Icon(Icons.add, size: 16),
                             label: const Text('Add Option'),
                           ),
@@ -476,10 +517,9 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                                         context
                                             .read<SocietyFeedBloc>()
                                             .add(CreatePollRequested(
-                                              societyId:
-                                                  societyId.isNotEmpty
-                                                      ? societyId
-                                                      : '65522e848651a547b7440bd8',
+                                              societyId: societyId.isNotEmpty
+                                                  ? societyId
+                                                  : '65522e848651a547b7440bd8',
                                               title: titleCtrl.text,
                                               content: contentCtrl.text,
                                               options: opts,
@@ -505,8 +545,7 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2),
+                                          color: Colors.white, strokeWidth: 2),
                                     )
                                   : const Text('Create Poll',
                                       style: TextStyle(

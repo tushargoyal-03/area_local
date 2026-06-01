@@ -332,8 +332,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(AppSpacing.lg.w, AppSpacing.sm.h,
-              AppSpacing.lg.w, AppSpacing.xxl.h),
+          padding: EdgeInsets.fromLTRB(AppSpacing.xs.w, AppSpacing.xs.h,
+              AppSpacing.xs.w, AppSpacing.xs.h),
           child: Form(
             key: _formKey,
             child: Column(
@@ -427,34 +427,25 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
                     ? 'Advertisement Description'
                     : 'Description'),
                 SizedBox(height: AppSpacing.sm.h),
-                Container(
-                  width: double.infinity,
-                  constraints: const BoxConstraints(minHeight: 120),
-                  padding: EdgeInsets.all(AppSpacing.md.w),
-                  // decoration: BoxDecoration(
-                  //   color: cs.surfaceContainerLow,
-                  //   borderRadius: BorderRadius.circular(22.r),
-                  // ),
-                  child: TextFormField(
-                    controller: _contentController,
-                    enabled: !isCreating,
-                    maxLines: 5,
-                    style: tt.bodyMedium,
-                    decoration: InputDecoration(
-                      hintText: categories[selectedIndex] == 'Advertisement'
-                          ? 'Describe your shop, special discount deals, active promo code, products or store hours...'
-                          : 'Describe details, skill level, date/time, and exact location...',
-                      hintStyle: tt.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
-                      border: InputBorder.none,
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Description is required';
-                      }
-                      return null;
-                    },
+                TextFormField(
+                  controller: _contentController,
+                  enabled: !isCreating,
+                  maxLines: 5,
+                  style: tt.bodyMedium,
+                  decoration: InputDecoration(
+                    hintText: categories[selectedIndex] == 'Advertisement'
+                        ? 'Describe your shop, special discount deals, active promo code, products or store hours...'
+                        : 'Describe details, skill level, date/time, and exact location...',
+                    hintStyle: tt.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant.withValues(alpha: 0.6)),
+                    border: InputBorder.none,
                   ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return 'Description is required';
+                    }
+                    return null;
+                  },
                 ),
 
                 SizedBox(height: AppSpacing.lg.h),
@@ -708,18 +699,10 @@ class _FormRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 36.w,
-                height: 36.w,
-                decoration: BoxDecoration(
-                  color: cs.surface,
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Icon(
-                  icon,
-                  size: 17.sp,
-                  color: cs.primary,
-                ),
+              Icon(
+                icon,
+                size: 17.sp,
+                color: cs.primary,
               ),
               SizedBox(width: 8.w),
               Expanded(
@@ -734,7 +717,8 @@ class _FormRow extends StatelessWidget {
                 ),
               ),
             ],
-          ),
+          ).paddingSymmetric(
+              horizontal: AppSpacing.xs.w, vertical: AppSpacing.xs.h),
         ),
       ),
     );
