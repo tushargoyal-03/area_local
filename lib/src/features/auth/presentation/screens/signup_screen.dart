@@ -50,27 +50,26 @@ class _SignupScreenState extends State<SignupScreen> {
         (position) => [position.longitude, position.latitude],
       );
 
-      // final email = _emailController.text.trim();
+      final email = _emailController.text.trim();
       if (!context.mounted) return;
 
-      // final emailError = EmailValidator.validateEmail(email);
+      final emailError = EmailValidator.validateEmail(email);
 
-      // if (email.isEmpty) {
-      //   showToast(context, message: 'Email is required', status: 'error');
-      //   return;
-      // }
+      if (email.isEmpty) {
+        showToast(context, message: 'Email is required', status: 'error');
+        return;
+      }
 
-      // if (emailError != null) {
-      //   showToast(context, message: emailError, status: 'error');
-      //   return;
-      // }
+      if (emailError != null) {
+        showToast(context, message: emailError, status: 'error');
+        return;
+      }
 
       context.read<AuthBloc>().add(
             SignUpRequested(
               context: context,
               name: _nameController.text.trim(),
-              // email: email,
-              email: _emailController.text.trim(),
+              email: email,
               password: _passwordController.text,
               role: _selectedRole,
               coordinates: coordinates,

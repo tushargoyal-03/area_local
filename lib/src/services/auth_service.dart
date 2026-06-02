@@ -82,24 +82,28 @@ class AuthService {
       },
     );
 
-    return result.map((response) {
-      try {
-        final responseData = response.data as Map<String, dynamic>;
-        final innerData = responseData['data'] as Map<String, dynamic>;
+    return result.fold(
+      (failure) => left<Failure, Map<String, dynamic>?>(failure),
+      (response) {
+        try {
+          final responseData = response.data as Map<String, dynamic>;
+          final innerData = responseData['data'] as Map<String, dynamic>;
 
-        _currentUser = {
-          'id': innerData['userId'].toString(),
-          'email': innerData['emailOrPhone'] ?? email,
-          'name': name,
-          'role': 'User',
-        };
+          _currentUser = {
+            'id': innerData['userId'].toString(),
+            'email': innerData['emailOrPhone'] ?? email,
+            'name': name,
+            'role': 'User',
+          };
 
-        // Note: OTP is not verified yet, so we don't dispatch authenticated state to controller
-        return _currentUser;
-      } catch (e) {
-        throw Exception('Invalid register response: $e');
-      }
-    });
+          // Note: OTP is not verified yet, so we don't dispatch authenticated state to controller
+          return right<Failure, Map<String, dynamic>?>(_currentUser);
+        } catch (e) {
+          return left<Failure, Map<String, dynamic>?>(
+              ServerFailure('Invalid register response: $e'));
+        }
+      },
+    );
   }
 
   FutureEither<void> forgotPassword({required String email}) async {
