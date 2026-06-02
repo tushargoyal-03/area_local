@@ -228,6 +228,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
                 onPressed: () => context.push(AppRoutes.createActivity),
                 backgroundColor: cs.primary,
                 foregroundColor: cs.onPrimary,
+                shape: CircleBorder(
+                  side: BorderSide(
+                    color: cs.outlineVariant.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
                 child: const Icon(IconsaxPlusLinear.add),
               )
             : null,

@@ -143,28 +143,43 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   }
 
   Widget _buildTimePickerColumn(
-      String label, TimeOfDay time, ValueChanged<TimeOfDay> onChanged) {
+    String label,
+    TimeOfDay time,
+    ValueChanged<TimeOfDay> onChanged,
+  ) {
     final cs = context.theme.colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(label,
+
+    return Expanded(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
             style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: cs.onSurfaceVariant.withValues(alpha: 0.6))),
-        SizedBox(height: 8.h),
-        SizedBox(
-          height: 120.h,
-          width: 100.w,
-          child: CupertinoDatePicker(
-            mode: CupertinoDatePickerMode.time,
-            initialDateTime: DateTime(0, 0, 0, time.hour, time.minute),
-            onDateTimeChanged: (newTime) {
-              onChanged(TimeOfDay.fromDateTime(newTime));
-            },
+              fontWeight: FontWeight.w600,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
           ),
-        ),
-      ],
+          SizedBox(height: 8.h),
+          SizedBox(
+            height: 120.h,
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.time,
+              use24hFormat: false,
+              initialDateTime: DateTime(
+                DateTime.now().year,
+                DateTime.now().month,
+                DateTime.now().day,
+                time.hour,
+                time.minute,
+              ),
+              onDateTimeChanged: (newTime) {
+                onChanged(TimeOfDay.fromDateTime(newTime));
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
