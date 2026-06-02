@@ -254,16 +254,10 @@ class _LoginView extends StatelessWidget {
                         controller: emailController,
                         enabled: !isLoading,
                         label: 'Email',
+                        keyboardType: TextInputType.emailAddress,
                         prefixIcon: const Icon(IconsaxPlusBold.sms),
-                        validator: (v) {
-                          if (AppUtils.isBlank(v)) {
-                            return 'Email is required';
-                          }
-                          if (!AppUtils.isValidEmail(v!)) {
-                            return 'Enter a valid email';
-                          }
-                          return null;
-                        },
+                        inputFormatters: AppInputFormatters.email,
+                        validator: Validators.email,
                       ),
                       SizedBox(height: AppSpacing.md.h),
                       AppTextField(
@@ -272,21 +266,15 @@ class _LoginView extends StatelessWidget {
                         label: 'Password',
                         obscureText: obscurePassword,
                         prefixIcon: const Icon(IconsaxPlusBold.lock),
+                        inputFormatters: AppInputFormatters.password,
                         suffixIcon: IconButton(
                           icon: Icon(obscurePassword
                               ? Icons.visibility_off
                               : Icons.visibility),
                           onPressed: onToggleObscure,
                         ),
-                        validator: (v) {
-                          if (AppUtils.isBlank(v)) {
-                            return 'Password is required';
-                          }
-                          if (v!.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
-                        },
+                        validator: (v) =>
+                            Validators.required(v, fieldName: 'Password'),
                       ),
                       SizedBox(height: AppSpacing.sm.h),
                       Row(

@@ -4,6 +4,7 @@ import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import '../providers/nearby_discovery_bloc.dart';
 import 'package:area_connect/src/features/business/presentation/providers/business_bloc.dart';
+import 'package:area_connect/src/features/nearby_discovery/presentation/widgets/society_discover_list.dart';
 
 class NearbyDiscoveryScreen extends StatefulWidget {
   const NearbyDiscoveryScreen({super.key});
@@ -311,14 +312,9 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
 
                 if (_activeTabIndex == 2) _buildBusinessList(cs, tt),
 
-                if (_activeTabIndex == 3 || _activeTabIndex == 4)
-                  Center(
-                      child: Padding(
-                    padding: EdgeInsets.only(top: 20.h),
-                    child: Text('Coming soon...',
-                        style: tt.bodyMedium
-                            ?.copyWith(color: cs.onSurfaceVariant)),
-                  )),
+                if (_activeTabIndex == 3) _buildEventsList(cs, tt),
+
+                if (_activeTabIndex == 4) _buildSocietyList(cs, tt),
               ],
             ),
           ),
@@ -436,6 +432,159 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                       style:
                           tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
                 ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildEventsList(ColorScheme cs, TextTheme tt) {
+    return BlocBuilder<PostsBloc, PostsState>(
+      builder: (context, state) {
+        if (state.isLoading && state.posts.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // Events are nearby activities with a scheduled event time, soonest first.
+        final events = state.posts.where((p) => p.eventTime != null).toList()
+          ..sort((a, b) => a.eventTime!.compareTo(b.eventTime!));
+
+        if (events.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.only(top: 24.h),
+            child: Center(
+              child: Text('No upcoming events nearby.',
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(IconsaxPlusLinear.calendar,
+                    size: 16.sp, color: cs.primary),
+                SizedBox(width: 6.w),
+                Text('${events.length} upcoming nearby',
+                    style:
+                        tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            SizedBox(height: 14.h),
+            ...events.map((post) => Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: ActivityCard(post: post),
+                )),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildSocietyList(ColorScheme cs, TextTheme tt) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Discover verified societies nearby + request to join.
+        SocietyDiscoverList(
+          lat: _center.latitude,
+          lng: _center.longitude,
+        ),
+        SizedBox(height: 20.h),
+        Divider(color: cs.outlineVariant.withValues(alpha: 0.3)),
+        SizedBox(height: 12.h),
+        Text('My societies',
+            style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        SizedBox(height: 12.h),
+        _buildMySocietiesList(cs, tt),
+      ],
+    );
+  }
+
+  Widget _buildMySocietiesList(ColorScheme cs, TextTheme tt) {
+    return FutureBuilder(
+      future: SocietiesService.instance.getMySocieties(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final societies = snapshot.data?.fold<List<dynamic>>(
+              (_) => <dynamic>[],
+              (list) => list,
+            ) ??
+            <dynamic>[];
+
+        if (societies.isEmpty) {
+          return Padding(
+            padding: EdgeInsets.only(top: 8.h, bottom: 12.h),
+            child: Column(
+              children: [
+                Text("You haven't joined any societies yet.",
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                SizedBox(height: 12.h),
+                OutlinedButton.icon(
+                  onPressed: () => context.push(AppRoutes.societyFeed),
+                  icon: const Icon(IconsaxPlusLinear.arrow_right_3, size: 16),
+                  label: const Text('Open Society Hub'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: societies.map((raw) {
+            final society =
+                raw is Map<String, dynamic> ? raw : <String, dynamic>{};
+            final name = society['name']?.toString() ?? 'Society';
+            final address = society['address']?.toString() ??
+                society['city']?.toString() ??
+                '';
+            final isVerified = society['isVerified'] == true;
+
+            return Container(
+              margin: EdgeInsets.only(bottom: 12.h),
+              decoration: BoxDecoration(
+                color: cs.surface,
+                borderRadius: BorderRadius.circular(20.r),
+                border:
+                    Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
+              ),
+              child: ListTile(
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                leading: CircleAvatar(
+                  backgroundColor: cs.primary.withValues(alpha: 0.12),
+                  child: Icon(IconsaxPlusLinear.home_1, color: cs.primary),
+                ),
+                title: Row(
+                  children: [
+                    Flexible(
+                      child: Text(name,
+                          style: tt.bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    if (isVerified) ...[
+                      SizedBox(width: 6.w),
+                      Icon(Icons.verified, size: 16.w, color: cs.primary),
+                    ],
+                  ],
+                ),
+                subtitle: address.isEmpty
+                    ? null
+                    : Text(address,
+                        style:
+                            tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                trailing: Icon(Icons.chevron_right_rounded,
+                    color: cs.onSurfaceVariant),
+                onTap: () => context.push(AppRoutes.societyFeed),
               ),
             );
           }).toList(),

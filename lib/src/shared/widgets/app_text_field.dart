@@ -23,7 +23,7 @@ class AppTextField extends StatelessWidget {
     this.onFieldSubmitted,
     this.focusNode,
     this.keyboardType,
-    this.textInputAction,
+    this.textInputAction = TextInputAction.next,
     this.obscureText = false,
     this.readOnly = false,
     this.enabled = true,
@@ -83,14 +83,15 @@ class AppTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       style: tt.bodyLarge?.copyWith(color: cs.onSurface),
       cursorColor: cs.primary,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         isDense: true,
         labelText: label,
         hintText: hint,
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
-        filled: filled,
-        fillColor: fillColor,
+        filled: filled ?? true,
+        fillColor: fillColor ?? cs.surface,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.xxxl.r),
           borderSide: BorderSide(

@@ -124,10 +124,11 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                       _buildActionBtn(
                           icon: IconsaxPlusLinear.profile_delete,
                           label: 'Block',
-                          onTap: () {
-                            showGlobalToast(
-                                message: 'User blocked', status: 'info');
-                          }),
+                          onTap: () => _confirmBlock(context, name)),
+                      _buildActionBtn(
+                          icon: IconsaxPlusLinear.flag,
+                          label: 'Report',
+                          onTap: () => _showReportSheet(context, name)),
                     ],
                   ),
                   if (lookingFor.isNotEmpty) ...[
@@ -162,6 +163,115 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           ),
         );
       },
+    );
+  }
+
+  Future<void> _confirmBlock(BuildContext context, String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.r)),
+        title: const Text('Block user?'),
+        content: Text(
+          '$name will no longer be able to message you, and you won\'t see '
+          'their messages. You can unblock them later.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final result = await ChatService.instance.blockUser(widget.userId);
+    result.fold(
+      (failure) => showGlobalToast(message: failure.message, status: 'error'),
+      (_) =>
+          showGlobalToast(message: '$name has been blocked', status: 'success'),
+    );
+  }
+
+  void _showReportSheet(BuildContext context, String name) {
+    const reasons = <String, String>{
+      'HARASSMENT_OR_BULLYING': 'Harassment or bullying',
+      'INAPPROPRIATE_CONTENT': 'Inappropriate content',
+      'SPAM_OR_SCAM': 'Spam or scam',
+      'IMPERSONATION': 'Impersonation',
+      'OTHER': 'Other',
+    };
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        final cs = ctx.theme.colorScheme;
+        final tt = ctx.theme.textTheme;
+        return Container(
+          padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 24.h),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28.r)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40.w,
+                  height: 4.h,
+                  decoration: BoxDecoration(
+                    color: cs.outlineVariant,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Text('Report $name',
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              SizedBox(height: 12.h),
+              ...reasons.entries.map(
+                (e) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(e.value, style: tt.bodyMedium),
+                  trailing: Icon(Icons.chevron_right_rounded,
+                      color: cs.onSurfaceVariant),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _submitReport(e.key, name);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _submitReport(String reason, String name) async {
+    final result = await ChatService.instance.reportUser(
+      userId: widget.userId,
+      reason: reason,
+    );
+    result.fold(
+      (failure) => showGlobalToast(message: failure.message, status: 'error'),
+      (_) => showGlobalToast(
+          message: 'Report submitted. Thanks for keeping the community safe.',
+          status: 'success'),
     );
   }
 

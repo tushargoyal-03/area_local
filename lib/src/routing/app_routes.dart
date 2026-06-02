@@ -19,10 +19,12 @@ abstract final class AppRoutes {
   static const String notification = '/notification';
   static const String nearbyDiscovery = '/nearby-discovery';
   static const String societyFeed = '/society-feed';
+  static const String createSociety = '/create-society';
   static const String roleSelection = '/role-selection';
   static const String chatRoom = '/chat-room';
   static const String searchUsers = '/search-users';
   static const String editProfile = '/edit-profile';
   static const String viewProfile = '/view-profile';
   static const String interestedUsers = '/activity-interested';
+  static const String businessPromotions = '/business-promotions';
 }

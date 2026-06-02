@@ -7,3 +7,4 @@ export 'logger.dart';
 export 'platform_info.dart';
 export 'task_runner.dart';
 export 'typedefs.dart';
+export 'validators.dart';

@@ -14,6 +14,28 @@ class InitSocietyFeed extends SocietyFeedEvent {
   const InitSocietyFeed();
 }
 
+/// Creates a brand-new society. The current SocietyAdmin becomes its admin.
+class CreateSocietyRequested extends SocietyFeedEvent {
+  final String name;
+  final String address;
+  final String city;
+  final List<double> coordinates; // [lng, lat]
+  final String? description;
+  final VoidCallback? onSuccess;
+
+  const CreateSocietyRequested({
+    required this.name,
+    required this.address,
+    required this.city,
+    required this.coordinates,
+    this.description,
+    this.onSuccess,
+  });
+
+  @override
+  List<Object?> get props => [name, address, city, coordinates, description];
+}
+
 class LoadSocietyFeed extends SocietyFeedEvent {
   final String societyId;
   final String? type; // 'Notice', 'Poll', etc.
@@ -49,6 +71,7 @@ class CreateSocietyPostRequested extends SocietyFeedEvent {
   final String type;
   final String title;
   final String content;
+  final String? eventDate;
   final VoidCallback? onSuccess;
 
   const CreateSocietyPostRequested({
@@ -56,11 +79,12 @@ class CreateSocietyPostRequested extends SocietyFeedEvent {
     required this.type,
     required this.title,
     required this.content,
+    this.eventDate,
     this.onSuccess,
   });
 
   @override
-  List<Object?> get props => [societyId, type, title, content];
+  List<Object?> get props => [societyId, type, title, content, eventDate];
 }
 
 class CreatePollRequested extends SocietyFeedEvent {
@@ -90,6 +114,8 @@ class SocietyFeedState extends Equatable {
   final String societyId;
   final String societyName;
   final bool isCreating;
+  final bool hasNoSociety;
+  final bool isCreatingSociety;
 
   const SocietyFeedState({
     this.isLoading = false,
@@ -98,6 +124,8 @@ class SocietyFeedState extends Equatable {
     this.societyId = '',
     this.societyName = '',
     this.isCreating = false,
+    this.hasNoSociety = false,
+    this.isCreatingSociety = false,
   });
 
   SocietyFeedState copyWith({
@@ -107,6 +135,8 @@ class SocietyFeedState extends Equatable {
     String? societyId,
     String? societyName,
     bool? isCreating,
+    bool? hasNoSociety,
+    bool? isCreatingSociety,
     bool clearError = false,
   }) {
     return SocietyFeedState(
@@ -116,18 +146,29 @@ class SocietyFeedState extends Equatable {
       societyId: societyId ?? this.societyId,
       societyName: societyName ?? this.societyName,
       isCreating: isCreating ?? this.isCreating,
+      hasNoSociety: hasNoSociety ?? this.hasNoSociety,
+      isCreatingSociety: isCreatingSociety ?? this.isCreatingSociety,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [isLoading, posts, error, societyId, societyName, isCreating];
+  List<Object?> get props => [
+        isLoading,
+        posts,
+        error,
+        societyId,
+        societyName,
+        isCreating,
+        hasNoSociety,
+        isCreatingSociety,
+      ];
 }
 
 // --- BLoC ---
 class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
   SocietyFeedBloc() : super(const SocietyFeedState()) {
     on<InitSocietyFeed>(_onInitFeed);
+    on<CreateSocietyRequested>(_onCreateSociety);
     on<LoadSocietyFeed>(_onLoadFeed);
     on<VotePoll>(_onVotePoll);
     on<LikePost>(_onLikePost);
@@ -140,7 +181,8 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
     InitSocietyFeed event,
     Emitter<SocietyFeedState> emit,
   ) async {
-    emit(state.copyWith(isLoading: true, clearError: true));
+    emit(
+        state.copyWith(isLoading: true, clearError: true, hasNoSociety: false));
 
     final result = await SocietiesService.instance.getMySocieties();
     result.fold(
@@ -150,16 +192,59 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
         if (societies.isEmpty) {
           emit(state.copyWith(
             isLoading: false,
-            error: 'You are not a member of any society yet.',
+            hasNoSociety: true,
           ));
           return;
         }
         final first = societies[0] as Map<String, dynamic>;
         final id = (first['_id'] ?? first['id'] ?? '').toString();
         final name = (first['name'] ?? 'My Society').toString();
-        emit(state.copyWith(societyId: id, societyName: name));
+        emit(state.copyWith(
+            societyId: id, societyName: name, hasNoSociety: false));
         // Now load the feed for this society
         add(LoadSocietyFeed(id, type: 'All'));
+      },
+    );
+  }
+
+  Future<void> _onCreateSociety(
+    CreateSocietyRequested event,
+    Emitter<SocietyFeedState> emit,
+  ) async {
+    emit(state.copyWith(isCreatingSociety: true, clearError: true));
+
+    final result = await SocietiesService.instance.createSociety(
+      name: event.name,
+      address: event.address,
+      city: event.city,
+      coordinates: event.coordinates,
+      description: event.description,
+    );
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(isCreatingSociety: false));
+        showGlobalToast(message: failure.message, status: 'error');
+      },
+      (society) {
+        final id = (society['_id'] ?? society['id'] ?? '').toString();
+        final name = (society['name'] ?? event.name).toString();
+        emit(state.copyWith(
+          isCreatingSociety: false,
+          hasNoSociety: false,
+          societyId: id,
+          societyName: name,
+        ));
+        showGlobalToast(
+            message: 'Society "$name" created successfully!',
+            status: 'success');
+        if (event.onSuccess != null) event.onSuccess!();
+        if (id.isNotEmpty) {
+          add(LoadSocietyFeed(id, type: 'All'));
+        } else {
+          // Fallback: refresh membership list if the API didn't echo an id.
+          add(const InitSocietyFeed());
+        }
       },
     );
   }
@@ -290,6 +375,7 @@ class SocietyFeedBloc extends Bloc<SocietyFeedEvent, SocietyFeedState> {
       type: event.type,
       title: event.title,
       content: event.content,
+      eventDate: event.eventDate,
     );
     result.fold(
       (failure) {

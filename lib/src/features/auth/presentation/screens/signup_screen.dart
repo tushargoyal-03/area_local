@@ -131,8 +131,7 @@ class _SignupView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppTopBar(title: ''),
-      body: Center(
+      body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -156,44 +155,30 @@ class _SignupView extends StatelessWidget {
                     AppTextField(
                       controller: nameController,
                       enabled: !isLoading,
-                      filled: true,
-                      fillColor: cs.surface,
+                      keyboardType: TextInputType.name,
                       label: 'Full Name',
                       prefixIcon: const Icon(IconsaxPlusLinear.user),
-                      validator: (v) {
-                        if (AppUtils.isBlank(v)) {
-                          return 'Name is required';
-                        }
-                        return null;
-                      },
+                      inputFormatters: AppInputFormatters.fullName,
+                      validator: (v) => Validators.name(v),
                     ),
                     SizedBox(height: AppSpacing.md.h),
                     AppTextField(
                       controller: emailController,
                       enabled: !isLoading,
-                      filled: true,
-                      fillColor: cs.surface,
                       label: 'Email',
+                      keyboardType: TextInputType.emailAddress,
                       prefixIcon: const Icon(IconsaxPlusLinear.sms),
-                      validator: (v) {
-                        if (AppUtils.isBlank(v)) {
-                          return 'Email is required';
-                        }
-                        if (!AppUtils.isValidEmail(v!)) {
-                          return 'Enter a valid email';
-                        }
-                        return null;
-                      },
+                      inputFormatters: AppInputFormatters.email,
+                      validator: Validators.email,
                     ),
                     SizedBox(height: AppSpacing.md.h),
                     AppTextField(
                       controller: passwordController,
                       enabled: !isLoading,
-                      filled: true,
-                      fillColor: cs.surface,
                       label: 'Password',
                       obscureText: obscurePassword,
                       prefixIcon: const Icon(IconsaxPlusLinear.lock),
+                      inputFormatters: AppInputFormatters.password,
                       suffixIcon: IconButton(
                         icon: Icon(
                           obscurePassword
@@ -202,54 +187,31 @@ class _SignupView extends StatelessWidget {
                         ),
                         onPressed: onToggleObscure,
                       ),
-                      validator: (v) {
-                        if (AppUtils.isBlank(v)) {
-                          return 'Password is required';
-                        }
-                        if (v!.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
+                      validator: Validators.password(),
                     ),
                     SizedBox(height: AppSpacing.md.h),
                     AppTextField(
                       controller: confirmPasswordController,
                       enabled: !isLoading,
-                      filled: true,
-                      fillColor: cs.surface,
                       label: 'Confirm Password',
                       obscureText: obscureConfirmPassword,
                       prefixIcon: const Icon(IconsaxPlusLinear.lock),
+                      inputFormatters: AppInputFormatters.password,
                       suffixIcon: IconButton(
                         icon: Icon(obscureConfirmPassword
                             ? IconsaxPlusLinear.eye_slash
                             : IconsaxPlusLinear.eye),
                         onPressed: onToggleConfirmObscure,
                       ),
-                      validator: (v) {
-                        if (AppUtils.isBlank(v)) {
-                          return 'Confirm password is required';
-                        }
-                        if (v != passwordController.text) {
-                          return 'Passwords do not match';
-                        }
-                        return null;
-                      },
+                      validator: Validators.confirmPassword(
+                        () => passwordController.text,
+                      ),
                     ),
                     SizedBox(height: AppSpacing.md.h),
-                    DropdownButtonFormField<String>(
-                      initialValue: selectedRole,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: cs.surface,
-                        labelText: 'Role',
-                        prefixIcon: const Icon(IconsaxPlusLinear.user_octagon),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12.r),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
+                    AppDropdownField<String>(
+                      label: 'Role',
+                      prefixIcon: const Icon(IconsaxPlusLinear.user_octagon),
+                      value: selectedRole,
                       items: const [
                         DropdownMenuItem(
                             value: 'User', child: Text('User / Resident')),
@@ -262,31 +224,28 @@ class _SignupView extends StatelessWidget {
                       ],
                       onChanged: isLoading ? null : onRoleChanged,
                     ),
-                    SizedBox(height: AppSpacing.lg.h),
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: isChecked,
-                          onChanged: (v) => onChecked(),
-                          visualDensity: VisualDensity.compact,
+                    SizedBox(height: AppSpacing.lg),
+                    CheckboxListTile.adaptive(
+                      dense: true,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      value: isChecked,
+                      onChanged: (v) => onChecked(),
+                      visualDensity: const VisualDensity(
+                          horizontal: VisualDensity.minimumDensity,
+                          vertical: VisualDensity.minimumDensity),
+                      title: Text(
+                        'By signing up, you agree to our Terms of Service and Privacy Policy',
+                        style: tt.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
                         ),
-                        Flexible(
-                          child: Text(
-                            'By signing up, you agree to our Terms of Service and Privacy Policy',
-                            style: tt.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                    SizedBox(height: AppSpacing.xxxl.h),
+                    SizedBox(height: AppSpacing.xxxl),
                     AppButton(
                       label: 'Sign Up',
                       isLoading: isLoading,
                       onPressed: isLoading ? null : onSignup,
-                      width: ButtonSize.large,
-                      isFullWidth: false,
+                      isFullWidth: true,
                     ),
                   ],
                 ),

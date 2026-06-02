@@ -50,16 +50,22 @@ class PostsService {
     required String content,
     required List<double> coordinates, // [lng, lat]
     List<String> mediaUrls = const [],
+    int? maxParticipants,
+    String? eventTime, // ISO-8601 string
   }) async {
+    final Map<String, dynamic> data = {
+      'category': category,
+      'title': title,
+      'content': content,
+      'coordinates': coordinates,
+      'mediaUrls': mediaUrls,
+    };
+    if (maxParticipants != null) data['maxParticipants'] = maxParticipants;
+    if (eventTime != null) data['eventTime'] = eventTime;
+
     final result = await DioService.instance.post(
       'posts/activity',
-      data: {
-        'category': category,
-        'title': title,
-        'content': content,
-        'coordinates': coordinates,
-        'mediaUrls': mediaUrls,
-      },
+      data: data,
     );
 
     return result.map((response) {

@@ -59,7 +59,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         );
         // Dispatch session update
         context.read<SessionBloc>().add(SessionUserChanged(user));
-        context.go(AppRoutes.home);
+
+        // A freshly upgraded Society Representative needs a society to manage,
+        // so guide them straight into the society hub to create one.
+        if (_selectedRole == 'SocietyAdmin') {
+          context.go(AppRoutes.societyFeed);
+        } else {
+          context.go(AppRoutes.home);
+        }
       },
     );
   }

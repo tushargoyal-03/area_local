@@ -544,11 +544,11 @@ class _QuickActions extends StatelessWidget {
         IconsaxPlusLinear.home_1,
         () => context.push(AppRoutes.societyFeed)
       ),
-      // (
-      //   'Chats',
-      //   IconsaxPlusLinear.message,
-      //   () => context.push(AppRoutes.chatRoom)
-      // ),
+      (
+        'Business',
+        IconsaxPlusLinear.shop,
+        () => context.push(AppRoutes.businessPromotions)
+      ),
       (
         'Discovery',
         IconsaxPlusLinear.location,

@@ -17,6 +17,98 @@ class SocietiesService {
     });
   }
 
+  /// Create a new society. The authenticated user becomes the creator/admin.
+  ///
+  /// Backend: `POST /societies`
+  /// Body: name, description?, address, city, coordinates [lng, lat]
+  FutureEither<Map<String, dynamic>> createSociety({
+    required String name,
+    required String address,
+    required String city,
+    required List<double> coordinates, // [lng, lat]
+    String? description,
+  }) async {
+    final Map<String, dynamic> data = {
+      'name': name,
+      'address': address,
+      'city': city,
+      'coordinates': coordinates,
+    };
+    if (description != null && description.isNotEmpty) {
+      data['description'] = description;
+    }
+
+    final result = await DioService.instance.post(
+      'societies',
+      data: data,
+    );
+
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as Map<String, dynamic>;
+      } catch (e) {
+        throw Exception('Failed to create society: $e');
+      }
+    });
+  }
+
+  /// Discover verified societies near a given location.
+  ///
+  /// Backend: `GET /societies/nearby`
+  FutureEither<List<dynamic>> getNearbySocieties({
+    required double lng,
+    required double lat,
+    double radiusInKm = 5,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final result = await DioService.instance.get(
+      'societies/nearby',
+      queryParameters: {
+        'lng': lng,
+        'lat': lat,
+        'radiusInKm': radiusInKm,
+        'page': page,
+        'limit': limit,
+      },
+    );
+
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as List<dynamic>;
+      } catch (e) {
+        throw Exception('Failed to load nearby societies: $e');
+      }
+    });
+  }
+
+  /// Request to join a society as a resident.
+  ///
+  /// Backend: `POST /societies/:id/join-request`
+  FutureEither<Map<String, dynamic>> requestToJoin({
+    required String societyId,
+    String? message,
+  }) async {
+    final Map<String, dynamic> data = {};
+    if (message != null && message.isNotEmpty) data['message'] = message;
+
+    final result = await DioService.instance.post(
+      'societies/$societyId/join-request',
+      data: data,
+    );
+
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['data'] as Map<String, dynamic>? ?? responseData;
+      } catch (e) {
+        throw Exception('Failed to send join request: $e');
+      }
+    });
+  }
+
   FutureEither<List<dynamic>> getSocietyFeed({
     required String societyId,
     String? type,

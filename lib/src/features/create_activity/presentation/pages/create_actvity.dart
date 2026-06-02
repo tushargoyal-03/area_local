@@ -324,6 +324,15 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       (position) => [position.longitude, position.latitude],
     );
 
+    // Combine the selected date with the start time into a single event timestamp
+    final eventTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _startTime.hour,
+      _startTime.minute,
+    );
+
     if (mounted) {
       context.read<PostsBloc>().add(
             CreatePostRequested(
@@ -333,6 +342,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
               content: content,
               coordinates: coordinates,
               image: _selectedImage,
+              maxParticipants: _capacityCount,
+              eventTime: eventTime,
             ),
           );
     }

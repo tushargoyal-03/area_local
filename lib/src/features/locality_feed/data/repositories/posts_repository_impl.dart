@@ -102,6 +102,8 @@ class PostsRepositoryImpl implements PostsRepository {
     required String content,
     required List<double> coordinates,
     List<String> mediaUrls = const [],
+    int? maxParticipants,
+    String? eventTime,
   }) async {
     final result = await _service.createPost(
       category: category,
@@ -109,6 +111,8 @@ class PostsRepositoryImpl implements PostsRepository {
       content: content,
       coordinates: coordinates,
       mediaUrls: mediaUrls,
+      maxParticipants: maxParticipants,
+      eventTime: eventTime,
     );
 
     return result.map((post) {

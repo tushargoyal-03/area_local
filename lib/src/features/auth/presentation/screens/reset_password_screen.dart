@@ -76,16 +76,8 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       keyboardType: TextInputType.number,
                       label: 'OTP Code',
                       prefixIcon: const Icon(IconsaxPlusBold.key),
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(6),
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      validator: (v) {
-                        if (AppUtils.isBlank(v) || v!.length < 6) {
-                          return 'Enter valid 6-digit OTP';
-                        }
-                        return null;
-                      },
+                      inputFormatters: AppInputFormatters.otp(6),
+                      validator: (v) => Validators.otp(v, length: 6),
                     ),
                     SizedBox(height: AppSpacing.lg.h),
                     AppTextField(
@@ -94,6 +86,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       obscureText: _obscureText,
                       label: 'New Password',
                       prefixIcon: const Icon(IconsaxPlusBold.lock_1),
+                      inputFormatters: AppInputFormatters.password,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscureText
@@ -106,12 +99,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           });
                         },
                       ),
-                      validator: (v) {
-                        if (AppUtils.isBlank(v) || v!.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
+                      validator: Validators.password(),
                     ),
                     SizedBox(height: AppSpacing.xxxl.h),
                     AppButton(

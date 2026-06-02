@@ -31,6 +31,8 @@ class CreatePostRequested extends PostsEvent {
   final String content;
   final List<double> coordinates;
   final File? image;
+  final int? maxParticipants;
+  final DateTime? eventTime;
 
   const CreatePostRequested({
     required this.context,
@@ -39,10 +41,20 @@ class CreatePostRequested extends PostsEvent {
     required this.content,
     required this.coordinates,
     this.image,
+    this.maxParticipants,
+    this.eventTime,
   });
 
   @override
-  List<Object?> get props => [category, title, content, coordinates, image];
+  List<Object?> get props => [
+        category,
+        title,
+        content,
+        coordinates,
+        image,
+        maxParticipants,
+        eventTime
+      ];
 }
 
 class ToggleInterestRequested extends PostsEvent {
@@ -259,6 +271,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
       content: event.content,
       coordinates: event.coordinates,
       mediaUrls: mediaUrls,
+      maxParticipants: event.maxParticipants,
+      eventTime: event.eventTime?.toUtc().toIso8601String(),
     );
 
     result.fold(

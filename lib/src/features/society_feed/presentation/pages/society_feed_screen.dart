@@ -145,11 +145,18 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                     radius: 20.r,
                     backgroundColor: cs.surfaceContainerLow,
                     child: IconButton(
+                      tooltip: 'Join requests',
                       onPressed: () {
                         final societyId =
                             context.read<SocietyFeedBloc>().state.societyId;
                         if (societyId.isNotEmpty) {
                           context.push('/society-requests/$societyId');
+                        } else {
+                          showGlobalToast(
+                            message:
+                                'Create your society first to manage join requests.',
+                            status: 'info',
+                          );
                         }
                       },
                       icon: Icon(
@@ -188,150 +195,223 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: AppSpacing.md.h),
+      body: BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
+        buildWhen: (prev, curr) =>
+            prev.hasNoSociety != curr.hasNoSociety ||
+            prev.isLoading != curr.isLoading,
+        builder: (context, feedState) {
+          if (feedState.hasNoSociety) {
+            return _buildNoSocietyState(context, cs, tt);
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: AppSpacing.md.h),
 
-          /// Quick Action Grid (Notice, Issue, Poll, SOS)
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildQuickAction(
-                  label: 'Notice',
-                  icon: IconsaxPlusLinear.volume_high,
-                  colors: [Colors.lightBlueAccent, Colors.indigo],
-                  onTap: () => _showCreatePostSheet(context, 'Notice'),
-                ),
-                _buildQuickAction(
-                  label: 'Issue',
-                  icon: IconsaxPlusLinear.warning_2,
-                  colors: [Colors.redAccent, Colors.orangeAccent],
-                  onTap: () => _showCreatePostSheet(context, 'Complaint'),
-                ),
-                _buildQuickAction(
-                  label: 'Poll',
-                  icon: IconsaxPlusLinear.ranking,
-                  colors: [Colors.greenAccent, Colors.teal],
-                  onTap: () => _showCreatePollSheet(context),
-                ),
-                _buildQuickAction(
-                  label: 'SOS',
-                  icon: IconsaxPlusLinear.shield_security,
-                  colors: [Colors.purpleAccent, Colors.deepPurple],
-                  onTap: () => _showCreatePostSheet(context, 'Alert'),
-                ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: AppSpacing.lg.h),
-
-          /// Tab/Filter chips
-          SizedBox(
-            height: 38.h,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs.w),
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final isSelected = index == _selectedCategoryIndex;
-                final category = _categories[index];
-
-                return Padding(
-                  padding: EdgeInsets.only(right: AppSpacing.xs.w),
-                  child: GestureDetector(
-                    onTap: () => _onCategoryTapped(index),
-                    child: AnimatedContainer(
-                      duration: AppDurations.fast,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md.w,
-                        vertical: AppSpacing.xs.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? cs.primary : cs.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(100.r),
-                        border: Border.all(
-                          color: isSelected
-                              ? cs.primary
-                              : cs.outlineVariant.withValues(alpha: 0.4),
-                          width: 1.w,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        category,
-                        style: tt.bodyMedium?.copyWith(
-                          color:
-                              isSelected ? cs.onPrimary : cs.onSurfaceVariant,
-                          fontWeight:
-                              isSelected ? FontWeight.w600 : FontWeight.w500,
-                          fontSize: 12.sp,
-                        ),
-                      ),
+              /// Quick Action Grid (Notice, Issue, Poll, SOS)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs.w),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildQuickAction(
+                      label: 'Notice',
+                      icon: IconsaxPlusLinear.volume_high,
+                      colors: [Colors.lightBlueAccent, Colors.indigo],
+                      onTap: () => _showCreatePostSheet(context, 'Notice'),
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
+                    _buildQuickAction(
+                      label: 'Issue',
+                      icon: IconsaxPlusLinear.warning_2,
+                      colors: [Colors.redAccent, Colors.orangeAccent],
+                      onTap: () => _showCreatePostSheet(context, 'Complaint'),
+                    ),
+                    _buildQuickAction(
+                      label: 'Poll',
+                      icon: IconsaxPlusLinear.ranking,
+                      colors: [Colors.greenAccent, Colors.teal],
+                      onTap: () => _showCreatePollSheet(context),
+                    ),
+                    _buildQuickAction(
+                      label: 'Event',
+                      icon: IconsaxPlusLinear.calendar_1,
+                      colors: [Colors.amberAccent, Colors.deepOrange],
+                      onTap: () => _showCreateEventSheet(context),
+                    ),
+                    _buildQuickAction(
+                      label: 'SOS',
+                      icon: IconsaxPlusLinear.shield_security,
+                      colors: [Colors.purpleAccent, Colors.deepPurple],
+                      onTap: () => _showCreatePostSheet(context, 'Alert'),
+                    ),
+                  ],
+                ),
+              ),
 
-          SizedBox(height: AppSpacing.md.h),
+              SizedBox(height: AppSpacing.lg.h),
 
-          /// Divider line
-          Divider(
-            height: 1.h,
-            thickness: 1.h,
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-          ),
-
-          /// Society Posts List
-          Expanded(
-            child: BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
-              builder: (context, state) {
-                if (state.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (state.error != null) {
-                  return Center(child: Text(state.error!));
-                }
-
-                if (state.posts.isEmpty) {
-                  return const Center(child: Text('No posts found.'));
-                }
-
-                return ListView.builder(
-                  padding: EdgeInsets.all(AppSpacing.xs.w),
-                  itemCount: state.posts.length,
+              /// Tab/Filter chips
+              SizedBox(
+                height: 38.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs.w),
+                  itemCount: _categories.length,
                   itemBuilder: (context, index) {
-                    final post = state.posts[index];
+                    final isSelected = index == _selectedCategoryIndex;
+                    final category = _categories[index];
+
                     return Padding(
-                      padding: EdgeInsets.only(bottom: AppSpacing.md.h),
-                      child: _buildSocietyPost(
-                        post: post,
-                        cs: cs,
-                        tt: tt,
+                      padding: EdgeInsets.only(right: AppSpacing.xs.w),
+                      child: GestureDetector(
+                        onTap: () => _onCategoryTapped(index),
+                        child: AnimatedContainer(
+                          duration: AppDurations.fast,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md.w,
+                            vertical: AppSpacing.xs.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? cs.primary
+                                : cs.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(100.r),
+                            border: Border.all(
+                              color: isSelected
+                                  ? cs.primary
+                                  : cs.outlineVariant.withValues(alpha: 0.4),
+                              width: 1.w,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            category,
+                            style: tt.bodyMedium?.copyWith(
+                              color: isSelected
+                                  ? cs.onPrimary
+                                  : cs.onSurfaceVariant,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              fontSize: 12.sp,
+                            ),
+                          ),
+                        ),
                       ),
                     );
                   },
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ),
+
+              SizedBox(height: AppSpacing.md.h),
+
+              /// Divider line
+              Divider(
+                height: 1.h,
+                thickness: 1.h,
+                color: cs.outlineVariant.withValues(alpha: 0.3),
+              ),
+
+              /// Society Posts List
+              Expanded(
+                child: BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
+                  builder: (context, state) {
+                    if (state.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (state.error != null) {
+                      return Center(child: Text(state.error!));
+                    }
+
+                    if (state.posts.isEmpty) {
+                      return const Center(child: Text('No posts found.'));
+                    }
+
+                    return ListView.builder(
+                      padding: EdgeInsets.all(AppSpacing.xs.w),
+                      itemCount: state.posts.length,
+                      itemBuilder: (context, index) {
+                        final post = state.posts[index];
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: AppSpacing.md.h),
+                          child: _buildSocietyPost(
+                            post: post,
+                            cs: cs,
+                            tt: tt,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: () => context.push(AppRoutes.createActivity),
-      //   shape: const CircleBorder(),
-      //   backgroundColor: cs.primary,
-      //   child: Icon(
-      //     IconsaxPlusLinear.add,
-      //     color: cs.onPrimary,
-      //   ),
-      // ),
+    );
+  }
+
+  Widget _buildNoSocietyState(
+      BuildContext context, ColorScheme cs, TextTheme tt) {
+    final isAdmin =
+        context.select((SessionBloc b) => b.state.user?.role == 'SocietyAdmin');
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(AppSpacing.xl.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 88.w,
+              height: 88.w,
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child:
+                  Icon(IconsaxPlusLinear.home_1, size: 40.w, color: cs.primary),
+            ),
+            SizedBox(height: AppSpacing.lg.h),
+            Text(
+              isAdmin ? 'Create your society' : 'No society yet',
+              style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: AppSpacing.sm.h),
+            Text(
+              isAdmin
+                  ? 'You are registered as a Society Representative. Set up your society so residents nearby can discover and join it.'
+                  : 'Join a society to see notices, polls, events, and complaints from your neighborhood.',
+              textAlign: TextAlign.center,
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            SizedBox(height: AppSpacing.xl.h),
+            if (isAdmin)
+              AppButton(
+                label: 'Create Society',
+                onPressed: () => context.push(AppRoutes.createSociety),
+                isFullWidth: true,
+              )
+            else
+              AppButton(
+                label: 'Discover Societies',
+                onPressed: () => context.push(AppRoutes.nearbyDiscovery),
+                isFullWidth: true,
+              ),
+            SizedBox(height: AppSpacing.md.h),
+            TextButton(
+              onPressed: () =>
+                  context.read<SocietyFeedBloc>().add(const InitSocietyFeed()),
+              child: const Text('Refresh'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -424,6 +504,160 @@ class _SocietyFeedScreenState extends State<SocietyFeedScreen> {
                 ],
               ),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showCreateEventSheet(BuildContext context) {
+    final titleCtrl = TextEditingController();
+    final contentCtrl = TextEditingController();
+    final societyId = context.read<SocietyFeedBloc>().state.societyId;
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return BlocProvider.value(
+          value: context.read<SocietyFeedBloc>(),
+          child: StatefulBuilder(
+            builder: (ctx2, setModalState) {
+              final cs = ctx2.theme.colorScheme;
+              final tt = ctx2.theme.textTheme;
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(ctx2).viewInsets.bottom,
+                ),
+                child: Container(
+                  padding: EdgeInsets.fromLTRB(24.w, 20.h, 24.w, 24.h),
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(28.r)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40.w,
+                          height: 4.h,
+                          decoration: BoxDecoration(
+                            color: cs.outlineVariant,
+                            borderRadius: BorderRadius.circular(2.r),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
+                      Text('New Event',
+                          style: tt.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 16.h),
+                      AppTextField(controller: titleCtrl, hint: 'Event title'),
+                      SizedBox(height: 12.h),
+                      AppTextField(
+                          controller: contentCtrl,
+                          hint: 'Details…',
+                          maxLines: 2),
+                      SizedBox(height: 12.h),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(16.r),
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: ctx2,
+                            initialDate: selectedDate,
+                            firstDate: DateTime.now(),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (picked != null) {
+                            setModalState(() => selectedDate = picked);
+                          }
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 16.w, vertical: 14.h),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(16.r),
+                            border: Border.all(
+                                color:
+                                    cs.outlineVariant.withValues(alpha: 0.4)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(IconsaxPlusLinear.calendar,
+                                  size: 18.w, color: cs.primary),
+                              SizedBox(width: 10.w),
+                              Text(
+                                '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                                style: tt.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const Spacer(),
+                              Text('Change',
+                                  style: tt.bodySmall
+                                      ?.copyWith(color: cs.primary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      BlocBuilder<SocietyFeedBloc, SocietyFeedState>(
+                        builder: (context, state) => SizedBox(
+                          width: double.infinity,
+                          height: 52.h,
+                          child: ElevatedButton(
+                            onPressed: state.isCreating
+                                ? null
+                                : () {
+                                    if (titleCtrl.text.isNotEmpty &&
+                                        societyId.isNotEmpty) {
+                                      context
+                                          .read<SocietyFeedBloc>()
+                                          .add(CreateSocietyPostRequested(
+                                            societyId: societyId,
+                                            type: 'Event',
+                                            title: titleCtrl.text,
+                                            content: contentCtrl.text,
+                                            eventDate: selectedDate
+                                                .toUtc()
+                                                .toIso8601String(),
+                                            onSuccess: () => Navigator.pop(ctx),
+                                          ));
+                                    } else {
+                                      showGlobalToast(
+                                          message: 'Event title is required',
+                                          status: 'error');
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: cs.primary,
+                              foregroundColor: cs.onPrimary,
+                              shape: const StadiumBorder(),
+                            ),
+                            child: state.isCreating
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Text('Create Event',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         );
       },

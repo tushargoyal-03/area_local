@@ -1377,15 +1377,6 @@ class _UserMenuSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 36.w,
-              height: 4.h,
-              margin: EdgeInsets.only(bottom: 16.h),
-              decoration: BoxDecoration(
-                color: cs.outlineVariant,
-                borderRadius: BorderRadius.circular(2.r),
-              ),
-            ),
             Avatar(name: recipientName, size: 48),
             SizedBox(height: 8.h),
             Text(recipientName,

@@ -1,4 +1,4 @@
-import 'package:area_connect/src/features/activity_details/presentation/widgets/review_sheet.dart';
+import 'package:area_connect/src/features/activity_details/presentation/widgets/review_participants_sheet.dart';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:area_connect/src/features/comment/presentation/pages/comment.dart';
@@ -221,46 +221,49 @@ class ActivityDetailScreen extends StatelessWidget {
                   const SizedBox(height: 20),
 
                   /// Map Placeholder Card
-                  Container(
-                    height: 180,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      gradient: LinearGradient(
-                        colors: [
-                          theme.primaryColor.withValues(alpha: 0.25),
-                          AppPalettes.primary2Light.withValues(alpha: 0.15),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                  GestureDetector(
+                    onTap: () => _openInMaps(livePost),
+                    child: Container(
+                      height: 180,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(28),
+                        gradient: LinearGradient(
+                          colors: [
+                            theme.primaryColor.withValues(alpha: 0.25),
+                            AppPalettes.primary2Light.withValues(alpha: 0.15),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                       ),
-                    ),
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          left: 14,
-                          bottom: 14,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.92),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            child: const Row(
-                              children: [
-                                Icon(IconsaxPlusLinear.location, size: 14),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Open in map',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ],
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            left: 14,
+                            bottom: 14,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.92),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(IconsaxPlusLinear.location, size: 14),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'Open in map',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
@@ -490,16 +493,13 @@ class ActivityDetailScreen extends StatelessWidget {
   }
 
   void _showReviewPicker(BuildContext context, AppPost livePost) {
-    // Showing a placeholder list of accepted participants to review
-    // In a real app, you'd load the accepted users; here we show an alert
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => ReviewSheet(
-        postId: livePost.id,
-        targetUserId: '',
-        targetUserName: 'Participant',
+      builder: (ctx) => BlocProvider.value(
+        value: context.read<PostsBloc>(),
+        child: ReviewParticipantsSheet(postId: livePost.id),
       ),
     );
   }
@@ -523,6 +523,19 @@ class ActivityDetailScreen extends StatelessWidget {
         child: Icon(icon, color: color),
       ),
     );
+  }
+
+  void _openInMaps(AppPost post) {
+    // coordinates are stored as [lng, lat]
+    if (post.coordinates.length < 2) {
+      showGlobalToast(
+          message: 'Location not available for this activity', status: 'info');
+      return;
+    }
+    final lng = post.coordinates[0];
+    final lat = post.coordinates[1];
+    UrlLauncherService.instance
+        .launch('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
   }
 
   String _formatDate(DateTime date) {

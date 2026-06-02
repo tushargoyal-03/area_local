@@ -6,6 +6,8 @@ import 'package:area_connect/src/features/locality_feed/presentation/pages/local
 import 'package:area_connect/src/features/nearby_discovery/presentation/pages/nearby_discovery_screen.dart';
 import 'package:area_connect/src/features/notification/presentation/pages/notification_screen.dart';
 import 'package:area_connect/src/features/society_feed/presentation/pages/society_feed_screen.dart';
+import 'package:area_connect/src/features/society_feed/presentation/pages/create_society_screen.dart';
+import 'package:area_connect/src/features/business/presentation/pages/business_promotions_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:area_connect/src/routing/global_navigator.dart';
 import 'package:area_connect/src/routing/app_routes.dart';
@@ -150,6 +152,16 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.societyFeed,
       name: 'societyFeed',
       builder: (context, state) => const SocietyFeedScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.createSociety,
+      name: 'createSociety',
+      builder: (context, state) => const CreateSocietyScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.businessPromotions,
+      name: 'businessPromotions',
+      builder: (context, state) => const BusinessPromotionsScreen(),
     ),
     GoRoute(
       path: AppRoutes.searchUsers,

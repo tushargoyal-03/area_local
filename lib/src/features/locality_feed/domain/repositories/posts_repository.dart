@@ -18,6 +18,8 @@ abstract class PostsRepository {
     required String content,
     required List<double> coordinates,
     List<String> mediaUrls = const [],
+    int? maxParticipants,
+    String? eventTime,
   });
 
   FutureEither<String> uploadImage(File file);

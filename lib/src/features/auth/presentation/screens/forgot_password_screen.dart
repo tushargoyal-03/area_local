@@ -96,15 +96,8 @@ class _ForgotPasswordView extends StatelessWidget {
                       keyboardType: TextInputType.emailAddress,
                       label: 'Email',
                       prefixIcon: const Icon(IconsaxPlusBold.sms),
-                      validator: (v) {
-                        if (AppUtils.isBlank(v)) {
-                          return 'Email is required';
-                        }
-                        if (!AppUtils.isValidEmail(v!)) {
-                          return 'Enter a valid email';
-                        }
-                        return null;
-                      },
+                      inputFormatters: AppInputFormatters.email,
+                      validator: Validators.email,
                     ),
                     SizedBox(height: AppSpacing.lg.h),
                     AppButton(
