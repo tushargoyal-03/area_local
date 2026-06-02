@@ -32,6 +32,7 @@ class CreatePromotionRequested extends BusinessEvent {
   final List<double> coordinates;
   final String? discountCode;
   final String? expiryDate;
+  final List<String> mediaUrls;
 
   const CreatePromotionRequested({
     required this.businessName,
@@ -40,11 +41,19 @@ class CreatePromotionRequested extends BusinessEvent {
     required this.coordinates,
     this.discountCode,
     this.expiryDate,
+    this.mediaUrls = const [],
   });
 
   @override
-  List<Object?> get props =>
-      [businessName, title, description, coordinates, discountCode, expiryDate];
+  List<Object?> get props => [
+        businessName,
+        title,
+        description,
+        coordinates,
+        discountCode,
+        expiryDate,
+        mediaUrls
+      ];
 }
 
 // --- State ---
@@ -155,6 +164,7 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
       coordinates: event.coordinates,
       discountCode: event.discountCode,
       expiryDate: event.expiryDate,
+      mediaUrls: event.mediaUrls,
     );
 
     result.fold(

@@ -36,6 +36,7 @@ class AppTextField extends StatelessWidget {
     this.filled,
     this.fillColor,
     this.inputFormatters,
+    this.onTap,
   });
 
   final String? label;
@@ -58,6 +59,7 @@ class AppTextField extends StatelessWidget {
   final bool autofocus;
   final bool? filled;
   final Color? fillColor;
+  final VoidCallback? onTap;
   final List<TextInputFormatter>? inputFormatters;
 
   @override
@@ -66,6 +68,7 @@ class AppTextField extends StatelessWidget {
     final tt = context.theme.textTheme;
 
     return TextFormField(
+      onTap: onTap,
       controller: controller,
       initialValue: initialValue,
       validator: validator,

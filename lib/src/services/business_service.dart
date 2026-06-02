@@ -39,6 +39,7 @@ class BusinessService {
     required List<double> coordinates,
     String? discountCode,
     String? expiryDate,
+    List<String> mediaUrls = const [],
   }) async {
     final Map<String, dynamic> data = {
       'businessName': businessName,
@@ -48,6 +49,7 @@ class BusinessService {
     };
     if (discountCode != null) data['discountCode'] = discountCode;
     if (expiryDate != null) data['expiryDate'] = expiryDate;
+    if (mediaUrls.isNotEmpty) data['mediaUrls'] = mediaUrls;
 
     final result = await DioService.instance.post(
       'business/promotions',

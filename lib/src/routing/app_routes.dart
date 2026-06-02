@@ -27,4 +27,5 @@ abstract final class AppRoutes {
   static const String viewProfile = '/view-profile';
   static const String interestedUsers = '/activity-interested';
   static const String businessPromotions = '/business-promotions';
+  static const String createPromotion = '/create-promotion';
 }

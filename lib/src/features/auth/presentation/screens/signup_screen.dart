@@ -240,7 +240,7 @@ class _SignupView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    SizedBox(height: AppSpacing.xxxl),
+                    SizedBox(height: AppSpacing.xxl),
                     AppButton(
                       label: 'Sign Up',
                       isLoading: isLoading,

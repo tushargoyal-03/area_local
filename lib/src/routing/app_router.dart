@@ -8,6 +8,7 @@ import 'package:area_connect/src/features/notification/presentation/pages/notifi
 import 'package:area_connect/src/features/society_feed/presentation/pages/society_feed_screen.dart';
 import 'package:area_connect/src/features/society_feed/presentation/pages/create_society_screen.dart';
 import 'package:area_connect/src/features/business/presentation/pages/business_promotions_screen.dart';
+import 'package:area_connect/src/features/business/presentation/pages/create_promotion_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:area_connect/src/routing/global_navigator.dart';
 import 'package:area_connect/src/routing/app_routes.dart';
@@ -162,6 +163,11 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.businessPromotions,
       name: 'businessPromotions',
       builder: (context, state) => const BusinessPromotionsScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.createPromotion,
+      name: 'createPromotion',
+      builder: (context, state) => const CreatePromotionScreen(),
     ),
     GoRoute(
       path: AppRoutes.searchUsers,

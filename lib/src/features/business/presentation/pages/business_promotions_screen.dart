@@ -13,11 +13,17 @@ class BusinessPromotionsScreen extends StatefulWidget {
 class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentTab = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.index != _currentTab) {
+        setState(() => _currentTab = _tabController.index);
+      }
+    });
     context.read<BusinessBloc>().add(LoadMyPromotions());
   }
 
@@ -25,55 +31,6 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  void _showCreateDialog() {
-    final nameCtrl = TextEditingController();
-    final titleCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
-    final discountCtrl = TextEditingController();
-
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Create Promotion'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AppTextField(controller: nameCtrl, hint: 'Business Name'),
-              SizedBox(height: 12.h),
-              AppTextField(controller: titleCtrl, hint: 'Title (e.g. 20% Off)'),
-              SizedBox(height: 12.h),
-              AppTextField(controller: descCtrl, hint: 'Description'),
-              SizedBox(height: 12.h),
-              AppTextField(
-                  controller: discountCtrl, hint: 'Discount Code (Optional)'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () {
-              if (nameCtrl.text.isNotEmpty && titleCtrl.text.isNotEmpty) {
-                context.read<BusinessBloc>().add(CreatePromotionRequested(
-                      businessName: nameCtrl.text,
-                      title: titleCtrl.text,
-                      description: descCtrl.text,
-                      discountCode:
-                          discountCtrl.text.isEmpty ? null : discountCtrl.text,
-                      coordinates: const [77.5946, 12.9716],
-                    ));
-                Navigator.pop(ctx);
-              }
-            },
-            child: const Text('Create'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -87,9 +44,9 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
         title: 'Business Promotions',
         centerTitle: true,
       ),
-      floatingActionButton: isOwner
+      floatingActionButton: (isOwner && _currentTab == 1)
           ? FloatingActionButton(
-              onPressed: _showCreateDialog,
+              onPressed: () => context.push(AppRoutes.createPromotion),
               child: const Icon(Icons.add),
             )
           : null,
@@ -159,7 +116,6 @@ class _NearbyPromotionsListState extends State<_NearbyPromotionsList> {
           itemBuilder: (context, index) {
             final promo = state.nearbyPromotions[index] as Map<String, dynamic>;
             final promoId = promo['_id']?.toString() ?? '';
-            // Track impression as item becomes visible
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _trackImpression(promoId);
             });
@@ -373,13 +329,9 @@ class _AnalyticRow extends StatelessWidget {
       children: [
         Icon(icon, size: 20, color: cs.primary),
         SizedBox(width: 12.w),
-        Expanded(
-          child: Text(label, style: tt.bodyMedium),
-        ),
-        Text(
-          value,
-          style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
+        Expanded(child: Text(label, style: tt.bodyMedium)),
+        Text(value,
+            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
       ],
     );
   }
