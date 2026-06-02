@@ -205,32 +205,10 @@ class _LoginView extends StatelessWidget {
               children: [
                 SizedBox(height: AppSpacing.ml.h),
                 // Brand icon
-                Container(
-                  width: 56.w,
-                  height: 56.w,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        AppPalettes.primaryLight,
-                        AppPalettes.primary2Light
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: cs.primary.withValues(alpha: 0.2),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    IconsaxPlusBold.location,
-                    color: Colors.white,
-                    size: 26.sp,
-                  ),
+                Image.asset(
+                  'assets/area_connect_logo.png',
+                  width: 72.w,
+                  height: 72.w,
                 ),
                 SizedBox(height: AppSpacing.lg.h),
                 Text(

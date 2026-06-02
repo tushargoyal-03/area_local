@@ -73,25 +73,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
               child: Row(
                 children: [
-                  Container(
+                  Image.asset(
+                    'assets/area_connect_logo.png',
                     width: 34.w,
                     height: 34.w,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          AppPalettes.primaryLight,
-                          AppPalettes.primary2Light,
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(10.r),
-                    ),
-                    child: Icon(
-                      IconsaxPlusBold.location,
-                      color: Colors.white,
-                      size: 18.sp,
-                    ),
                   ),
                   SizedBox(width: 10.w),
                   Text(

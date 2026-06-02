@@ -30,11 +30,17 @@ import 'package:area_connect/src/features/onboarding/presentation/screens/onboar
 import 'package:area_connect/src/features/user_profile/presentation/pages/search_users_screen.dart';
 import 'package:area_connect/src/features/user_profile/presentation/pages/edit_profile_screen.dart';
 import 'package:area_connect/src/features/user_profile/presentation/pages/view_profile_screen.dart';
+import 'package:area_connect/src/features/splash/presentation/screens/splash_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: AppRoutes.onboarding,
+  initialLocation: AppRoutes.splash,
   routes: <RouteBase>[
+    GoRoute(
+      path: AppRoutes.splash,
+      name: 'splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
     GoRoute(
       path: AppRoutes.onboarding,
       name: 'onboarding',

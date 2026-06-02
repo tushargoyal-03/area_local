@@ -1,5 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
+import 'package:area_connect/src/utils/email_validator.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -49,18 +50,32 @@ class _SignupScreenState extends State<SignupScreen> {
         (position) => [position.longitude, position.latitude],
       );
 
-      if (context.mounted) {
-        context.read<AuthBloc>().add(
-              SignUpRequested(
-                context: context,
-                name: _nameController.text.trim(),
-                email: _emailController.text.trim(),
-                password: _passwordController.text,
-                role: _selectedRole,
-                coordinates: coordinates,
-              ),
-            );
-      }
+      // final email = _emailController.text.trim();
+      if (!context.mounted) return;
+
+      // final emailError = EmailValidator.validateEmail(email);
+
+      // if (email.isEmpty) {
+      //   showToast(context, message: 'Email is required', status: 'error');
+      //   return;
+      // }
+
+      // if (emailError != null) {
+      //   showToast(context, message: emailError, status: 'error');
+      //   return;
+      // }
+
+      context.read<AuthBloc>().add(
+            SignUpRequested(
+              context: context,
+              name: _nameController.text.trim(),
+              // email: email,
+              email: _emailController.text.trim(),
+              password: _passwordController.text,
+              role: _selectedRole,
+              coordinates: coordinates,
+            ),
+          );
     }
 
     return _SignupView(
