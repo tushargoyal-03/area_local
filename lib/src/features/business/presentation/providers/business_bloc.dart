@@ -9,18 +9,7 @@ abstract class BusinessEvent extends Equatable {
 }
 
 class LoadNearbyPromotions extends BusinessEvent {
-  final double lng;
-  final double lat;
-  final double radiusInKm;
-
-  const LoadNearbyPromotions({
-    required this.lng,
-    required this.lat,
-    this.radiusInKm = 5,
-  });
-
-  @override
-  List<Object?> get props => [lng, lat, radiusInKm];
+  const LoadNearbyPromotions();
 }
 
 class LoadMyPromotions extends BusinessEvent {}
@@ -122,11 +111,7 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     Emitter<BusinessState> emit,
   ) async {
     emit(state.copyWith(isLoadingNearby: true, clearError: true));
-    final result = await BusinessService.instance.getNearbyPromotions(
-      lng: event.lng,
-      lat: event.lat,
-      radiusInKm: event.radiusInKm,
-    );
+    final result = await BusinessService.instance.getNearbyPromotions();
 
     result.fold(
       (failure) =>

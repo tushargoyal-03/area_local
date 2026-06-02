@@ -40,30 +40,18 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
   }
 
   Future<void> _loadNeighbors() async {
+    // GPS is used only to center the map — API calls use backend-stored location
     final locationRes = await LocationService.instance.getCurrentPosition();
     if (!mounted) return;
     locationRes.fold(
-      (failure) {
-        // Fallback to New Delhi coordinates if Geolocator fails/permission denied
-        setState(() => _center = const LatLng(28.6139, 77.2090));
-        context.read<NearbyDiscoveryBloc>().add(
-              const LoadNearbyNeighbors(lng: 77.2090, lat: 28.6139),
-            );
-      },
-      (position) {
-        setState(() => _center = LatLng(position.latitude, position.longitude));
-        context.read<NearbyDiscoveryBloc>().add(
-              LoadNearbyNeighbors(
-                lng: position.longitude,
-                lat: position.latitude,
-              ),
-            );
-        context.read<PostsBloc>().add(LoadNearbyPostsRequested(
-            lng: position.longitude, lat: position.latitude));
-        context.read<BusinessBloc>().add(LoadNearbyPromotions(
-            lng: position.longitude, lat: position.latitude));
-      },
+      (failure) => setState(() => _center = const LatLng(28.6139, 77.2090)),
+      (position) => setState(
+          () => _center = LatLng(position.latitude, position.longitude)),
     );
+
+    context.read<NearbyDiscoveryBloc>().add(const LoadNearbyNeighbors());
+    context.read<PostsBloc>().add(const LoadNearbyPostsRequested());
+    context.read<BusinessBloc>().add(const LoadNearbyPromotions());
   }
 
   /// Recenters the map camera on the current [_center].

@@ -11,17 +11,7 @@ abstract class PostsEvent extends Equatable {
 }
 
 class LoadNearbyPostsRequested extends PostsEvent {
-  final double lng;
-  final double lat;
-  final double radiusInKm;
-  const LoadNearbyPostsRequested({
-    required this.lng,
-    required this.lat,
-    this.radiusInKm = 5,
-  });
-
-  @override
-  List<Object?> get props => [lng, lat, radiusInKm];
+  const LoadNearbyPostsRequested();
 }
 
 class CreatePostRequested extends PostsEvent {
@@ -233,11 +223,7 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
   ) async {
     emit(state.copyWith(isLoading: true));
 
-    final result = await _repository.getNearbyFeed(
-      lng: event.lng,
-      lat: event.lat,
-      radiusInKm: event.radiusInKm,
-    );
+    final result = await _repository.getNearbyFeed();
 
     result.fold(
       (failure) =>

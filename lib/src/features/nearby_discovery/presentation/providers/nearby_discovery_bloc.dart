@@ -9,18 +9,7 @@ abstract class NearbyDiscoveryEvent extends Equatable {
 }
 
 class LoadNearbyNeighbors extends NearbyDiscoveryEvent {
-  final double lng;
-  final double lat;
-  final double radiusInKm;
-
-  const LoadNearbyNeighbors({
-    required this.lng,
-    required this.lat,
-    this.radiusInKm = 5,
-  });
-
-  @override
-  List<Object?> get props => [lng, lat, radiusInKm];
+  const LoadNearbyNeighbors();
 }
 
 class SayHiToNeighbor extends NearbyDiscoveryEvent {
@@ -73,11 +62,7 @@ class NearbyDiscoveryBloc
   ) async {
     emit(state.copyWith(isLoading: true, clearError: true));
 
-    final result = await UsersService.instance.getNearbyUsers(
-      lng: event.lng,
-      lat: event.lat,
-      radiusInKm: event.radiusInKm,
-    );
+    final result = await UsersService.instance.getNearbyUsers();
 
     result.fold(
       (failure) =>

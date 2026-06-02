@@ -15,36 +15,9 @@ class _LocalityFeedPageState extends State<LocalityFeedPage> {
   }
 
   Future<void> _loadFeed() async {
-    final locationRes = await LocationService.instance.getCurrentPosition();
-
     if (!mounted) return;
-
-    locationRes.fold(
-      (failure) {
-        // Safe fallback: try using coordinates saved in the active user profile
-        final user = context.read<SessionBloc>().state.user;
-        if (user != null &&
-            user.coordinates != null &&
-            user.coordinates!.length == 2) {
-          context.read<PostsBloc>().add(LoadNearbyPostsRequested(
-                lng: user.coordinates![0],
-                lat: user.coordinates![1],
-              ));
-        } else {
-          // Last resort fallback (Jaipur default coordinates)
-          context.read<PostsBloc>().add(const LoadNearbyPostsRequested(
-                lng: 77.5946,
-                lat: 12.9716,
-              ));
-        }
-      },
-      (position) {
-        context.read<PostsBloc>().add(LoadNearbyPostsRequested(
-              lng: position.longitude,
-              lat: position.latitude,
-            ));
-      },
-    );
+    // Backend resolves location from stored coords — no GPS needed here
+    context.read<PostsBloc>().add(const LoadNearbyPostsRequested());
   }
 
   @override

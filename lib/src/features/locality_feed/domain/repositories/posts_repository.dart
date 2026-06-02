@@ -4,9 +4,9 @@ import '../entities/post.dart';
 
 abstract class PostsRepository {
   FutureEither<List<AppPost>> getNearbyFeed({
-    required double lng,
-    required double lat,
-    double radiusInKm = 5,
+    double? lng,
+    double? lat,
+    double? radiusInKm,
     int page = 1,
     int limit = 20,
     String? currentUserId,

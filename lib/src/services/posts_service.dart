@@ -8,21 +8,20 @@ class PostsService {
 
   /// Retrieve nearby activities feed based on current longitude and latitude coordinates.
   FutureEither<List<dynamic>> getNearbyFeed({
-    required double lng,
-    required double lat,
-    double radiusInKm = 5,
+    double? lng,
+    double? lat,
+    double? radiusInKm,
     int page = 1,
     int limit = 20,
   }) async {
+    final Map<String, dynamic> queryParameters = {'page': page, 'limit': limit};
+    if (lng != null) queryParameters['lng'] = lng;
+    if (lat != null) queryParameters['lat'] = lat;
+    if (radiusInKm != null) queryParameters['radiusInKm'] = radiusInKm;
+
     final result = await DioService.instance.get(
       'posts/nearby',
-      queryParameters: {
-        'lng': lng,
-        'lat': lat,
-        'radiusInKm': radiusInKm,
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: queryParameters,
     );
 
     return result.map((response) {

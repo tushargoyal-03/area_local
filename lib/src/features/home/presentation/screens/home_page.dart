@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:area_connect/src/features/nearby_discovery/presentation/providers/nearby_discovery_bloc.dart';
 import 'package:area_connect/src/imports/imports.dart';
 import 'package:area_connect/src/features/locality_feed/presentation/pages/locality_feed_page.dart';
@@ -14,28 +16,29 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
     with WidgetsBindingObserver {
   int _currentTab = 0;
   String _locationAddress = 'Vaishali Nagar, Jaipur';
+  StreamSubscription<Position>? _locationSubscription;
 
-  Future<void> _fetchAndSyncLocation() async {
-    // Request location permission, fetch coordinates, and sync to backend user profile
+  /// Fetch the current GPS position, update the address label, and sync
+  /// coordinates to the backend.  Pass [showFeedback] = true only on the
+  /// first explicit sync (init / login) — background updates are silent.
+  Future<void> _syncLocation({bool showFeedback = false}) async {
     final locationRes = await LocationService.instance.getCurrentPosition();
     locationRes.fold(
       (failure) {
-        showGlobalToast(
-          message:
-              'Location issue: ${failure.message}. Using default location.',
-          status: 'warning',
-        );
-        debugPrint('Failed to fetch location on login: ${failure.message}');
+        if (showFeedback) {
+          showGlobalToast(
+            message:
+                'Location issue: ${failure.message}. Using default location.',
+            status: 'warning',
+          );
+        }
+        debugPrint('Location sync failed: ${failure.message}');
       },
       (position) async {
-        showGlobalToast(
-          message: 'Live location synchronized successfully!',
-          status: 'success',
-        );
         debugPrint(
-            'Fetched dynamic login coordinates: [${position.longitude}, ${position.latitude}]');
+            'Location synced: [${position.longitude}, ${position.latitude}]');
 
-        // Reverse geocode dynamically to get a real suburb and city name
+        // Reverse geocode to show a real suburb / city name in the header.
         final addressRes =
             await LocationService.instance.getAddressFromCoordinates(
           position.latitude,
@@ -43,25 +46,52 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
         );
         addressRes.fold(
           (failure) =>
-              debugPrint('Failed to reverse-geocode: ${failure.message}'),
+              debugPrint('Reverse geocode failed: ${failure.message}'),
           (address) {
-            if (mounted) {
-              setState(() {
-                _locationAddress = address;
-              });
-            }
+            if (mounted) setState(() => _locationAddress = address);
           },
         );
-        final updateRes = await UsersService.instance.updateProfile(
-          coordinates: [position.longitude, position.latitude],
+
+        // Push to backend so all geo queries use fresh coords.
+        final updateRes = await UsersService.instance.updateLocation(
+          [position.longitude, position.latitude],
         );
         updateRes.fold(
-          (failure) => debugPrint(
-              'Failed to sync location to backend: ${failure.message}'),
-          (successData) =>
-              debugPrint('Successfully synced location to backend!'),
+          (failure) =>
+              debugPrint('Backend location sync failed: ${failure.message}'),
+          (_) => debugPrint('Backend location updated.'),
         );
       },
+    );
+  }
+
+  /// Start a foreground position stream: fires whenever the user moves more
+  /// than 100 m so the backend always has a fresh location while the app is
+  /// open.  Updates are silent (no toasts).
+  void _startLocationStream() {
+    _locationSubscription = LocationService.instance
+        .getPositionStream(distanceFilter: 100)
+        .listen(
+      (position) async {
+        debugPrint(
+            'Position stream update: [${position.longitude}, ${position.latitude}]');
+        final addressRes =
+            await LocationService.instance.getAddressFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        addressRes.fold(
+          (_) {},
+          (address) {
+            if (mounted) setState(() => _locationAddress = address);
+          },
+        );
+        UsersService.instance
+            .updateLocation([position.longitude, position.latitude]);
+      },
+      onError: (Object error) =>
+          debugPrint('Location stream error (ignored): $error'),
+      cancelOnError: false,
     );
   }
 
@@ -69,17 +99,16 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Initialize native notifications and request platform permissions
     NotificationService.instance.init();
     NotificationService.instance.requestPermissions();
 
-    // Trigger initial WebSocket binding if already logged in on boot
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final sessionState = context.read<SessionBloc>().state;
       if (sessionState.status == SessionStatus.authenticated &&
           sessionState.user != null) {
         final user = sessionState.user!;
-        _fetchAndSyncLocation(); // Dynamically fetch geolocator coordinates and update backend
+        _syncLocation(); // Initial silent sync on boot
+        _startLocationStream(); // Keep updating as user moves
         context
             .read<ChatBloc>()
             .add(LoadConversationsRequested(currentUserId: user.id));
@@ -87,43 +116,21 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
           final socket = ChatService.instance.socket;
           if (socket != null) {
             NotificationService.instance.setupSocketListeners(socket, user.id);
-            // WhatsApp-style: notify server we are Online!
             ChatService.instance.updatePresenceStatus(true);
           }
         });
       }
 
-      // Pre-fetch nearby posts and neighbors for dashboard widgets
-      final locationRes = await LocationService.instance.getCurrentPosition();
-      locationRes.fold(
-        (failure) {
-          context.read<PostsBloc>().add(const LoadNearbyPostsRequested(
-                lng: 77.5946,
-                lat: 12.9716,
-              ));
-          context.read<NearbyDiscoveryBloc>().add(const LoadNearbyNeighbors(
-                lng: 77.5946,
-                lat: 12.9716,
-              ));
-        },
-        (position) {
-          context.read<PostsBloc>().add(LoadNearbyPostsRequested(
-                lng: position.longitude,
-                lat: position.latitude,
-              ));
-          context.read<NearbyDiscoveryBloc>().add(LoadNearbyNeighbors(
-                lng: position.longitude,
-                lat: position.latitude,
-              ));
-        },
-      );
+      // Pre-fetch nearby posts and neighbors — backend resolves location from stored coords
+      context.read<PostsBloc>().add(const LoadNearbyPostsRequested());
+      context.read<NearbyDiscoveryBloc>().add(const LoadNearbyNeighbors());
     });
   }
 
   @override
   void dispose() {
+    _locationSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
-    // Notify server we are Offline on close
     ChatService.instance.updatePresenceStatus(false);
     super.dispose();
   }
@@ -135,12 +142,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
     if (sessionState.status == SessionStatus.authenticated &&
         sessionState.user != null) {
       if (state == AppLifecycleState.resumed) {
-        // App started or foregrounded -> online
+        // Foreground: update presence and re-sync location (user may have moved)
         ChatService.instance.updatePresenceStatus(true);
+        _syncLocation();
       } else if (state == AppLifecycleState.paused ||
           state == AppLifecycleState.detached ||
           state == AppLifecycleState.inactive) {
-        // App closed or backgrounded -> offline
         ChatService.instance.updatePresenceStatus(false);
       }
     }
@@ -166,7 +173,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
         if (sessionState.status == SessionStatus.authenticated &&
             sessionState.user != null) {
           final user = sessionState.user!;
-          _fetchAndSyncLocation(); // Dynamically fetch geolocator coordinates and update backend
+          _syncLocation(); // Sync location after login (silent)
+          _startLocationStream();
           // Wait for Socket to establish connect before binding listeners
           Future.delayed(const Duration(seconds: 2), () {
             final socket = ChatService.instance.socket;

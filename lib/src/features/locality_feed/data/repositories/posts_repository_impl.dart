@@ -10,9 +10,9 @@ class PostsRepositoryImpl implements PostsRepository {
 
   @override
   FutureEither<List<AppPost>> getNearbyFeed({
-    required double lng,
-    required double lat,
-    double radiusInKm = 5,
+    double? lng,
+    double? lat,
+    double? radiusInKm,
     int page = 1,
     int limit = 20,
     String? currentUserId,
@@ -56,7 +56,7 @@ class PostsRepositoryImpl implements PostsRepository {
           content: post['content']?.toString() ?? '',
           mediaUrls: List<String>.from(post['mediaUrls'] ?? []),
           coordinates:
-              List<double>.from(post['location']?['coordinates'] ?? [lng, lat]),
+              List<double>.from(post['location']?['coordinates'] ?? <double>[]),
           interestedUsers: interested,
           commentsCount: post['commentsCount'] ?? 0,
           sharesCount: post['sharesCount'] ?? 0,

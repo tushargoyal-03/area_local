@@ -39,22 +39,29 @@ class UsersService {
     });
   }
 
+  FutureEither<void> updateLocation(List<double> coordinates) async {
+    final result = await DioService.instance.patch(
+      'users/location',
+      data: {'coordinates': coordinates},
+    );
+    return result.map((_) {});
+  }
+
   FutureEither<List<dynamic>> getNearbyUsers({
-    required double lng,
-    required double lat,
-    double radiusInKm = 2,
+    double? lng,
+    double? lat,
+    double? radiusInKm,
     int page = 1,
     int limit = 20,
   }) async {
+    final Map<String, dynamic> queryParameters = {'page': page, 'limit': limit};
+    if (lng != null) queryParameters['lng'] = lng;
+    if (lat != null) queryParameters['lat'] = lat;
+    if (radiusInKm != null) queryParameters['radiusInKm'] = radiusInKm;
+
     final result = await DioService.instance.get(
       'users/nearby',
-      queryParameters: {
-        'lng': lng,
-        'lat': lat,
-        'radiusInKm': radiusInKm,
-        'page': page,
-        'limit': limit,
-      },
+      queryParameters: queryParameters,
     );
 
     return result.map((response) {

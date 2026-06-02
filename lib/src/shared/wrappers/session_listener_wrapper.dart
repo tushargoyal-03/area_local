@@ -19,14 +19,14 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
       listener: (context, state) {
         if (state.status != SessionStatus.unknown) {
           FlutterNativeSplash.remove();
-          
+
           if (state.status == SessionStatus.authenticated) {
             PresenceManager.instance.init();
           } else if (state.status == SessionStatus.unauthenticated) {
             PresenceManager.instance.dispose();
           }
 
-          // If this is the first session load (app startup), 
+          // If this is the first session load (app startup),
           // let the SplashScreen handle the navigation after its delay!
           if (_isFirstLoad) {
             _isFirstLoad = false;
