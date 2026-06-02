@@ -87,11 +87,10 @@ class _ConversationsScreenState extends State<ConversationsScreen>
             icon: Icon(IconsaxPlusLinear.refresh, color: cs.onSurface),
           ),
         ],
-        bottom: TabBar(
+        bottom: AppCapsuleTabBar(
           controller: _tabController,
-          tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
-          labelStyle: tt.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-          unselectedLabelStyle: tt.bodyMedium,
+          tabs: _tabs.map((t) => t.label).toList(),
+          margin: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 8.h),
         ),
       ),
       body: Column(
