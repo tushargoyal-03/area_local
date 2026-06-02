@@ -12,3 +12,4 @@ export 'toast/imports.dart';
 export 'app_cached_image.dart';
 export 'activity_card.dart';
 export 'app_capsule_tab_bar.dart';
+export 'app_map.dart';

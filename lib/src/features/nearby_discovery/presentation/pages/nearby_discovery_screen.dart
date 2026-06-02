@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import '../providers/nearby_discovery_bloc.dart';
@@ -20,10 +22,20 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
   ];
   int _activeTabIndex = 0;
 
+  /// Map center, defaults to the New Delhi fallback location.
+  LatLng _center = const LatLng(28.6139, 77.2090);
+  final MapController _mapController = MapController();
+
   @override
   void initState() {
     super.initState();
     _loadNeighbors();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadNeighbors() async {
@@ -32,11 +44,13 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
     locationRes.fold(
       (failure) {
         // Fallback to New Delhi coordinates if Geolocator fails/permission denied
+        setState(() => _center = const LatLng(28.6139, 77.2090));
         context.read<NearbyDiscoveryBloc>().add(
               const LoadNearbyNeighbors(lng: 77.2090, lat: 28.6139),
             );
       },
       (position) {
+        setState(() => _center = LatLng(position.latitude, position.longitude));
         context.read<NearbyDiscoveryBloc>().add(
               LoadNearbyNeighbors(
                 lng: position.longitude,
@@ -49,6 +63,128 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
             lng: position.longitude, lat: position.latitude));
       },
     );
+  }
+
+  /// Recenters the map camera on the current [_center].
+  void _centerOnMe() {
+    _mapController.move(_center, _mapController.camera.zoom);
+  }
+
+  /// Builds all markers for the map: the current user ("you are here") plus
+  /// each nearby neighbor.
+  ///
+  /// The backend's `users/nearby` payload only carries `distanceInKm` (no
+  /// coordinates), so neighbors are placed around [_center] at their reported
+  /// distance using an evenly distributed bearing. If a neighbor ever does
+  /// carry real coordinates, those are used instead.
+  List<Marker> _buildMarkers(NearbyDiscoveryState state) {
+    final markers = <Marker>[
+      // Current user marker.
+      Marker(
+        point: _center,
+        width: 44,
+        height: 44,
+        child: _MeMarker(color: context.theme.colorScheme.primary),
+      ),
+    ];
+
+    final neighbors = state.neighbors;
+    for (var i = 0; i < neighbors.length; i++) {
+      final neighbor = neighbors[i];
+      final point = _resolveNeighborPoint(neighbor, i, neighbors.length);
+      if (point == null) continue;
+
+      final name =
+          (neighbor is Map ? neighbor['displayName'] : null) ?? 'Neighbor';
+      final avatarUrl =
+          neighbor is Map ? neighbor['avatarUrl'] as String? : null;
+
+      markers.add(
+        Marker(
+          point: point,
+          width: 46,
+          height: 46,
+          child: _NeighborMarker(
+            name: name.toString(),
+            imageUrl: avatarUrl,
+          ),
+        ),
+      );
+    }
+    return markers;
+  }
+
+  /// Resolves a neighbor's map position.
+  ///
+  /// Prefers real coordinates when present; otherwise distributes the neighbor
+  /// around [_center] at its `distanceInKm` using an evenly spaced bearing.
+  LatLng? _resolveNeighborPoint(dynamic neighbor, int index, int total) {
+    final real = _parseCoordinates(neighbor);
+    if (real != null) return real;
+
+    if (neighbor is! Map) return null;
+
+    final distanceRaw = neighbor['distanceInKm'];
+    final distanceKm = distanceRaw is num ? distanceRaw.toDouble() : 0.0;
+    if (!distanceKm.isFinite) return null;
+
+    // Spread neighbors evenly around a circle; nudge a zero distance outward a
+    // little so co-located neighbors don't all stack on the user pin.
+    final effectiveKm = distanceKm <= 0 ? 0.15 : distanceKm;
+    final bearing = total <= 0 ? 0.0 : (2 * math.pi * index) / total;
+
+    return _offset(_center, effectiveKm, bearing);
+  }
+
+  /// Returns a [LatLng] offset from [origin] by [distanceKm] along [bearingRad].
+  LatLng _offset(LatLng origin, double distanceKm, double bearingRad) {
+    const earthRadiusKm = 6371.0;
+    final angular = distanceKm / earthRadiusKm;
+    final lat1 = origin.latitudeInRad;
+    final lng1 = origin.longitudeInRad;
+
+    final lat2 = math.asin(
+      math.sin(lat1) * math.cos(angular) +
+          math.cos(lat1) * math.sin(angular) * math.cos(bearingRad),
+    );
+    final lng2 = lng1 +
+        math.atan2(
+          math.sin(bearingRad) * math.sin(angular) * math.cos(lat1),
+          math.cos(angular) - math.sin(lat1) * math.sin(lat2),
+        );
+
+    return LatLng(_radToDeg(lat2), _radToDeg(lng2));
+  }
+
+  double _radToDeg(double rad) => rad * 180.0 / math.pi;
+
+  /// Defensively extracts a [LatLng] from a neighbor map, or null if absent.
+  LatLng? _parseCoordinates(dynamic neighbor) {
+    if (neighbor is! Map) return null;
+
+    double? toFinite(dynamic value) {
+      final n = value is num ? value.toDouble() : null;
+      if (n == null || !n.isFinite) return null;
+      return n;
+    }
+
+    // Shape 1: location.coordinates == [lng, lat]
+    final location = neighbor['location'];
+    if (location is Map) {
+      final coordinates = location['coordinates'];
+      if (coordinates is List && coordinates.length >= 2) {
+        final lng = toFinite(coordinates[0]);
+        final lat = toFinite(coordinates[1]);
+        if (lng != null && lat != null) return LatLng(lat, lng);
+      }
+    }
+
+    // Shape 2: top-level lng/lat
+    final lng = toFinite(neighbor['lng']);
+    final lat = toFinite(neighbor['lat']);
+    if (lng != null && lat != null) return LatLng(lat, lng);
+
+    return null;
   }
 
   @override
@@ -122,25 +258,27 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
               padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
               children: [
                 /// Map / Discovery Card
-                Container(
+                SizedBox(
                   height: 160.h,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(28.r),
-                    gradient: LinearGradient(
-                      colors: [
-                        cs.primary.withValues(alpha: 0.2),
-                        AppPalettes.primary2Light.withValues(alpha: 0.15),
-                      ],
-                    ),
-                  ),
                   child: Stack(
                     children: [
+                      BlocBuilder<NearbyDiscoveryBloc, NearbyDiscoveryState>(
+                        builder: (context, state) {
+                          return AppMap(
+                            center: _center,
+                            controller: _mapController,
+                            markers: _buildMarkers(state),
+                            height: 160.h,
+                          );
+                        },
+                      ),
+
                       /// Center Button
                       Positioned(
                         bottom: 10,
                         right: 10,
                         child: ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: _centerOnMe,
                           icon:
                               const Icon(IconsaxPlusLinear.location, size: 14),
                           label: const Text(
@@ -442,6 +580,62 @@ class _ChipItem extends StatelessWidget {
           color: active ? cs.primary : cs.onSurfaceVariant,
         ),
       ),
+    );
+  }
+}
+
+/// "You are here" marker for the current user.
+class _MeMarker extends StatelessWidget {
+  final Color color;
+
+  const _MeMarker({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: const Icon(
+        IconsaxPlusBold.user,
+        color: Colors.white,
+        size: 20,
+      ),
+    );
+  }
+}
+
+/// Marker representing a nearby neighbor, showing their avatar.
+class _NeighborMarker extends StatelessWidget {
+  final String name;
+  final String? imageUrl;
+
+  const _NeighborMarker({required this.name, this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.theme.colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: cs.surface, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: Avatar(name: name, size: 42, imageUrl: imageUrl),
     );
   }
 }
