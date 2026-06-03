@@ -10,7 +10,7 @@ class SocietiesService {
     return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        final data = responseData['data'];
+        final data = responseData['societies'] ?? responseData['data'];
         if (data is List) {
           return right(data);
         }
@@ -81,7 +81,7 @@ class SocietiesService {
     return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        final data = responseData['data'];
+        final data = responseData['societies'] ?? responseData['data'];
         if (data is List) {
           return right(data);
         }
@@ -272,7 +272,7 @@ class SocietiesService {
     return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        final data = responseData['data'];
+        final data = responseData['joinRequests'] ?? responseData['requests'] ?? responseData['data'];
         if (data is List) {
           return right(data);
         }

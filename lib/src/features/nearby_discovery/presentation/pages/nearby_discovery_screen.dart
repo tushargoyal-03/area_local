@@ -225,7 +225,7 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
             height: 44.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs.w),
               itemCount: _tabs.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
@@ -244,7 +244,7 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
           /// Content
           Expanded(
             child: ListView(
-              padding: EdgeInsets.fromLTRB(16.w, 10.h, 16.w, 16.h),
+              padding: EdgeInsets.all(AppSpacing.xs.w),
               children: [
                 /// Map / Discovery Card
                 SizedBox(
@@ -407,7 +407,10 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
 
         return Column(
           children: state.nearbyPromotions.map((promo) {
+            if (promo is! Map) return const SizedBox.shrink();
+            promo = Map<String, dynamic>.from(promo);
             return Container(
+              width: double.infinity,
               margin: EdgeInsets.only(bottom: 12.h),
               padding: EdgeInsets.all(AppSpacing.md.w),
               decoration: BoxDecoration(
@@ -726,7 +729,7 @@ class _ChipItem extends StatelessWidget {
           fontWeight: active ? FontWeight.w600 : FontWeight.w500,
           color: active ? cs.primary : cs.onSurfaceVariant,
         ),
-      ),
+      ).center,
     );
   }
 }

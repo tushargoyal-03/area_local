@@ -109,7 +109,7 @@ class _NearbyPromotionsListState extends State<_NearbyPromotionsList> {
         }
 
         return ListView.separated(
-          padding: EdgeInsets.all(AppSpacing.lg.w),
+          padding: EdgeInsets.all(AppSpacing.xs.w),
           itemCount: state.nearbyPromotions.length,
           separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md.h),
           itemBuilder: (context, index) {
