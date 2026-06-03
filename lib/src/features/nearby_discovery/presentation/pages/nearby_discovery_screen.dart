@@ -13,7 +13,8 @@ class NearbyDiscoveryScreen extends StatefulWidget {
   State<NearbyDiscoveryScreen> createState() => _NearbyDiscoveryScreenState();
 }
 
-class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
+class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen>
+    with SingleTickerProviderStateMixin {
   final List<String> _tabs = [
     'People',
     'Activities',
@@ -22,6 +23,7 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
     'Society'
   ];
   int _activeTabIndex = 0;
+  late TabController _tabController;
 
   /// Map center, defaults to the New Delhi fallback location.
   LatLng _center = const LatLng(28.6139, 77.2090);
@@ -30,13 +32,25 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController.addListener(_handleTabSelection);
     _loadNeighbors();
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_handleTabSelection);
+    _tabController.dispose();
     _mapController.dispose();
     super.dispose();
+  }
+
+  void _handleTabSelection() {
+    if (_tabController.index != _activeTabIndex) {
+      setState(() {
+        _activeTabIndex = _tabController.index;
+      });
+    }
   }
 
   Future<void> _loadNeighbors() async {
@@ -194,46 +208,40 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
             SizedBox(height: 2.h),
           ],
         ),
-        actions: [
-          Container(
-            margin: EdgeInsets.only(right: 12.w),
-            width: 40.w,
-            height: 40.w,
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerLow,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              IconsaxPlusLinear.filter,
-              size: 18.sp,
-              color: cs.onSurface,
-            ),
-          ),
-        ],
+        bottom: AppCapsuleTabBar(
+          controller: _tabController,
+          isScrollable: true,
+          tabs: _tabs.map((tab) {
+            IconData icon;
+            if (tab == 'People') {
+              icon = IconsaxPlusLinear.profile_2user;
+            } else if (tab == 'Activities') {
+              icon = IconsaxPlusLinear.flash;
+            } else if (tab == 'Business') {
+              icon = IconsaxPlusLinear.shop;
+            } else if (tab == 'Events') {
+              icon = IconsaxPlusLinear.calendar;
+            } else if (tab == 'Society') {
+              icon = IconsaxPlusLinear.home_1;
+            } else {
+              icon = IconsaxPlusLinear.element_3;
+            }
+
+            return Tab(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 16.sp),
+                  SizedBox(width: 6.w),
+                  Text(tab),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
       ),
       body: Column(
         children: [
-          /// Filter Chips
-          SizedBox(
-            height: 44.h,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.symmetric(horizontal: AppSpacing.xs.w),
-              itemCount: _tabs.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () => setState(() => _activeTabIndex = index),
-                  child: _ChipItem(
-                    label: _tabs[index],
-                    active: _activeTabIndex == index,
-                    cs: cs,
-                    tt: tt,
-                  ),
-                );
-              },
-            ),
-          ),
-
           /// Content
           Expanded(
             child: ListView(
@@ -281,8 +289,6 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                     ],
                   ),
                 ),
-
-                SizedBox(height: 14.h),
 
                 SizedBox(height: 14.h),
 
@@ -687,42 +693,6 @@ class _NearbyCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ChipItem extends StatelessWidget {
-  final String label;
-  final bool active;
-  final ColorScheme cs;
-  final TextTheme tt;
-
-  const _ChipItem({
-    required this.label,
-    required this.active,
-    required this.cs,
-    required this.tt,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.only(right: 8.w),
-      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
-      decoration: BoxDecoration(
-        color: active
-            ? cs.primary.withValues(alpha: 0.12)
-            : cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Text(
-        label,
-        style: tt.labelMedium?.copyWith(
-          fontSize: 12.sp,
-          fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-          color: active ? cs.primary : cs.onSurfaceVariant,
-        ),
-      ).center,
     );
   }
 }

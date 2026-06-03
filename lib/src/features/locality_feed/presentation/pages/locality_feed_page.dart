@@ -75,6 +75,7 @@ class _LocalityFeedPageState extends State<LocalityFeedPage>
       appBar: AppTopBar(
         bottom: AppCapsuleTabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: _categories.map((cat) {
             IconData icon;
             if (cat == 'For you') {
@@ -109,9 +110,7 @@ class _LocalityFeedPageState extends State<LocalityFeedPage>
         title: 'Locality Feed',
         actions: [
           IconButton(
-            onPressed: () {
-              context.push(AppRoutes.savedOffers);
-            },
+            onPressed: () => context.push(AppRoutes.savedOffers),
             icon: Icon(
               Icons.bookmark_border,
               color: cs.onSurface,
@@ -175,10 +174,11 @@ class _LocalityFeedPageState extends State<LocalityFeedPage>
           return RefreshIndicator.adaptive(
             onRefresh: _loadFeed,
             child: ListView.separated(
+              padding: const EdgeInsets.all(10),
               itemCount: filteredPosts.length,
               shrinkWrap: true,
               separatorBuilder: (context, index) =>
-                  SizedBox(height: AppSpacing.md.h),
+                  SizedBox(height: AppSpacing.md),
               itemBuilder: (context, index) {
                 final post = filteredPosts[index];
                 return ActivityCard(post: post);

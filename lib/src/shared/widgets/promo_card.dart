@@ -209,14 +209,12 @@ class PromoCardState extends State<PromoCard> {
                               padding: EdgeInsets.symmetric(vertical: 14.h),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16.r)),
-                              backgroundColor:
-                                  widget.promo['isSaved'] == true
-                                      ? cs.primary
-                                      : null,
-                              foregroundColor:
-                                  widget.promo['isSaved'] == true
-                                      ? cs.onPrimary
-                                      : null,
+                              backgroundColor: widget.promo['isSaved'] == true
+                                  ? cs.primary
+                                  : null,
+                              foregroundColor: widget.promo['isSaved'] == true
+                                  ? cs.onPrimary
+                                  : null,
                             ),
                           ),
                         ),

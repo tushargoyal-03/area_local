@@ -8,12 +8,16 @@ class AppCapsuleTabBar extends StatefulWidget implements PreferredSizeWidget {
   final List<Widget> tabs;
   final double height;
   final EdgeInsetsGeometry margin;
+  final bool isScrollable;
+  final TabAlignment? tabAlignment;
 
   const AppCapsuleTabBar({
     super.key,
     required this.controller,
     required this.tabs,
     this.height = 44.0,
+    this.isScrollable = false,
+    this.tabAlignment = TabAlignment.center,
     this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
   });
 
@@ -25,7 +29,6 @@ class AppCapsuleTabBar extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _AppCapsuleTabBarState extends State<AppCapsuleTabBar> {
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -50,8 +53,10 @@ class _AppCapsuleTabBarState extends State<AppCapsuleTabBar> {
             ),
             child: TabBar(
               controller: widget.controller,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
+              isScrollable: widget.isScrollable,
+              tabAlignment: widget.isScrollable
+                  ? (widget.tabAlignment ?? TabAlignment.start)
+                  : null,
               dividerColor: Colors.transparent,
               splashFactory: NoSplash.splashFactory,
               indicatorSize: TabBarIndicatorSize.tab,
