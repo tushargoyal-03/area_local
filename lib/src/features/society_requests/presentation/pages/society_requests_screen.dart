@@ -142,8 +142,7 @@ class _RequestItemCard extends StatelessWidget {
                           GoRouterState.of(context).pathParameters['id'] ?? '';
                       context.read<SocietyRequestsBloc>().add(
                           RejectSocietyRequest(
-                              societyId: socId,
-                              requestId: request.id));
+                              societyId: socId, requestId: request.id));
                     },
                     style: TextButton.styleFrom(foregroundColor: cs.error),
                     child: const Text('Reject'),
@@ -155,8 +154,7 @@ class _RequestItemCard extends StatelessWidget {
                           GoRouterState.of(context).pathParameters['id'] ?? '';
                       context.read<SocietyRequestsBloc>().add(
                           ApproveSocietyRequest(
-                              societyId: socId,
-                              requestId: request.id));
+                              societyId: socId, requestId: request.id));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: cs.primary,

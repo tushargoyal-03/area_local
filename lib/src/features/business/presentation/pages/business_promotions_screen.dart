@@ -1,6 +1,5 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
-import 'package:area_connect/src/shared/widgets/app_capsule_tab_bar.dart';
 import '../providers/business_bloc.dart';
 
 class BusinessPromotionsScreen extends StatefulWidget {
@@ -37,7 +36,6 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final cs = context.theme.colorScheme;
     final isOwner = context
         .select((SessionBloc b) => b.state.user?.role == 'BusinessOwner');
 

@@ -33,7 +33,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               email: _emailController.text,
               onSuccess: () {
                 if (mounted) {
-                  context.go(AppRoutes.resetPassword, extra: _emailController.text);
+                  context.go(AppRoutes.resetPassword,
+                      extra: _emailController.text);
                 }
               },
             ),

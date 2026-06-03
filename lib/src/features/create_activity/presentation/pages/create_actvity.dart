@@ -328,7 +328,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
     }
 
     // Validate end time is after start time
-    if (_startTime.hour == _endTime.hour && _startTime.minute == _endTime.minute) {
+    if (_startTime.hour == _endTime.hour &&
+        _startTime.minute == _endTime.minute) {
       showGlobalToast(
         message: 'End time must be after start time',
         status: 'error',
@@ -336,10 +337,10 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       return;
     }
 
-    final locationRes = await LocationService.instance.getCurrentPosition();
-
     final user = context.read<SessionBloc>().state.user;
     final fallbackCoordinates = user?.coordinates ?? const [77.5946, 12.9716];
+
+    final locationRes = await LocationService.instance.getCurrentPosition();
 
     final coordinates = locationRes.fold(
       (failure) => fallbackCoordinates,

@@ -110,7 +110,8 @@ class SocietiesService {
     return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return right(responseData['data'] as Map<String, dynamic>? ?? responseData);
+        return right(
+            responseData['data'] as Map<String, dynamic>? ?? responseData);
       } catch (e) {
         return left(ServerFailure('Failed to send join request: $e'));
       }

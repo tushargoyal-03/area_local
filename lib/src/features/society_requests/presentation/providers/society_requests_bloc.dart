@@ -1,7 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:area_connect/src/features/society_requests/domain/entities/society_join_request.dart';
-import 'package:area_connect/src/shared/helpers/show_toast.dart';
 
 // Events
 abstract class SocietyRequestsEvent extends Equatable {

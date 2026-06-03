@@ -1,7 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:area_connect/src/utils/email_validator.dart';
-import 'package:area_connect/src/features/auth/domain/entities/user.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});

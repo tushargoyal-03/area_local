@@ -113,8 +113,9 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                             final currentUserId =
                                 context.read<SessionBloc>().state.user?.id;
                             if (currentUserId != null) {
-                              context.read<ChatBloc>().add(
-                                  StartDirectChatRequested(
+                              context
+                                  .read<ChatBloc>()
+                                  .add(StartDirectChatRequested(
                                       recipientId: widget.userId,
                                       recipientName: name,
                                       currentUserId: currentUserId,

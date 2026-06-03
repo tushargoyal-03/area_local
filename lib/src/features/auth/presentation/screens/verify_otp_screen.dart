@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
-import 'package:area_connect/src/features/auth/domain/entities/user.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   final String signupId;

@@ -88,7 +88,8 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   '/chat-room',
                   extra: {
                     'chatId': chatId,
-                    'recipientName': groupTitle.isEmpty ? 'New Group' : groupTitle,
+                    'recipientName':
+                        groupTitle.isEmpty ? 'New Group' : groupTitle,
                     'recipientId': '',
                     'conversationType': 'group',
                   },

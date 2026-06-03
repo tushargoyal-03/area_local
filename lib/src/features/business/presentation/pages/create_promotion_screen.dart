@@ -40,8 +40,6 @@ class _CreatePromotionScreenState extends State<CreatePromotionScreen> {
     super.dispose();
   }
 
-
-
   Future<void> _pickImage() async {
     final result =
         await MediaService.instance.pickImage(source: ImageSource.gallery);
@@ -103,28 +101,8 @@ class _CreatePromotionScreenState extends State<CreatePromotionScreen> {
     if (mounted) context.pop();
   }
 
-  String _formatDate(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final cs = context.theme.colorScheme;
-
     return Scaffold(
       appBar: const AppTopBar(title: 'New Promotion', centerTitle: true),
       body: SingleChildScrollView(

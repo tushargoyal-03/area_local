@@ -87,26 +87,15 @@ class PostsRepositoryImpl implements PostsRepository {
   @override
   FutureEither<String> uploadImage(File file) async {
     final result = await _service.uploadImage(file);
-    return result.fold(
-<<<<<<< HEAD
-      (failure) {
-        return Left(failure);
-      },
-=======
+    return result.fold<Either<Failure, String>>(
       (failure) => Left(failure),
->>>>>>> c60d4ac (refactor: remove BuildContext dependency from BLoC events and migrate service methods to use Either for standardized error handling)
       (data) {
         // Backend returns { mediaUrl: '...', key: '...' }
         final url = data['mediaUrl']?.toString() ?? data['url']?.toString();
         if (url != null && url.isNotEmpty) {
           return Right(url);
         }
-<<<<<<< HEAD
-        return const Left(
-            ServerFailure('Upload succeeded but no URL returned'));
-=======
-        return Left(ServerFailure('Invalid upload response structure'));
->>>>>>> c60d4ac (refactor: remove BuildContext dependency from BLoC events and migrate service methods to use Either for standardized error handling)
+        return const Left(ServerFailure('Invalid upload response structure'));
       },
     );
   }
