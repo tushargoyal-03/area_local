@@ -256,14 +256,27 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     final List<String> mediaUrls = [];
     if (event.image != null) {
       final uploadRes = await _repository.uploadImage(event.image!);
+      bool uploadFailed = false;
+      String? errorMsg;
+
       uploadRes.fold(
-        (_) {
-          mediaUrls.add(event.image!.path);
+        (failure) {
+          uploadFailed = true;
+          errorMsg = failure.message;
         },
         (url) {
           mediaUrls.add(url);
         },
       );
+
+      if (uploadFailed) {
+        emit(state.copyWith(isCreating: false));
+        showGlobalToast(
+          message: 'Image upload failed: ${errorMsg ?? "Unknown error"}',
+          status: 'error',
+        );
+        return;
+      }
     }
 
     final result = await _repository.createPost(

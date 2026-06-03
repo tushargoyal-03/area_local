@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:io';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
@@ -18,6 +18,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
   List<Map<String, dynamic>> _searchResults = [];
   bool _isSearching = false;
   String _groupImageUrl = '';
+  bool _isUploadingImage = false;
 
   @override
   void dispose() {
@@ -133,17 +134,27 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: _pickGroupImage,
+                  onTap: _isUploadingImage ? null : _pickGroupImage,
                   child: CircleAvatar(
                     radius: 30.r,
                     backgroundColor: cs.surfaceContainerHigh,
-                    backgroundImage: _groupImageUrl.isNotEmpty
-                        ? NetworkImage(_groupImageUrl)
-                        : null,
-                    child: _groupImageUrl.isEmpty
-                        ? Icon(IconsaxPlusLinear.camera,
-                            size: 24.sp, color: cs.onSurfaceVariant)
-                        : null,
+                    backgroundImage:
+                        _groupImageUrl.isNotEmpty && !_isUploadingImage
+                            ? NetworkImage(_groupImageUrl)
+                            : null,
+                    child: _isUploadingImage
+                        ? SizedBox(
+                            width: 20.w,
+                            height: 20.h,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.primary,
+                            ),
+                          )
+                        : _groupImageUrl.isEmpty
+                            ? Icon(IconsaxPlusLinear.camera,
+                                size: 24.sp, color: cs.onSurfaceVariant)
+                            : null,
                   ),
                 ),
                 SizedBox(width: 12.w),
@@ -271,10 +282,27 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
   Future<void> _pickGroupImage() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      final seed = Random().nextInt(9999);
-      setState(
-          () => _groupImageUrl = 'https://picsum.photos/seed/$seed/400/400');
-    }
+    if (picked == null) return;
+
+    setState(() => _isUploadingImage = true);
+    final result = await PostsService.instance.uploadImage(File(picked.path));
+
+    result.fold(
+      (failure) {
+        setState(() => _isUploadingImage = false);
+        showGlobalToast(
+            message: 'Failed to upload group image: ${failure.message}',
+            status: 'error');
+      },
+      (data) {
+        setState(() {
+          _isUploadingImage = false;
+          _groupImageUrl =
+              data['mediaUrl']?.toString() ?? data['url']?.toString() ?? '';
+        });
+        showGlobalToast(
+            message: 'Group image uploaded successfully!', status: 'success');
+      },
+    );
   }
 }

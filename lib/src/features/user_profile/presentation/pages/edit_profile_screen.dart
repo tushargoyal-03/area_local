@@ -1,4 +1,4 @@
-import 'dart:math';
+import 'dart:io';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import '../providers/user_profile_bloc.dart';
@@ -16,6 +16,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _bioController;
   late TextEditingController _lookingForController;
   String? _pendingAvatarUrl;
+  File? _localAvatarFile;
 
   @override
   void initState() {
@@ -38,10 +39,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
     if (picked == null) return;
-    // DEV: bypass storage — assign a random picsum URL
-    final seed = Random().nextInt(9999);
-    setState(
-        () => _pendingAvatarUrl = 'https://picsum.photos/seed/$seed/400/400');
+    setState(() {
+      _localAvatarFile = File(picked.path);
+    });
   }
 
   void _onSave() {
@@ -54,7 +54,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       context.read<UserProfileBloc>().add(UpdateProfileRequested(
             displayName: _displayNameController.text.trim(),
-            avatarUrl: _pendingAvatarUrl,
+            avatarFile: _localAvatarFile,
             lookingFor: tags.isNotEmpty ? tags : null,
           ));
     }
@@ -119,10 +119,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             CircleAvatar(
                               radius: 50.r,
                               backgroundColor: cs.surfaceContainerHigh,
-                              backgroundImage: displayedAvatar != null
-                                  ? NetworkImage(displayedAvatar)
-                                  : null,
-                              child: displayedAvatar == null
+                              backgroundImage: _localAvatarFile != null
+                                  ? FileImage(_localAvatarFile!)
+                                      as ImageProvider
+                                  : (displayedAvatar != null
+                                      ? NetworkImage(displayedAvatar)
+                                      : null),
+                              child: _localAvatarFile == null &&
+                                      displayedAvatar == null
                                   ? Icon(Icons.person,
                                       size: 50.r, color: cs.onSurfaceVariant)
                                   : null,
@@ -144,7 +148,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ),
                     ),
-                    if (_pendingAvatarUrl != null)
+                    if (_localAvatarFile != null)
                       Center(
                         child: Padding(
                           padding: EdgeInsets.only(top: 6.h),

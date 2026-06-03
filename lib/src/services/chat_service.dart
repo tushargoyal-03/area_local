@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'package:area_connect/src/imports/imports.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:mime/mime.dart';
+import 'package:dio/dio.dart' as dio;
 
 class ChatService {
   ChatService._();
@@ -318,6 +320,41 @@ class ChatService {
       if (e is DioException) {
       } else {}
       return null;
+    }
+  }
+
+  FutureEither<Map<String, dynamic>> updateGroupImage({
+    required String groupId,
+    required File file,
+  }) async {
+    try {
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      final fileName = file.path.split('/').last;
+
+      final formData = dio.FormData.fromMap({
+        'file': await dio.MultipartFile.fromFile(
+          file.path,
+          filename: fileName,
+          contentType: dio.DioMediaType.parse(mimeType),
+        ),
+      });
+
+      final result = await DioService.instance.post(
+        'chat/groups/$groupId/image',
+        data: formData,
+      );
+
+      return result.flatMap((response) {
+        try {
+          final responseData = response.data as Map<String, dynamic>;
+          return right(responseData['data'] as Map<String, dynamic>);
+        } catch (e) {
+          return left(
+              ServerFailure('Failed to parse group image response: $e'));
+        }
+      });
+    } catch (e) {
+      return left(ServerFailure('Failed to upload group image: $e'));
     }
   }
 

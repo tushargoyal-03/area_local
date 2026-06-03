@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
@@ -20,18 +21,21 @@ class LoadPublicProfile extends UserProfileEvent {
 class UpdateProfileRequested extends UserProfileEvent {
   final String? displayName;
   final String? avatarUrl;
+  final File? avatarFile;
   final List<double>? coordinates;
   final List<String>? lookingFor;
 
   const UpdateProfileRequested({
     this.displayName,
     this.avatarUrl,
+    this.avatarFile,
     this.coordinates,
     this.lookingFor,
   });
 
   @override
-  List<Object?> get props => [displayName, avatarUrl, coordinates, lookingFor];
+  List<Object?> get props =>
+      [displayName, avatarUrl, avatarFile, coordinates, lookingFor];
 }
 
 class SearchUsersRequested extends UserProfileEvent {
@@ -149,9 +153,36 @@ class UserProfileBloc extends Bloc<UserProfileEvent, UserProfileState> {
   ) async {
     emit(state.copyWith(
         isUpdating: true, clearError: true, updateSuccess: false));
+
+    String? avatarUrl = event.avatarUrl;
+
+    if (event.avatarFile != null) {
+      final uploadRes =
+          await UsersService.instance.uploadAvatar(event.avatarFile!);
+      bool uploadFailed = false;
+      String? errorMsg;
+
+      uploadRes.fold(
+        (failure) {
+          uploadFailed = true;
+          errorMsg = failure.message;
+        },
+        (profile) {
+          avatarUrl = profile['avatarUrl']?.toString();
+        },
+      );
+
+      if (uploadFailed) {
+        emit(state.copyWith(isUpdating: false, error: errorMsg));
+        showGlobalToast(
+            message: errorMsg ?? 'Avatar upload failed', status: 'error');
+        return;
+      }
+    }
+
     final result = await UsersService.instance.updateProfile(
       displayName: event.displayName,
-      avatarUrl: event.avatarUrl,
+      avatarUrl: avatarUrl,
       coordinates: event.coordinates,
       lookingFor: event.lookingFor,
     );

@@ -116,6 +116,7 @@ class MediaService {
       final FilePickerResult? result = await FilePicker.pickFiles(
         type: type,
         allowedExtensions: allowedExtensions,
+        // ignore: deprecated_member_use
         allowMultiple: allowMultiple,
       );
 

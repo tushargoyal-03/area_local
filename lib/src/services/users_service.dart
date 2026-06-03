@@ -1,8 +1,43 @@
+import 'dart:io';
 import 'package:area_connect/src/imports/imports.dart';
+import 'package:mime/mime.dart';
+import 'package:dio/dio.dart' as dio;
 
 class UsersService {
   UsersService._();
   static final UsersService instance = UsersService._();
+
+  FutureEither<Map<String, dynamic>> uploadAvatar(File file) async {
+    try {
+      final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
+      final fileName = file.path.split('/').last;
+
+      final formData = dio.FormData.fromMap({
+        'file': await dio.MultipartFile.fromFile(
+          file.path,
+          filename: fileName,
+          contentType: dio.DioMediaType.parse(mimeType),
+        ),
+      });
+
+      final result = await DioService.instance.post(
+        'users/me/avatar',
+        data: formData,
+      );
+
+      return result.flatMap((response) {
+        try {
+          final responseData = response.data as Map<String, dynamic>;
+          return right(responseData['data'] as Map<String, dynamic>);
+        } catch (e) {
+          return left(
+              ServerFailure('Failed to parse avatar upload response: $e'));
+        }
+      });
+    } catch (e) {
+      return left(ServerFailure('Failed to upload avatar: $e'));
+    }
+  }
 
   FutureEither<Map<String, dynamic>> getMe() async {
     final result = await DioService.instance.get('users/me');

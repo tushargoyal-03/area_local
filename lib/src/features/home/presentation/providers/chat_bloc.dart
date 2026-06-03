@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
@@ -237,6 +236,17 @@ class RemoveMemberRequested extends ChatEvent {
   List<Object?> get props => [conversationId, targetUserId];
 }
 
+class UpdateGroupImageRequested extends ChatEvent {
+  final String conversationId;
+  final File imageFile;
+  const UpdateGroupImageRequested({
+    required this.conversationId,
+    required this.imageFile,
+  });
+  @override
+  List<Object?> get props => [conversationId, imageFile];
+}
+
 class RealtimeMessageDeleted extends ChatEvent {
   final Map<String, dynamic> data;
   const RealtimeMessageDeleted({required this.data});
@@ -341,6 +351,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     on<LeaveGroupRequested>(_onLeaveGroup);
     on<DeleteGroupRequested>(_onDeleteGroup);
     on<RemoveMemberRequested>(_onRemoveMember);
+    on<UpdateGroupImageRequested>(_onUpdateGroupImage);
     on<RealtimeMessageReceived>(_onRealtimeMessageReceived);
     on<RealtimeMessageDeleted>(_onRealtimeMessageDeleted);
     on<RealtimeConversationUpdated>(_onRealtimeConversationUpdated);
@@ -607,58 +618,58 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(state.copyWith(isSendingMedia: true));
 
     final fileStat = await event.file.stat();
-    // DEV: bypass real upload — use publicly accessible placeholder URLs
-    final mediaUrl = _devMediaUrl(event.messageType);
+    final uploadRes = await PostsService.instance.uploadImage(event.file);
 
-    final optimisticMsg = AppChatMessage(
-      id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
-      conversationId: event.chatId,
-      senderId: event.currentUserId,
-      type: MessageTypeX.fromString(event.messageType),
-      text: '',
-      mediaUrl: mediaUrl,
-      durationSeconds: event.durationSeconds,
-      attachments: const [],
-      readBy: [event.currentUserId],
-      createdAt: DateTime.now(),
-      isMe: true,
+    await uploadRes.fold(
+      (failure) async {
+        emit(state.copyWith(
+            isSendingMedia: false, errorMessage: failure.message));
+        showGlobalToast(
+          message: 'Failed to upload media: ${failure.message}',
+          status: 'error',
+        );
+      },
+      (data) async {
+        final mediaUrl =
+            data['mediaUrl']?.toString() ?? data['url']?.toString();
+        if (mediaUrl == null || mediaUrl.isEmpty) {
+          emit(state.copyWith(
+              isSendingMedia: false, errorMessage: 'Upload failed'));
+          showGlobalToast(
+              message: 'Upload failed: invalid response structure',
+              status: 'error');
+          return;
+        }
+
+        final optimisticMsg = AppChatMessage(
+          id: 'optimistic_${DateTime.now().millisecondsSinceEpoch}',
+          conversationId: event.chatId,
+          senderId: event.currentUserId,
+          type: MessageTypeX.fromString(event.messageType),
+          text: '',
+          mediaUrl: mediaUrl,
+          durationSeconds: event.durationSeconds,
+          attachments: const [],
+          readBy: [event.currentUserId],
+          createdAt: DateTime.now(),
+          isMe: true,
+        );
+
+        emit(state.copyWith(
+          isSendingMedia: false,
+          activeRoomMessages: [optimisticMsg, ...state.activeRoomMessages],
+        ));
+
+        await _service.sendMessage(
+          conversationId: event.chatId,
+          type: event.messageType,
+          mediaUrl: mediaUrl,
+          durationSeconds: event.durationSeconds,
+          fileSize: fileStat.size,
+          mimeType: event.mimeType,
+        );
+      },
     );
-
-    emit(state.copyWith(
-      isSendingMedia: false,
-      activeRoomMessages: [optimisticMsg, ...state.activeRoomMessages],
-    ));
-
-    await _service.sendMessage(
-      conversationId: event.chatId,
-      type: event.messageType,
-      mediaUrl: mediaUrl,
-      durationSeconds: event.durationSeconds,
-      fileSize: fileStat.size,
-      mimeType: event.mimeType,
-    );
-  }
-
-  static String _devMediaUrl(String type) {
-    final seed = Random().nextInt(9999);
-    switch (type) {
-      case 'video':
-        const videos = [
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-          'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
-        ];
-        return videos[seed % videos.length];
-      case 'voice':
-        const audios = [
-          'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-          'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-          'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-        ];
-        return audios[seed % audios.length];
-      default:
-        return 'https://picsum.photos/seed/$seed/600/400';
-    }
   }
 
   Future<void> _onStartDirectChat(
@@ -710,6 +721,39 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         if (event.onSuccess != null) {
           event.onSuccess!(chatId, groupTitle);
         }
+      },
+    );
+  }
+
+  Future<void> _onUpdateGroupImage(
+    UpdateGroupImageRequested event,
+    Emitter<ChatState> emit,
+  ) async {
+    emit(state.copyWith(isConversationsLoading: true));
+    final result = await _service.updateGroupImage(
+      groupId: event.conversationId,
+      file: event.imageFile,
+    );
+    result.fold(
+      (failure) {
+        emit(state.copyWith(
+            isConversationsLoading: false, errorMessage: failure.message));
+        showGlobalToast(message: failure.message, status: 'error');
+      },
+      (convData) {
+        emit(state.copyWith(isConversationsLoading: false));
+        final newImageUrl = convData['imageUrl']?.toString();
+        final updatedConvs = state.conversations.map((c) {
+          if (c.id == event.conversationId) {
+            return c.copyWith(imageUrl: newImageUrl);
+          }
+          return c;
+        }).toList();
+        emit(state.copyWith(
+            conversations: updatedConvs,
+            successMessage: 'Group image updated'));
+        showGlobalToast(
+            message: 'Group image updated successfully!', status: 'success');
       },
     );
   }
