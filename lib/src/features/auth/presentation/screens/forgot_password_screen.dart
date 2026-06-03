@@ -74,6 +74,8 @@ class _ForgotPasswordView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Image.asset('assets/area_connect_logo.png',
+                  width: 150.w, height: 150.w),
               SizedBox(height: AppSpacing.xl.h),
               Text(
                 'Reset Password',
@@ -110,18 +112,18 @@ class _ForgotPasswordView extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: AppSpacing.xxxl.h),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Back to Login',
-                  style: tt.labelLarge?.copyWith(
-                    color: cs.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              SizedBox(height: AppSpacing.xl.h),
+              // SizedBox(height: AppSpacing.xxxl.h),
+              // TextButton(
+              //   onPressed: () => Navigator.pop(context),
+              //   child: Text(
+              //     'Back to Login',
+              //     style: tt.labelLarge?.copyWith(
+              //       color: cs.primary,
+              //       fontWeight: FontWeight.bold,
+              //     ),
+              //   ),
+              // ),
+              // SizedBox(height: AppSpacing.xl.h),
             ],
           ),
         ),

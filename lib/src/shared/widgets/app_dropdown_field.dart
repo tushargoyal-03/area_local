@@ -78,7 +78,7 @@ class AppDropdownField<T> extends StatelessWidget {
     final tt = context.theme.textTheme;
 
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: enabled ? onChanged : null,
       validator: validator,

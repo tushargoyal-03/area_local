@@ -10,6 +10,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.onPressed,
     this.isTransparent = false,
     this.showbackbutton = true,
+    this.leading,
   });
 
   final String title;
@@ -19,6 +20,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final bool? centerTitle;
   final bool isTransparent;
   final bool showbackbutton;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -51,11 +53,12 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
             title,
           ),
       leadingWidth: 40.w,
-      leading: showbackbutton
-          ? BackButton(
-              onPressed: handleBack,
-            )
-          : null,
+      leading: leading ??
+          (showbackbutton
+              ? BackButton(
+                  onPressed: handleBack,
+                )
+              : null),
       iconTheme: theme.iconTheme,
       actions: actions ?? [],
     );

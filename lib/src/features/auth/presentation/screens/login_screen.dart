@@ -159,8 +159,8 @@ class _LoginView extends StatelessWidget {
                 // Brand icon
                 Image.asset(
                   'assets/area_connect_logo.png',
-                  width: 72.w,
-                  height: 72.w,
+                  width: 150.w,
+                  height: 150.w,
                 ),
                 SizedBox(height: AppSpacing.lg.h),
                 Text(

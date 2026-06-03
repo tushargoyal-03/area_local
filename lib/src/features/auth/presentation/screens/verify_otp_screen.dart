@@ -101,6 +101,8 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
           behavior: HitTestBehavior.opaque,
           child: Column(
             children: [
+              Image.asset('assets/area_connect_logo.png',
+                  width: 150.w, height: 150.w),
               Expanded(
                 child: SingleChildScrollView(
                   child: Padding(
@@ -173,9 +175,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                             final hasValue = index < text.length;
                             final digit = hasValue ? text[index] : '';
 
-                            // Check if this box is the current active focus cell
-                            // The active cell is where the cursor sits, which is equal to text.length.
-                            // If index is equal to text.length and the textfield is focused, then it's active.
                             final isActive = index == text.length && _isFocused;
 
                             return Expanded(

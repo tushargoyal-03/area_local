@@ -50,9 +50,11 @@ class _SignupScreenState extends State<SignupScreen> {
         (position) => [position.longitude, position.latitude],
       );
 
+      // Email Validation
       final email = _emailController.text.trim();
       if (!context.mounted) return;
 
+      // Validator
       final emailError = EmailValidator.validateEmail(email);
 
       if (email.isEmpty) {
@@ -145,6 +147,14 @@ class _SignupView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppTopBar(
+        showbackbutton: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios),
+          onPressed: () => context.pop(),
+        ),
+        title: '',
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -240,6 +250,7 @@ class _SignupView extends StatelessWidget {
                     ),
                     SizedBox(height: AppSpacing.lg),
                     CheckboxListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
                       dense: true,
                       controlAffinity: ListTileControlAffinity.leading,
                       value: isChecked,
@@ -266,7 +277,7 @@ class _SignupView extends StatelessWidget {
               ),
             ],
           ),
-        ).paddingSymmetric(horizontal: AppSpacing.ml.w),
+        ).paddingSymmetric(horizontal: AppSpacing.xs.w),
       ),
     );
   }
