@@ -16,6 +16,8 @@ class PostsRepositoryImpl implements PostsRepository {
     int page = 1,
     int limit = 20,
     String? currentUserId,
+    String? type,
+    String? category,
   }) async {
     final result = await _service.getNearbyFeed(
       lng: lng,
@@ -23,6 +25,8 @@ class PostsRepositoryImpl implements PostsRepository {
       radiusInKm: radiusInKm,
       page: page,
       limit: limit,
+      type: type,
+      category: category,
     );
 
     return result.map((list) {
@@ -32,6 +36,7 @@ class PostsRepositoryImpl implements PostsRepository {
 
         final interestedCount = post['interestedCount'] as int? ?? 0;
         final isInterested = post['isInterested'] as bool? ?? false;
+        final isSaved = post['isSaved'] as bool? ?? false;
 
         // Mock interested array to satisfy legacy count UI if needed.
         final interested = List<String>.generate(
@@ -64,6 +69,7 @@ class PostsRepositoryImpl implements PostsRepository {
               DateTime.now(),
           isInterested: isInterested,
           distanceInMeters: (post['distanceInMeters'] as num?)?.toDouble(),
+          isSaved: isSaved,
           status: post['status']?.toString() ?? 'OPEN',
           postType: post['type']?.toString() ??
               post['postType']?.toString() ??
@@ -143,6 +149,7 @@ class PostsRepositoryImpl implements PostsRepository {
             DateTime.now(),
         isInterested: false,
         status: post['status']?.toString() ?? 'OPEN',
+        isSaved: false,
         postType: post['postType']?.toString() ?? 'activity',
         maxParticipants: post['maxParticipants'] as int?,
         acceptedParticipantsCount:
@@ -185,6 +192,7 @@ class PostsRepositoryImpl implements PostsRepository {
         sharesCount: 0,
         createdAt: DateTime.now(),
         isInterested: isInterested,
+        isSaved: false,
       );
     });
   }

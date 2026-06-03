@@ -57,6 +57,7 @@ class AppPost extends Equatable {
   final DateTime createdAt;
   final bool isInterested; // Computed for current user
   final double? distanceInMeters;
+  final bool isSaved; // Computed for current user for promotions
 
   // New fields
   final String status; // OPEN / FULL / CLOSED / EXPIRED
@@ -91,6 +92,7 @@ class AppPost extends Equatable {
     required this.createdAt,
     this.isInterested = false,
     this.distanceInMeters,
+    this.isSaved = false,
     this.status = 'OPEN',
     this.postType = 'activity',
     this.maxParticipants,
@@ -122,6 +124,7 @@ class AppPost extends Equatable {
     DateTime? createdAt,
     bool? isInterested,
     double? distanceInMeters,
+    bool? isSaved,
     String? status,
     String? postType,
     int? maxParticipants,
@@ -152,6 +155,7 @@ class AppPost extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       isInterested: isInterested ?? this.isInterested,
       distanceInMeters: distanceInMeters ?? this.distanceInMeters,
+      isSaved: isSaved ?? this.isSaved,
       status: status ?? this.status,
       postType: postType ?? this.postType,
       maxParticipants: maxParticipants ?? this.maxParticipants,
@@ -186,6 +190,7 @@ class AppPost extends Equatable {
         createdAt,
         isInterested,
         distanceInMeters,
+        isSaved,
         status,
         postType,
         maxParticipants,

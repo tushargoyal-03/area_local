@@ -52,6 +52,7 @@ class ActivityCard extends StatelessWidget {
         'discountCode': post!.discountCode,
         'mediaUrls': post!.mediaUrls,
         'isInterested': post!.isInterested,
+        'isSaved': post!.isSaved,
       };
 
       return PromoCard(
@@ -67,7 +68,7 @@ class ActivityCard extends StatelessWidget {
                   currentUserId: currentUserId,
                 ));
             showGlobalToast(
-                message: post!.isInterested
+                message: post!.isSaved
                     ? 'Offer removed from saved'
                     : 'Offer saved successfully!',
                 status: 'success');

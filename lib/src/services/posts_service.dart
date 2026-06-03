@@ -14,11 +14,15 @@ class PostsService {
     double? radiusInKm,
     int page = 1,
     int limit = 20,
+    String? type,
+    String? category,
   }) async {
     final Map<String, dynamic> queryParameters = {'page': page, 'limit': limit};
     if (lng != null) queryParameters['lng'] = lng;
     if (lat != null) queryParameters['lat'] = lat;
     if (radiusInKm != null) queryParameters['radiusInKm'] = radiusInKm;
+    if (type != null) queryParameters['type'] = type;
+    if (category != null) queryParameters['category'] = category;
 
     final result = await DioService.instance.get(
       'posts/nearby',

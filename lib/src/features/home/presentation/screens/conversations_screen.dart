@@ -89,7 +89,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
         ],
         bottom: AppCapsuleTabBar(
           controller: _tabController,
-          tabs: _tabs.map((t) => t.label).toList(),
+          tabs: _tabs.map((t) => Tab(text: t.label)).toList(),
           margin: EdgeInsets.fromLTRB(16.w, 4.h, 16.w, 8.h),
         ),
       ),

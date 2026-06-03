@@ -198,11 +198,11 @@ class PromoCardState extends State<PromoCard> {
                           child: FilledButton.tonalIcon(
                             onPressed: widget.onSave,
                             icon: Icon(
-                                widget.promo['isInterested'] == true
+                                widget.promo['isSaved'] == true
                                     ? Icons.bookmark
                                     : Icons.bookmark_outline,
                                 size: 20),
-                            label: Text(widget.promo['isInterested'] == true
+                            label: Text(widget.promo['isSaved'] == true
                                 ? 'Saved'
                                 : 'Save Offer'),
                             style: FilledButton.styleFrom(
@@ -210,11 +210,11 @@ class PromoCardState extends State<PromoCard> {
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16.r)),
                               backgroundColor:
-                                  widget.promo['isInterested'] == true
+                                  widget.promo['isSaved'] == true
                                       ? cs.primary
                                       : null,
                               foregroundColor:
-                                  widget.promo['isInterested'] == true
+                                  widget.promo['isSaved'] == true
                                       ? cs.onPrimary
                                       : null,
                             ),

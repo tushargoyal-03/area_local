@@ -11,6 +11,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
     this.isTransparent = false,
     this.showbackbutton = true,
     this.leading,
+    this.bottom,
   });
 
   final String title;
@@ -21,6 +22,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isTransparent;
   final bool showbackbutton;
   final Widget? leading;
+  final PreferredSizeWidget? bottom;
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +63,12 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
               : null),
       iconTheme: theme.iconTheme,
       actions: actions ?? [],
+      bottom: bottom,
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(
+        kToolbarHeight + (bottom?.preferredSize.height ?? 0.0),
+      );
 }

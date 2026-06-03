@@ -12,7 +12,13 @@ abstract class PostsEvent extends Equatable {
 }
 
 class LoadNearbyPostsRequested extends PostsEvent {
-  const LoadNearbyPostsRequested();
+  final String? type;
+  final String? category;
+
+  const LoadNearbyPostsRequested({this.type, this.category});
+
+  @override
+  List<Object?> get props => [type, category];
 }
 
 class CreatePostRequested extends PostsEvent {
@@ -229,7 +235,10 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
   ) async {
     emit(state.copyWith(isLoading: true));
 
-    final result = await _repository.getNearbyFeed();
+    final result = await _repository.getNearbyFeed(
+      type: event.type,
+      category: event.category,
+    );
 
     result.fold(
       (failure) =>
@@ -306,6 +315,10 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     final originalPosts = List<AppPost>.from(state.posts);
     final updatedPosts = state.posts.map((post) {
       if (post.id == event.postId) {
+        if (post.postType == 'promotion') {
+          return post.copyWith(isSaved: !post.isSaved);
+        }
+
         final currentInterested = List<String>.from(post.interestedUsers);
         final isNowInterested = !post.isInterested;
 
@@ -340,7 +353,7 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
             final isSaved = data['isSaved'] as bool? ?? false;
             final finalPosts = state.posts.map((p) {
               if (p.id == event.postId) {
-                return p.copyWith(isInterested: isSaved);
+                return p.copyWith(isSaved: isSaved);
               }
               return p;
             }).toList();

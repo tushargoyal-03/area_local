@@ -10,6 +10,8 @@ abstract class PostsRepository {
     int page = 1,
     int limit = 20,
     String? currentUserId,
+    String? type,
+    String? category,
   });
 
   FutureEither<AppPost> createPost({

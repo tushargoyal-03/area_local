@@ -58,8 +58,8 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
               AppCapsuleTabBar(
                 controller: _tabController,
                 tabs: const [
-                  'Nearby',
-                  'My Promotions',
+                  Tab(text: 'Nearby'),
+                  Tab(text: 'My Promotions'),
                 ],
               ),
             Expanded(

@@ -192,13 +192,6 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
               style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 2.h),
-            Text(
-              'Vaishali Nagar · 2 km radius',
-              style: tt.bodySmall?.copyWith(
-                fontSize: 11.sp,
-                color: cs.onSurfaceVariant,
-              ),
-            ),
           ],
         ),
         actions: [
