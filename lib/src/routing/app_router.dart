@@ -9,6 +9,7 @@ import 'package:area_connect/src/features/society_feed/presentation/pages/societ
 import 'package:area_connect/src/features/society_feed/presentation/pages/create_society_screen.dart';
 import 'package:area_connect/src/features/business/presentation/pages/business_promotions_screen.dart';
 import 'package:area_connect/src/features/business/presentation/pages/create_promotion_screen.dart';
+import 'package:area_connect/src/features/business/presentation/pages/saved_offers_screen.dart';
 import 'package:go_router/go_router.dart';
 import 'package:area_connect/src/routing/global_navigator.dart';
 import 'package:area_connect/src/routing/app_routes.dart';
@@ -174,6 +175,11 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.createPromotion,
       name: 'createPromotion',
       builder: (context, state) => const CreatePromotionScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.savedOffers,
+      name: 'savedOffers',
+      builder: (context, state) => const SavedOffersScreen(),
     ),
     GoRoute(
       path: AppRoutes.searchUsers,

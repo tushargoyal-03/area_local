@@ -111,6 +111,15 @@ class _LocalityFeedViewState extends State<_LocalityFeedView> {
         ),
         actions: [
           IconButton(
+            onPressed: () {
+              context.push(AppRoutes.savedOffers);
+            },
+            icon: Icon(
+              Icons.bookmark_border,
+              color: widget.cs.onSurface,
+            ),
+          ),
+          IconButton(
             onPressed: widget.onRefresh,
             icon: Icon(
               IconsaxPlusLinear.refresh,

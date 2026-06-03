@@ -24,6 +24,7 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
         setState(() => _currentTab = _tabController.index);
       }
     });
+    context.read<BusinessBloc>().add(const LoadNearbyPromotions());
     context.read<BusinessBloc>().add(LoadMyPromotions());
   }
 
@@ -119,7 +120,7 @@ class _NearbyPromotionsListState extends State<_NearbyPromotionsList> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) _trackImpression(promoId);
             });
-            return _PromoCard(
+            return PromoCard(
               promo: promo,
               showAnalytics: false,
               onTap: () =>
@@ -163,7 +164,7 @@ class _MyPromotionsListState extends State<_MyPromotionsList> {
           itemBuilder: (context, index) {
             final promo = state.myPromotions[index] as Map<String, dynamic>;
             final promoId = promo['_id']?.toString() ?? '';
-            return _PromoCard(
+            return PromoCard(
               promo: promo,
               showAnalytics: true,
               onAnalytics: () => _showAnalyticsDialog(context, promoId),
@@ -184,155 +185,105 @@ class _MyPromotionsListState extends State<_MyPromotionsList> {
       (analytics) {
         showDialog<void>(
           context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Promotion Analytics'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _AnalyticRow(
-                    icon: Icons.visibility_outlined,
-                    label: 'Impressions',
-                    value: analytics['impressionsCount']?.toString() ?? '0'),
-                SizedBox(height: 12.h),
-                _AnalyticRow(
-                    icon: Icons.touch_app_outlined,
-                    label: 'Clicks',
-                    value: analytics['clicksCount']?.toString() ?? '0'),
-                SizedBox(height: 12.h),
-                _AnalyticRow(
-                    icon: Icons.bookmark_outline,
-                    label: 'Saves',
-                    value: analytics['savesCount']?.toString() ?? '0'),
-              ],
-            ),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Close')),
-            ],
-          ),
+          builder: (ctx) {
+            final cs = Theme.of(ctx).colorScheme;
+            final tt = Theme.of(ctx).textTheme;
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Container(
+                padding: EdgeInsets.all(24.w),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  borderRadius: BorderRadius.circular(24.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: cs.shadow.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(16.w),
+                      decoration: BoxDecoration(
+                        color: cs.primaryContainer.withValues(alpha: 0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.bar_chart_rounded, size: 36, color: cs.primary),
+                    ),
+                    SizedBox(height: 16.h),
+                    Text('Analytics Dashboard', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8.h),
+                    Text('Live performance metrics for your offer', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant), textAlign: TextAlign.center),
+                    SizedBox(height: 32.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _StatCard(icon: Icons.visibility_rounded, label: 'Views', value: analytics['impressionsCount']?.toString() ?? '0', color: Colors.blue),
+                        _StatCard(icon: Icons.touch_app_rounded, label: 'Clicks', value: analytics['clicksCount']?.toString() ?? '0', color: Colors.orange),
+                        _StatCard(icon: Icons.bookmark_rounded, label: 'Saves', value: analytics['savesCount']?.toString() ?? '0', color: Colors.green),
+                      ],
+                    ),
+                    SizedBox(height: 32.h),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: FilledButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16.h),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                        ),
+                        child: const Text('Close'),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
 }
 
-class _PromoCard extends StatelessWidget {
-  final Map<String, dynamic> promo;
-  final bool showAnalytics;
-  final VoidCallback? onTap;
-  final VoidCallback? onSave;
-  final VoidCallback? onAnalytics;
-
-  const _PromoCard({
-    required this.promo,
-    required this.showAnalytics,
-    this.onTap,
-    this.onSave,
-    this.onAnalytics,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.theme.colorScheme;
-    final tt = context.theme.textTheme;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(AppSpacing.md.w),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16.r),
-          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(promo['businessName'] ?? 'Business',
-                style: tt.labelSmall?.copyWith(color: cs.primary)),
-            SizedBox(height: 4.h),
-            Text(promo['title'] ?? 'Promotion',
-                style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-            SizedBox(height: 8.h),
-            Text(promo['description'] ?? '',
-                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
-            if (promo['discountCode'] != null) ...[
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Text(
-                  'Code: ${promo['discountCode']}',
-                  style: tt.bodySmall?.copyWith(
-                      color: cs.onPrimaryContainer,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-            SizedBox(height: 12.h),
-            Row(
-              children: [
-                if (!showAnalytics && onSave != null)
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: onSave,
-                      icon: const Icon(Icons.bookmark_outline, size: 16),
-                      label: const Text('Save'),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
-                        shape: const StadiumBorder(),
-                      ),
-                    ),
-                  ),
-                if (showAnalytics && onAnalytics != null)
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: onAnalytics,
-                      icon: const Icon(Icons.bar_chart_outlined, size: 16),
-                      label: const Text('Analytics'),
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
-                        shape: const StadiumBorder(),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AnalyticRow extends StatelessWidget {
+class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
+  final Color color;
 
-  const _AnalyticRow({
+  const _StatCard({
     required this.icon,
     required this.label,
     required this.value,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
-    final cs = context.theme.colorScheme;
     final tt = context.theme.textTheme;
-
-    return Row(
+    
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: cs.primary),
-        SizedBox(width: 12.w),
-        Expanded(child: Text(label, style: tt.bodyMedium)),
-        Text(value,
-            style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        Container(
+          padding: EdgeInsets.all(12.w),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Icon(icon, color: color, size: 28),
+        ),
+        SizedBox(height: 12.h),
+        Text(value, style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w900, color: context.theme.colorScheme.onSurface)),
+        Text(label, style: tt.bodySmall?.copyWith(color: context.theme.colorScheme.onSurfaceVariant)),
       ],
     );
   }
 }
+

@@ -114,10 +114,16 @@ class _CreatePromotionScreenState extends State<CreatePromotionScreen> {
     for (final img in _selectedImages) {
       final uploadRes = await PostsService.instance.uploadImage(img);
       uploadRes.fold(
-        (_) {},
+        (failure) {
+          showGlobalToast(
+              message: 'Image upload failed: ${failure.message}',
+              status: 'error');
+        },
         (data) {
-          final url = data['url']?.toString();
-          if (url != null) mediaUrls.add(url);
+          // Backend returns { mediaUrl: '...', key: '...' }
+          final url = data['mediaUrl']?.toString() ??
+              data['url']?.toString();
+          if (url != null && url.isNotEmpty) mediaUrls.add(url);
         },
       );
     }

@@ -320,30 +320,52 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     emit(state.copyWith(posts: updatedPosts));
 
     // Make the API request
-    final result = await _repository.toggleInterest(
-      postId: event.postId,
-      currentUserId: event.currentUserId,
-    );
+    try {
+      final post = originalPosts.firstWhere((p) => p.id == event.postId);
+      if (post.postType == 'promotion') {
+        final result = await BusinessService.instance.toggleSavePromotion(event.postId);
+        result.fold(
+          (failure) {
+            emit(state.copyWith(posts: originalPosts));
+            showGlobalToast(message: failure.message, status: 'error');
+          },
+          (data) {
+            final isSaved = data['isSaved'] as bool? ?? false;
+            final finalPosts = state.posts.map((p) {
+              if (p.id == event.postId) {
+                return p.copyWith(isInterested: isSaved);
+              }
+              return p;
+            }).toList();
+            emit(state.copyWith(posts: finalPosts));
+          },
+        );
+      } else {
+        final result = await _repository.toggleInterest(
+          postId: event.postId,
+          currentUserId: event.currentUserId,
+        );
 
-    result.fold(
-      (failure) {
-        // Revert optimistical update on error
-        emit(state.copyWith(posts: originalPosts));
-        showGlobalToast(message: failure.message, status: 'error');
-      },
-      (updatedPostSkeleton) {
-        // Make sure list count is exactly synchronized with server state
-        final finalPosts = state.posts.map((post) {
-          if (post.id == event.postId) {
-            return post.copyWith(
-              isInterested: updatedPostSkeleton.isInterested,
-            );
-          }
-          return post;
-        }).toList();
-        emit(state.copyWith(posts: finalPosts));
-      },
-    );
+        result.fold(
+          (failure) {
+            emit(state.copyWith(posts: originalPosts));
+            showGlobalToast(message: failure.message, status: 'error');
+          },
+          (updatedPostSkeleton) {
+            final finalPosts = state.posts.map((p) {
+              if (p.id == event.postId) {
+                return p.copyWith(isInterested: updatedPostSkeleton.isInterested);
+              }
+              return p;
+            }).toList();
+            emit(state.copyWith(posts: finalPosts));
+          },
+        );
+      }
+    } catch (e) {
+      emit(state.copyWith(posts: originalPosts));
+      showGlobalToast(message: 'Error updating status', status: 'error');
+    }
   }
 
   Future<void> _onAddComment(

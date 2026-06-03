@@ -60,12 +60,19 @@ class AppPost extends Equatable {
 
   // New fields
   final String status; // OPEN / FULL / CLOSED / EXPIRED
-  final String postType; // activity / general / society / business
+  final String postType; // activity / general / society / business / promotion
   final int? maxParticipants;
   final int acceptedParticipantsCount;
   final int interestedCount; // server-side count
   final DateTime? eventTime;
   final double? rankScore;
+
+  // Promotion fields
+  final String? businessId;
+  final String? businessName;
+  final String? discountCode;
+  final DateTime? expiryDate;
+  final double? radiusInKm;
 
   const AppPost({
     required this.id,
@@ -91,6 +98,11 @@ class AppPost extends Equatable {
     this.interestedCount = 0,
     this.eventTime,
     this.rankScore,
+    this.businessId,
+    this.businessName,
+    this.discountCode,
+    this.expiryDate,
+    this.radiusInKm,
   });
 
   AppPost copyWith({
@@ -117,6 +129,11 @@ class AppPost extends Equatable {
     int? interestedCount,
     DateTime? eventTime,
     double? rankScore,
+    String? businessId,
+    String? businessName,
+    String? discountCode,
+    DateTime? expiryDate,
+    double? radiusInKm,
   }) {
     return AppPost(
       id: id ?? this.id,
@@ -143,6 +160,11 @@ class AppPost extends Equatable {
       interestedCount: interestedCount ?? this.interestedCount,
       eventTime: eventTime ?? this.eventTime,
       rankScore: rankScore ?? this.rankScore,
+      businessId: businessId ?? this.businessId,
+      businessName: businessName ?? this.businessName,
+      discountCode: discountCode ?? this.discountCode,
+      expiryDate: expiryDate ?? this.expiryDate,
+      radiusInKm: radiusInKm ?? this.radiusInKm,
     );
   }
 
@@ -171,6 +193,11 @@ class AppPost extends Equatable {
         interestedCount,
         eventTime,
         rankScore,
+        businessId,
+        businessName,
+        discountCode,
+        expiryDate,
+        radiusInKm,
       ];
 }
 

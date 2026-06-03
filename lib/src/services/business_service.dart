@@ -106,4 +106,38 @@ class BusinessService {
       return data['data'] as Map<String, dynamic>? ?? data;
     });
   }
+
+  /// Get saved promotions for the current user.
+  FutureEither<List<dynamic>> getSavedPromotions({
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final result = await DioService.instance.get(
+      'business/promotions/saved',
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+      },
+    );
+
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        return responseData['promotions'] as List<dynamic>;
+      } catch (e) {
+        throw Exception('Failed to load saved promotions: $e');
+      }
+    });
+  }
+
+  /// Toggle save status for a promotion.
+  FutureEither<Map<String, dynamic>> toggleSavePromotion(String promotionId) async {
+    final result = await DioService.instance.post(
+      'business/promotions/$promotionId/save',
+    );
+    return result.map((response) {
+      final data = response.data as Map<String, dynamic>;
+      return data['data'] as Map<String, dynamic>? ?? data;
+    });
+  }
 }

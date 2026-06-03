@@ -1,6 +1,7 @@
 import 'dart:io';
-import 'dart:math';
 import 'package:area_connect/src/imports/imports.dart';
+import 'package:dio/dio.dart' as dio;
+import 'package:mime/mime.dart';
 
 class PostsService {
   PostsService._();
@@ -35,11 +36,45 @@ class PostsService {
     });
   }
 
-  /// DEV: bypass real storage — return a random picsum placeholder URL.
+  /// Determine the backend mediaType ('image', 'video', 'voice') from the MIME type.
+  String _resolveMediaType(String mimeType) {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('audio/')) return 'voice';
+    return 'image'; // default fallback
+  }
+
+  /// Upload a file to the backend via POST /api/media/upload (multipart/form-data).
+  /// Returns the response containing { mediaUrl, key }.
   FutureEither<Map<String, dynamic>> uploadImage(File file) async {
-    final seed = Random().nextInt(9999);
-    final url = 'https://picsum.photos/seed/$seed/800/600';
-    return Right({'url': url, 'data': null});
+    final mimeType =
+        lookupMimeType(file.path) ?? 'application/octet-stream';
+    final mediaType = _resolveMediaType(mimeType);
+    final fileName = file.path.split('/').last;
+
+    final formData = dio.FormData.fromMap({
+      'file': await dio.MultipartFile.fromFile(
+        file.path,
+        filename: fileName,
+        contentType: dio.DioMediaType.parse(mimeType),
+      ),
+      'mediaType': mediaType,
+    });
+
+    final result = await DioService.instance.post(
+      'media/upload',
+      data: formData,
+    );
+
+    return result.map((response) {
+      try {
+        final responseData = response.data as Map<String, dynamic>;
+        final data = responseData['data'] as Map<String, dynamic>;
+        return data;
+      } catch (e) {
+        throw Exception('Failed to upload file: $e');
+      }
+    });
   }
 
   /// Create a new hyperlocal activity post.

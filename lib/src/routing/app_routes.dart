@@ -28,4 +28,5 @@ abstract final class AppRoutes {
   static const String interestedUsers = '/activity-interested';
   static const String businessPromotions = '/business-promotions';
   static const String createPromotion = '/create-promotion';
+  static const String savedOffers = '/saved-offers';
 }

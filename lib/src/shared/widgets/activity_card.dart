@@ -43,6 +43,40 @@ class ActivityCard extends StatelessWidget {
     final String displayDate = meta['date'] ?? availability;
     final String displayLocation = meta['location'] ?? 'Vaishali Nagar';
 
+    if (post?.postType == 'promotion') {
+      final promoMap = {
+        '_id': post!.id,
+        'businessName': post!.businessName ?? post!.authorName,
+        'title': post!.title,
+        'description': post!.content,
+        'discountCode': post!.discountCode,
+        'mediaUrls': post!.mediaUrls,
+        'isInterested': post!.isInterested,
+      };
+
+      return PromoCard(
+        promo: promoMap,
+        showAnalytics: false,
+        onTap: () {
+          context.push(AppRoutes.activity, extra: post);
+        },
+        onSave: () {
+          if (currentUserId.isNotEmpty) {
+            context.read<PostsBloc>().add(ToggleInterestRequested(
+                  postId: post!.id,
+                  currentUserId: currentUserId,
+                ));
+            showGlobalToast(
+                message: post!.isInterested
+                    ? 'Offer removed from saved'
+                    : 'Offer saved successfully!',
+                status: 'success');
+          }
+        },
+      ).animate().fade(duration: const Duration(milliseconds: 200)).slideY(
+          begin: 0.05, end: 0, duration: const Duration(milliseconds: 200));
+    }
+
     // HSL-derived harmonic styling
     final cardColor = cs.surfaceContainerLow;
     final isMyPost = post != null && post!.authorId == currentUserId;

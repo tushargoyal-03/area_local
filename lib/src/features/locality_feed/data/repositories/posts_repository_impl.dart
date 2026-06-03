@@ -65,13 +65,18 @@ class PostsRepositoryImpl implements PostsRepository {
           isInterested: isInterested,
           distanceInMeters: (post['distanceInMeters'] as num?)?.toDouble(),
           status: post['status']?.toString() ?? 'OPEN',
-          postType: post['postType']?.toString() ?? 'activity',
+          postType: post['type']?.toString() ?? post['postType']?.toString() ?? 'activity',
           maxParticipants: post['maxParticipants'] as int?,
           acceptedParticipantsCount:
               post['acceptedParticipantsCount'] as int? ?? 0,
           interestedCount: interestedCount,
           eventTime: DateTime.tryParse(post['eventTime']?.toString() ?? ''),
           rankScore: (post['rankScore'] as num?)?.toDouble(),
+          businessId: post['businessId']?.toString(),
+          businessName: post['businessName']?.toString(),
+          discountCode: post['discountCode']?.toString(),
+          expiryDate: DateTime.tryParse(post['expiryDate']?.toString() ?? ''),
+          radiusInKm: (post['radiusInKm'] as num?)?.toDouble(),
         );
       }).toList();
     });
@@ -82,15 +87,16 @@ class PostsRepositoryImpl implements PostsRepository {
     final result = await _service.uploadImage(file);
     return result.fold(
       (failure) {
-        // Safe offline/fallback: return local path so it loads locally instantly
-        return Right(file.path);
+        return Left(failure);
       },
       (data) {
-        final url = data['url']?.toString() ?? data['data']?['url']?.toString();
-        if (url != null) {
+        // Backend returns { mediaUrl: '...', key: '...' }
+        final url = data['mediaUrl']?.toString() ?? data['url']?.toString();
+        if (url != null && url.isNotEmpty) {
           return Right(url);
         }
-        return Right(file.path);
+        return const Left(
+            ServerFailure('Upload succeeded but no URL returned'));
       },
     );
   }

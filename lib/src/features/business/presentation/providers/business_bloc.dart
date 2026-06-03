@@ -14,6 +14,8 @@ class LoadNearbyPromotions extends BusinessEvent {
 
 class LoadMyPromotions extends BusinessEvent {}
 
+class LoadSavedPromotions extends BusinessEvent {}
+
 class CreatePromotionRequested extends BusinessEvent {
   final String businessName;
   final String title;
@@ -49,18 +51,22 @@ class CreatePromotionRequested extends BusinessEvent {
 class BusinessState extends Equatable {
   final bool isLoadingNearby;
   final bool isLoadingMine;
+  final bool isLoadingSaved;
   final bool isCreating;
   final List<dynamic> nearbyPromotions;
   final List<dynamic> myPromotions;
+  final List<dynamic> savedPromotions;
   final String? error;
   final bool createSuccess;
 
   const BusinessState({
     this.isLoadingNearby = false,
     this.isLoadingMine = false,
+    this.isLoadingSaved = false,
     this.isCreating = false,
     this.nearbyPromotions = const [],
     this.myPromotions = const [],
+    this.savedPromotions = const [],
     this.error,
     this.createSuccess = false,
   });
@@ -68,9 +74,11 @@ class BusinessState extends Equatable {
   BusinessState copyWith({
     bool? isLoadingNearby,
     bool? isLoadingMine,
+    bool? isLoadingSaved,
     bool? isCreating,
     List<dynamic>? nearbyPromotions,
     List<dynamic>? myPromotions,
+    List<dynamic>? savedPromotions,
     String? error,
     bool? createSuccess,
     bool clearError = false,
@@ -78,9 +86,11 @@ class BusinessState extends Equatable {
     return BusinessState(
       isLoadingNearby: isLoadingNearby ?? this.isLoadingNearby,
       isLoadingMine: isLoadingMine ?? this.isLoadingMine,
+      isLoadingSaved: isLoadingSaved ?? this.isLoadingSaved,
       isCreating: isCreating ?? this.isCreating,
       nearbyPromotions: nearbyPromotions ?? this.nearbyPromotions,
       myPromotions: myPromotions ?? this.myPromotions,
+      savedPromotions: savedPromotions ?? this.savedPromotions,
       error: clearError ? null : (error ?? this.error),
       createSuccess: createSuccess ?? this.createSuccess,
     );
@@ -90,9 +100,11 @@ class BusinessState extends Equatable {
   List<Object?> get props => [
         isLoadingNearby,
         isLoadingMine,
+        isLoadingSaved,
         isCreating,
         nearbyPromotions,
         myPromotions,
+        savedPromotions,
         error,
         createSuccess,
       ];
@@ -103,6 +115,7 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
   BusinessBloc() : super(const BusinessState()) {
     on<LoadNearbyPromotions>(_onLoadNearby);
     on<LoadMyPromotions>(_onLoadMine);
+    on<LoadSavedPromotions>(_onLoadSaved);
     on<CreatePromotionRequested>(_onCreatePromotion);
   }
 
@@ -133,6 +146,21 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
           emit(state.copyWith(isLoadingMine: false, error: failure.message)),
       (promotions) =>
           emit(state.copyWith(isLoadingMine: false, myPromotions: promotions)),
+    );
+  }
+
+  Future<void> _onLoadSaved(
+    LoadSavedPromotions event,
+    Emitter<BusinessState> emit,
+  ) async {
+    emit(state.copyWith(isLoadingSaved: true, clearError: true));
+    final result = await BusinessService.instance.getSavedPromotions();
+
+    result.fold(
+      (failure) =>
+          emit(state.copyWith(isLoadingSaved: false, error: failure.message)),
+      (promotions) =>
+          emit(state.copyWith(isLoadingSaved: false, savedPromotions: promotions)),
     );
   }
 
