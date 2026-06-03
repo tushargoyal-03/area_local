@@ -21,12 +21,12 @@ class BusinessService {
       queryParameters: queryParameters,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['promotions'] as List<dynamic>;
+        return right(responseData['promotions'] as List<dynamic>);
       } catch (e) {
-        throw Exception('Failed to load nearby promotions: $e');
+        return left(ServerFailure('Failed to load nearby promotions: $e'));
       }
     });
   }
@@ -55,12 +55,12 @@ class BusinessService {
       data: data,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to create promotion: $e');
+        return left(ServerFailure('Failed to create promotion: $e'));
       }
     });
   }
@@ -77,12 +77,12 @@ class BusinessService {
       },
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['promotions'] as List<dynamic>;
+        return right(responseData['promotions'] as List<dynamic>);
       } catch (e) {
-        throw Exception('Failed to load my promotions: $e');
+        return left(ServerFailure('Failed to load my promotions: $e'));
       }
     });
   }
@@ -101,9 +101,13 @@ class BusinessService {
     final result = await DioService.instance.get(
       'business/promotions/$promotionId/analytics',
     );
-    return result.map((response) {
-      final data = response.data as Map<String, dynamic>;
-      return data['data'] as Map<String, dynamic>? ?? data;
+    return result.flatMap((response) {
+      try {
+        final data = response.data as Map<String, dynamic>;
+        return right(data['data'] as Map<String, dynamic>? ?? data);
+      } catch (e) {
+        return left(ServerFailure('Failed to load analytics: $e'));
+      }
     });
   }
 

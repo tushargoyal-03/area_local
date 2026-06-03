@@ -337,18 +337,28 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
             ),
             SizedBox(height: 14.h),
             ...List.generate(state.neighbors.length, (i) {
-              final neighbor = state.neighbors[i];
-              final name = neighbor['displayName'] ?? 'Neighbor';
+              final item = state.neighbors[i];
+              if (item is! Map) {
+                return const SizedBox.shrink();
+              }
+              final neighbor = Map<String, dynamic>.from(item);
+              final name = neighbor['displayName']?.toString() ?? 'Neighbor';
               final dist = neighbor['distanceInKm'] ?? 0.0;
 
               String interest = 'connecting';
-              if (neighbor['lookingFor'] != null &&
-                  (neighbor['lookingFor'] as List).isNotEmpty) {
-                interest = (neighbor['lookingFor'] as List).join(', ');
+              final lookingFor = neighbor['lookingFor'];
+              if (lookingFor is List && lookingFor.isNotEmpty) {
+                interest = lookingFor
+                    .map((e) => e?.toString() ?? '')
+                    .where((e) => e.isNotEmpty)
+                    .join(', ');
+                if (interest.isEmpty) {
+                  interest = 'connecting';
+                }
               }
 
               return _NearbyCard(
-                userId: neighbor['userId'] ?? '',
+                userId: neighbor['userId']?.toString() ?? '',
                 name: name,
                 distance:
                     dist is num ? dist.toStringAsFixed(1) : dist.toString(),
@@ -522,7 +532,7 @@ class _NearbyDiscoveryScreenState extends State<NearbyDiscoveryScreen> {
                 ),
               ],
             ),
-          );
+          ).center;
         }
 
         return Column(

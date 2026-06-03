@@ -25,13 +25,13 @@ class PostsService {
       queryParameters: queryParameters,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
         final feed = responseData['data'] as List<dynamic>;
-        return feed;
+        return right(feed);
       } catch (e) {
-        throw Exception('Failed to parse posts feed: $e');
+        return left(ServerFailure('Failed to parse posts feed: $e'));
       }
     });
   }
@@ -101,12 +101,12 @@ class PostsService {
       data: data,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to create post: $e');
+        return left(ServerFailure('Failed to create post: $e'));
       }
     });
   }
@@ -117,12 +117,12 @@ class PostsService {
       'posts/$postId/interested',
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to toggle interest: $e');
+        return left(ServerFailure('Failed to toggle interest: $e'));
       }
     });
   }
@@ -139,11 +139,11 @@ class PostsService {
       },
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
-        return response.data as Map<String, dynamic>;
+        return right(response.data as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to add comment: $e');
+        return left(ServerFailure('Failed to add comment: $e'));
       }
     });
   }
@@ -154,13 +154,13 @@ class PostsService {
       'posts/$postId/comments',
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
         final comments = responseData['data'] as List<dynamic>;
-        return comments;
+        return right(comments);
       } catch (e) {
-        throw Exception('Failed to load comments: $e');
+        return left(ServerFailure('Failed to load comments: $e'));
       }
     });
   }
@@ -184,9 +184,13 @@ class PostsService {
       'posts/$postId/interested-users',
       queryParameters: {'page': page, 'limit': limit},
     );
-    return result.map((response) {
-      final data = response.data as Map<String, dynamic>;
-      return data['data'] as List<dynamic>;
+    return result.flatMap((response) {
+      try {
+        final data = response.data as Map<String, dynamic>;
+        return right(data['data'] as List<dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to get interested users: $e'));
+      }
     });
   }
 
@@ -196,9 +200,13 @@ class PostsService {
     final result = await DioService.instance.post(
       'posts/$postId/interested-users/$userId/accept',
     );
-    return result.map((response) {
-      final data = response.data as Map<String, dynamic>;
-      return data['data'] as Map<String, dynamic>? ?? data;
+    return result.flatMap((response) {
+      try {
+        final data = response.data as Map<String, dynamic>;
+        return right(data['data'] as Map<String, dynamic>? ?? data);
+      } catch (e) {
+        return left(ServerFailure('Failed to accept interest: $e'));
+      }
     });
   }
 
@@ -208,9 +216,13 @@ class PostsService {
     final result = await DioService.instance.post(
       'posts/$postId/interested-users/$userId/reject',
     );
-    return result.map((response) {
-      final data = response.data as Map<String, dynamic>;
-      return data['data'] as Map<String, dynamic>? ?? data;
+    return result.flatMap((response) {
+      try {
+        final data = response.data as Map<String, dynamic>;
+        return right(data['data'] as Map<String, dynamic>? ?? data);
+      } catch (e) {
+        return left(ServerFailure('Failed to reject interest: $e'));
+      }
     });
   }
 
@@ -239,9 +251,13 @@ class PostsService {
       'posts/$postId/reviews',
       data: body,
     );
-    return result.map((response) {
-      final data = response.data as Map<String, dynamic>;
-      return data['data'] as Map<String, dynamic>? ?? data;
+    return result.flatMap((response) {
+      try {
+        final data = response.data as Map<String, dynamic>;
+        return right(data['data'] as Map<String, dynamic>? ?? data);
+      } catch (e) {
+        return left(ServerFailure('Failed to submit review: $e'));
+      }
     });
   }
 }

@@ -81,6 +81,8 @@ class LocationService {
   FutureEither<String> getAddressFromCoordinates(double lat, double lng) async {
     return runTask(() async {
       final dio = Dio();
+      dio.options.connectTimeout = const Duration(seconds: 5);
+      dio.options.receiveTimeout = const Duration(seconds: 5);
       dio.options.headers['User-Agent'] = 'AreaConnect/1.0';
 
       final response = await dio.get<Map<String, dynamic>>(

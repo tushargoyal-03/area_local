@@ -7,12 +7,16 @@ class SocietiesService {
   /// Fetch the list of societies the current user belongs to.
   FutureEither<List<dynamic>> getMySocieties() async {
     final result = await DioService.instance.get('societies/my');
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as List<dynamic>;
+        final data = responseData['data'];
+        if (data is List) {
+          return right(data);
+        }
+        return right(const []);
       } catch (e) {
-        throw Exception('Failed to load my societies: $e');
+        return left(ServerFailure('Failed to load my societies: $e'));
       }
     });
   }
@@ -43,12 +47,12 @@ class SocietiesService {
       data: data,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to create society: $e');
+        return left(ServerFailure('Failed to create society: $e'));
       }
     });
   }
@@ -74,12 +78,16 @@ class SocietiesService {
       },
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as List<dynamic>;
+        final data = responseData['data'];
+        if (data is List) {
+          return right(data);
+        }
+        return right(const []);
       } catch (e) {
-        throw Exception('Failed to load nearby societies: $e');
+        return left(ServerFailure('Failed to load nearby societies: $e'));
       }
     });
   }
@@ -99,12 +107,12 @@ class SocietiesService {
       data: data,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>? ?? responseData;
+        return right(responseData['data'] as Map<String, dynamic>? ?? responseData);
       } catch (e) {
-        throw Exception('Failed to send join request: $e');
+        return left(ServerFailure('Failed to send join request: $e'));
       }
     });
   }
@@ -126,12 +134,16 @@ class SocietiesService {
       queryParameters: query,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['posts'] as List<dynamic>;
+        final posts = responseData['posts'];
+        if (posts is List) {
+          return right(posts);
+        }
+        return right(const []);
       } catch (e) {
-        throw Exception('Failed to load society feed: $e');
+        return left(ServerFailure('Failed to load society feed: $e'));
       }
     });
   }
@@ -157,12 +169,12 @@ class SocietiesService {
       data: data,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to create society post: $e');
+        return left(ServerFailure('Failed to create society post: $e'));
       }
     });
   }
@@ -182,12 +194,12 @@ class SocietiesService {
       },
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to create poll: $e');
+        return left(ServerFailure('Failed to create poll: $e'));
       }
     });
   }
@@ -203,12 +215,12 @@ class SocietiesService {
       },
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to cast vote: $e');
+        return left(ServerFailure('Failed to cast vote: $e'));
       }
     });
   }
@@ -216,12 +228,12 @@ class SocietiesService {
   FutureEither<Map<String, dynamic>> likePost(String postId) async {
     final result =
         await DioService.instance.post('societies/posts/$postId/like');
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to like post: $e');
+        return left(ServerFailure('Failed to like post: $e'));
       }
     });
   }
@@ -229,12 +241,12 @@ class SocietiesService {
   FutureEither<Map<String, dynamic>> upvoteComplaint(String postId) async {
     final result =
         await DioService.instance.post('societies/complaints/$postId/upvote');
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to upvote complaint: $e');
+        return left(ServerFailure('Failed to upvote complaint: $e'));
       }
     });
   }
@@ -256,12 +268,16 @@ class SocietiesService {
       queryParameters: query,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as List<dynamic>;
+        final data = responseData['data'];
+        if (data is List) {
+          return right(data);
+        }
+        return right(const []);
       } catch (e) {
-        throw Exception('Failed to load join requests: $e');
+        return left(ServerFailure('Failed to load join requests: $e'));
       }
     });
   }
@@ -273,12 +289,12 @@ class SocietiesService {
     final result = await DioService.instance.post(
       'societies/$societyId/join-requests/$requestId/approve',
     );
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to approve join request: $e');
+        return left(ServerFailure('Failed to approve join request: $e'));
       }
     });
   }
@@ -290,12 +306,12 @@ class SocietiesService {
     final result = await DioService.instance.post(
       'societies/$societyId/join-requests/$requestId/reject',
     );
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to reject join request: $e');
+        return left(ServerFailure('Failed to reject join request: $e'));
       }
     });
   }

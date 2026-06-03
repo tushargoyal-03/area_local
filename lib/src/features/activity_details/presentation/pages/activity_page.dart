@@ -455,10 +455,21 @@ class ActivityDetailScreen extends StatelessWidget {
           onTap: () {
             if (currentUserId.isNotEmpty) {
               context.read<ChatBloc>().add(StartDirectChatRequested(
-                    context: context,
                     recipientId: livePost.authorId,
                     recipientName: livePost.authorName,
                     currentUserId: currentUserId,
+                    onSuccess: (chatId) {
+                      if (context.mounted) {
+                        context.push(
+                          '/chat-room',
+                          extra: {
+                            'chatId': chatId,
+                            'recipientName': livePost.authorName,
+                            'recipientId': livePost.authorId,
+                          },
+                        );
+                      }
+                    },
                   ));
             }
           },

@@ -21,6 +21,7 @@ class _CreateSocietyScreenState extends State<CreateSocietyScreen> {
   final _cityCtrl = TextEditingController();
 
   List<double>? _coordinates; // [lng, lat]
+  String? _capturedAddress;
   bool _isLocating = false;
 
   @override
@@ -56,6 +57,9 @@ class _CreateSocietyScreenState extends State<CreateSocietyScreen> {
       },
       (position) async {
         _coordinates = [position.longitude, position.latitude];
+        _capturedAddress =
+            'Lat: ${position.latitude.toStringAsFixed(4)}, Lng: ${position.longitude.toStringAsFixed(4)}';
+        if (mounted) setState(() {});
 
         // Reverse geocode to pre-fill address/city fields.
         final addrRes = await LocationService.instance
@@ -70,6 +74,11 @@ class _CreateSocietyScreenState extends State<CreateSocietyScreen> {
             }
             if (_cityCtrl.text.isEmpty && parts.length >= 2) {
               _cityCtrl.text = parts.last.trim();
+            }
+            if (mounted) {
+              setState(() {
+                _capturedAddress = address;
+              });
             }
           },
         );
@@ -121,7 +130,7 @@ class _CreateSocietyScreenState extends State<CreateSocietyScreen> {
       appBar: const AppTopBar(title: 'Create Society', centerTitle: true),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(AppSpacing.lg.w),
+          padding: EdgeInsets.all(AppSpacing.xs.w),
           child: Form(
             key: _formKey,
             child: Column(
@@ -234,7 +243,8 @@ class _CreateSocietyScreenState extends State<CreateSocietyScreen> {
                       Expanded(
                         child: Text(
                           _coordinates != null
-                              ? 'Location captured (${_coordinates![1].toStringAsFixed(4)}, ${_coordinates![0].toStringAsFixed(4)})'
+                              ? (_capturedAddress ??
+                                  'Location captured (${_coordinates![1].toStringAsFixed(4)}, ${_coordinates![0].toStringAsFixed(4)})')
                               : 'No location captured yet',
                           style: tt.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant,

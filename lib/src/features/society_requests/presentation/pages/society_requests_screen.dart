@@ -143,8 +143,7 @@ class _RequestItemCard extends StatelessWidget {
                       context.read<SocietyRequestsBloc>().add(
                           RejectSocietyRequest(
                               societyId: socId,
-                              requestId: request.id,
-                              context: context));
+                              requestId: request.id));
                     },
                     style: TextButton.styleFrom(foregroundColor: cs.error),
                     child: const Text('Reject'),
@@ -157,8 +156,7 @@ class _RequestItemCard extends StatelessWidget {
                       context.read<SocietyRequestsBloc>().add(
                           ApproveSocietyRequest(
                               societyId: socId,
-                              requestId: request.id,
-                              context: context));
+                              requestId: request.id));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: cs.primary,

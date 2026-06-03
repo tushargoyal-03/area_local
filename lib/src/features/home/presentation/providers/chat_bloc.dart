@@ -81,15 +81,15 @@ class SendMediaMessageRequested extends ChatEvent {
 }
 
 class StartDirectChatRequested extends ChatEvent {
-  final BuildContext context;
   final String recipientId;
   final String recipientName;
   final String currentUserId;
+  final void Function(String chatId)? onSuccess;
   const StartDirectChatRequested({
-    required this.context,
     required this.recipientId,
     required this.recipientName,
     required this.currentUserId,
+    this.onSuccess,
   });
 
   @override
@@ -97,17 +97,17 @@ class StartDirectChatRequested extends ChatEvent {
 }
 
 class CreateGroupRequested extends ChatEvent {
-  final BuildContext context;
   final String currentUserId;
   final String? title;
   final String? imageUrl;
   final List<String> participantIds;
+  final void Function(String chatId, String groupTitle)? onSuccess;
   const CreateGroupRequested({
-    required this.context,
     required this.currentUserId,
     this.title,
     this.imageUrl,
     required this.participantIds,
+    this.onSuccess,
   });
 
   @override
@@ -678,15 +678,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         emit(state.copyWith(isConversationsLoading: false));
         final chatId = chat['_id']?.toString() ?? '';
 
-        if (event.context.mounted) {
-          event.context.push(
-            '/chat-room',
-            extra: {
-              'chatId': chatId,
-              'recipientName': event.recipientName,
-              'recipientId': event.recipientId,
-            },
-          );
+        if (event.onSuccess != null) {
+          event.onSuccess!(chatId);
         }
       },
     );
@@ -714,17 +707,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final chatId = group['_id']?.toString() ?? '';
         final groupTitle = group['title']?.toString() ?? 'Group';
 
-        if (event.context.mounted) {
-          Navigator.of(event.context).pop(); // close new group screen
-          event.context.push(
-            '/chat-room',
-            extra: {
-              'chatId': chatId,
-              'recipientName': groupTitle.isEmpty ? 'New Group' : groupTitle,
-              'recipientId': '',
-              'conversationType': 'group',
-            },
-          );
+        if (event.onSuccess != null) {
+          event.onSuccess!(chatId, groupTitle);
         }
       },
     );

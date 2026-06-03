@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
+import 'package:area_connect/src/features/create_activity/presentation/widgets/custom_calendar.dart';
 import '../providers/business_bloc.dart';
 
 /// Full-screen form for creating a business promotion.
@@ -39,58 +40,7 @@ class _CreatePromotionScreenState extends State<CreatePromotionScreen> {
     super.dispose();
   }
 
-  void _showExpiryPicker() {
-    DateTime tempDate = _expiryDate;
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetCtx) {
-        return Container(
-          height: 300.h,
-          decoration: BoxDecoration(
-            color: Theme.of(sheetCtx).colorScheme.onSurface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-          ),
-          child: Column(
-            children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(sheetCtx),
-                      child: const Text('Cancel'),
-                    ),
-                    Text('Expiry Date',
-                        style: Theme.of(sheetCtx)
-                            .textTheme
-                            .titleSmall
-                            ?.copyWith(fontWeight: FontWeight.w600)),
-                    TextButton(
-                      onPressed: () {
-                        setState(() => _expiryDate = tempDate);
-                        Navigator.pop(sheetCtx);
-                      },
-                      child: const Text('Done'),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: CupertinoDatePicker(
-                  mode: CupertinoDatePickerMode.date,
-                  initialDateTime: _expiryDate,
-                  minimumDate: DateTime.now().subtract(const Duration(days: 1)),
-                  maximumDate: DateTime.now().add(const Duration(days: 365)),
-                  onDateTimeChanged: (date) => tempDate = date,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
 
   Future<void> _pickImage() async {
     final result =
@@ -225,15 +175,13 @@ class _CreatePromotionScreenState extends State<CreatePromotionScreen> {
               SizedBox(height: AppSpacing.lg),
 
               // Expiry Date picker
-              AppTextField(
-                label: 'EXPIRY DATE',
-                readOnly: true,
-                controller: TextEditingController(
-                  text: _formatDate(_expiryDate),
-                ),
-                onTap: _showExpiryPicker,
-                prefixIcon: Icon(IconsaxPlusLinear.calendar,
-                    size: 20.w, color: cs.primary),
+              _label('EXPIRY DATE'),
+              SizedBox(height: AppSpacing.sm.h),
+              CustomCalendarWidget(
+                initialDate: _expiryDate,
+                onDateSelected: (date) {
+                  setState(() => _expiryDate = date);
+                },
               ),
               SizedBox(height: AppSpacing.lg.h),
 

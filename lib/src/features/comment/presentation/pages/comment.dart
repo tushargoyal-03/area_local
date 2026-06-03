@@ -26,24 +26,28 @@ class _CommentsSheetScreenState extends State<CommentsSheetScreen> {
     final result = await PostsService.instance.getComments(widget.postId);
     result.fold(
       (failure) {
-        setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
         showGlobalToast(message: failure.message, status: 'error');
       },
       (list) {
-        setState(() {
-          _isLoading = false;
-          _commentsList.clear();
-          _commentsList.addAll(list.map((item) {
-            final comment = item as Map<String, dynamic>;
-            final author = comment['author'] as Map<String, dynamic>?;
-            return {
-              'name': author?['displayName']?.toString() ?? 'Neighbor',
-              'text': comment['content']?.toString() ?? '',
-              'time': _formatTime(comment['createdAt']?.toString()),
-              'likes': 0,
-            };
-          }));
-        });
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _commentsList.clear();
+            _commentsList.addAll(list.map((item) {
+              final comment = item as Map<String, dynamic>;
+              final author = comment['author'] as Map<String, dynamic>?;
+              return {
+                'name': author?['displayName']?.toString() ?? 'Neighbor',
+                'text': comment['content']?.toString() ?? '',
+                'time': _formatTime(comment['createdAt']?.toString()),
+                'likes': 0,
+              };
+            }));
+          });
+        }
       },
     );
   }
@@ -77,16 +81,25 @@ class _CommentsSheetScreenState extends State<CommentsSheetScreen> {
             postId: widget.postId,
             content: text,
             onSuccess: () {
-              setState(() {
-                _isSubmitting = false;
-                _commentsList.add({
-                  'name': 'You',
-                  'text': text,
-                  'time': 'Just now',
-                  'likes': 0,
+              if (mounted) {
+                setState(() {
+                  _isSubmitting = false;
+                  _commentsList.add({
+                    'name': 'You',
+                    'text': text,
+                    'time': 'Just now',
+                    'likes': 0,
+                  });
+                  _commentController.clear();
                 });
-                _commentController.clear();
-              });
+              }
+            },
+            onFailure: () {
+              if (mounted) {
+                setState(() {
+                  _isSubmitting = false;
+                });
+              }
             },
           ),
         );

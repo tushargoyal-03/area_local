@@ -30,8 +30,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       context.read<AuthBloc>().add(
             ForgotPasswordRequested(
-              context: context,
               email: _emailController.text,
+              onSuccess: () {
+                if (mounted) {
+                  context.go(AppRoutes.resetPassword, extra: _emailController.text);
+                }
+              },
             ),
           );
     }

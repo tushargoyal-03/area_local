@@ -6,12 +6,12 @@ class UsersService {
 
   FutureEither<Map<String, dynamic>> getMe() async {
     final result = await DioService.instance.get('users/me');
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to get current user: $e');
+        return left(ServerFailure('Failed to get current user: $e'));
       }
     });
   }
@@ -29,12 +29,12 @@ class UsersService {
     if (lookingFor != null) data['lookingFor'] = lookingFor;
 
     final result = await DioService.instance.patch('users/profile', data: data);
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to update profile: $e');
+        return left(ServerFailure('Failed to update profile: $e'));
       }
     });
   }
@@ -64,24 +64,24 @@ class UsersService {
       queryParameters: queryParameters,
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as List<dynamic>;
+        return right(responseData['data'] as List<dynamic>);
       } catch (e) {
-        throw Exception('Failed to load nearby users: $e');
+        return left(ServerFailure('Failed to load nearby users: $e'));
       }
     });
   }
 
   FutureEither<Map<String, dynamic>> getPublicProfile(String userId) async {
     final result = await DioService.instance.get('users/$userId/profile');
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to get public profile: $e');
+        return left(ServerFailure('Failed to get public profile: $e'));
       }
     });
   }
@@ -100,18 +100,18 @@ class UsersService {
       },
     );
 
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
         final dataObj = responseData['data'];
         if (dataObj is Map) {
-          return (dataObj['results'] as List?) ?? [];
+          return right((dataObj['results'] as List?) ?? []);
         } else if (dataObj is List) {
-          return dataObj;
+          return right(dataObj);
         }
-        return [];
+        return right([]);
       } catch (e) {
-        throw Exception('Failed to search users: $e');
+        return left(ServerFailure('Failed to search users: $e'));
       }
     });
   }

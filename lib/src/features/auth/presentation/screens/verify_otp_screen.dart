@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
+import 'package:area_connect/src/features/auth/domain/entities/user.dart';
 
 class VerifyOtpScreen extends StatefulWidget {
   final String signupId;
@@ -17,7 +18,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
   // Timer State
   late Timer _timer;
-  int _secondsRemaining = 24;
+  int _secondsRemaining = 60;
 
   @override
   void initState() {
@@ -57,7 +58,6 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
     if (_secondsRemaining > 0) return;
     context.read<AuthBloc>().add(
           ResendOtpRequested(
-            context: context,
             email:
                 widget.signupId.isEmpty ? 'mock@example.com' : widget.signupId,
           ),
@@ -70,10 +70,15 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
 
     context.read<AuthBloc>().add(
           VerifyOtpRequested(
-            context: context,
             otp: _otpController.text,
             email:
                 widget.signupId.isEmpty ? 'mock@example.com' : widget.signupId,
+            onSuccess: (user) {
+              if (mounted) {
+                context.read<SessionBloc>().add(SessionUserChanged(user));
+                context.go(AppRoutes.roleSelection);
+              }
+            },
           ),
         );
   }
@@ -263,7 +268,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
                                         horizontal: 16.w, vertical: 8.h),
                                   ),
                                   child: Text(
-                                    'Resend Code',
+                                    'Resend OTP',
                                     style: tt.bodyMedium?.copyWith(
                                       fontWeight: FontWeight.w500,
                                       color: cs.primary,

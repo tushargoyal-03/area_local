@@ -54,12 +54,12 @@ class ChatService {
       'chat/conversations',
       queryParameters: params,
     );
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as List<dynamic>;
+        return right(responseData['data'] as List<dynamic>);
       } catch (e) {
-        throw Exception('Failed to load conversations: $e');
+        return left(ServerFailure('Failed to load conversations: $e'));
       }
     });
   }
@@ -77,12 +77,12 @@ class ChatService {
       'chat/messages/$chatId',
       queryParameters: params,
     );
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as List<dynamic>;
+        return right(responseData['data'] as List<dynamic>);
       } catch (e) {
-        throw Exception('Failed to load messages: $e');
+        return left(ServerFailure('Failed to load messages: $e'));
       }
     });
   }
@@ -93,12 +93,12 @@ class ChatService {
       'chat/direct',
       data: {'recipientId': recipientId},
     );
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to get/create direct chat: $e');
+        return left(ServerFailure('Failed to get/create direct chat: $e'));
       }
     });
   }
@@ -108,12 +108,12 @@ class ChatService {
       'chat/say-hi',
       data: {'recipientId': recipientId},
     );
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to say hi: $e');
+        return left(ServerFailure('Failed to say hi: $e'));
       }
     });
   }
@@ -130,12 +130,12 @@ class ChatService {
     if (imageUrl != null && imageUrl.isNotEmpty) data['imageUrl'] = imageUrl;
 
     final result = await DioService.instance.post('chat/groups', data: data);
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to create group: $e');
+        return left(ServerFailure('Failed to create group: $e'));
       }
     });
   }
@@ -148,11 +148,11 @@ class ChatService {
       'chat/groups/$groupId/members',
       data: {'memberIds': memberIds},
     );
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
-        return (response.data as Map<String, dynamic>);
+        return right(response.data as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to add members: $e');
+        return left(ServerFailure('Failed to add members: $e'));
       }
     });
   }
@@ -161,15 +161,23 @@ class ChatService {
 
   FutureEither<Map<String, dynamic>> blockUser(String userId) async {
     final result = await DioService.instance.post('users/$userId/block');
-    return result.map((response) {
-      return (response.data as Map<String, dynamic>);
+    return result.flatMap((response) {
+      try {
+        return right(response.data as Map<String, dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to block user: $e'));
+      }
     });
   }
 
   FutureEither<Map<String, dynamic>> unblockUser(String userId) async {
     final result = await DioService.instance.delete('users/$userId/block');
-    return result.map((response) {
-      return (response.data as Map<String, dynamic>);
+    return result.flatMap((response) {
+      try {
+        return right(response.data as Map<String, dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to unblock user: $e'));
+      }
     });
   }
 
@@ -189,8 +197,12 @@ class ChatService {
       'reports/users/$userId',
       data: data,
     );
-    return result.map((response) {
-      return (response.data as Map<String, dynamic>);
+    return result.flatMap((response) {
+      try {
+        return right(response.data as Map<String, dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to report user: $e'));
+      }
     });
   }
 
@@ -198,31 +210,61 @@ class ChatService {
 
   FutureEither<Map<String, dynamic>> deleteMessage(String messageId) async {
     final result = await DioService.instance.delete('chat/messages/$messageId');
-    return result.map((r) => r.data as Map<String, dynamic>);
+    return result.flatMap((r) {
+      try {
+        return right(r.data as Map<String, dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to delete message: $e'));
+      }
+    });
   }
 
   FutureEither<Map<String, dynamic>> deleteConversation(
       String conversationId) async {
     final result =
         await DioService.instance.delete('chat/conversations/$conversationId');
-    return result.map((r) => r.data as Map<String, dynamic>);
+    return result.flatMap((r) {
+      try {
+        return right(r.data as Map<String, dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to delete conversation: $e'));
+      }
+    });
   }
 
   FutureEither<Map<String, dynamic>> removeGroupMember(
       {required String groupId, required String userId}) async {
     final result = await DioService.instance
         .delete('chat/groups/$groupId/members/$userId');
-    return result.map((r) => r.data as Map<String, dynamic>);
+    return result.flatMap((r) {
+      try {
+        return right(r.data as Map<String, dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to remove member: $e'));
+      }
+    });
   }
 
   FutureEither<Map<String, dynamic>> leaveGroup(String groupId) async {
     final result = await DioService.instance.post('chat/groups/$groupId/leave');
-    return result.map((r) => r.data as Map<String, dynamic>);
+    return result.flatMap((r) {
+      try {
+        return right(r.data as Map<String, dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to leave group: $e'));
+      }
+    });
   }
 
   FutureEither<Map<String, dynamic>> deleteGroup(String groupId) async {
     final result = await DioService.instance.delete('chat/groups/$groupId');
-    return result.map((r) => r.data as Map<String, dynamic>);
+    return result.flatMap((r) {
+      try {
+        return right(r.data as Map<String, dynamic>);
+      } catch (e) {
+        return left(ServerFailure('Failed to delete group: $e'));
+      }
+    });
   }
 
   // --- Media Upload ---
@@ -242,12 +284,12 @@ class ChatService {
         'mediaType': mediaType,
       },
     );
-    return result.map((response) {
+    return result.flatMap((response) {
       try {
         final responseData = response.data as Map<String, dynamic>;
-        return responseData['data'] as Map<String, dynamic>;
+        return right(responseData['data'] as Map<String, dynamic>);
       } catch (e) {
-        throw Exception('Failed to get upload URL: $e');
+        return left(ServerFailure('Failed to get upload URL: $e'));
       }
     });
   }

@@ -1,5 +1,6 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
+import 'package:area_connect/src/shared/widgets/app_capsule_tab_bar.dart';
 import '../providers/business_bloc.dart';
 
 class BusinessPromotionsScreen extends StatefulWidget {
@@ -47,6 +48,7 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
       ),
       floatingActionButton: (isOwner && _currentTab == 1)
           ? FloatingActionButton(
+              shape: const CircleBorder(),
               onPressed: () => context.push(AppRoutes.createPromotion),
               child: const Icon(Icons.add),
             )
@@ -55,14 +57,12 @@ class _BusinessPromotionsScreenState extends State<BusinessPromotionsScreen>
         child: Column(
           children: [
             if (isOwner)
-              TabBar(
+              AppCapsuleTabBar(
                 controller: _tabController,
                 tabs: const [
-                  Tab(text: 'Nearby'),
-                  Tab(text: 'My Promotions'),
+                  'Nearby',
+                  'My Promotions',
                 ],
-                labelColor: cs.primary,
-                unselectedLabelColor: cs.onSurfaceVariant,
               ),
             Expanded(
               child: isOwner
@@ -158,7 +158,7 @@ class _MyPromotionsListState extends State<_MyPromotionsList> {
         }
 
         return ListView.separated(
-          padding: EdgeInsets.all(AppSpacing.lg.w),
+          padding: EdgeInsets.all(AppSpacing.xs.w),
           itemCount: state.myPromotions.length,
           separatorBuilder: (_, __) => SizedBox(height: AppSpacing.md.h),
           itemBuilder: (context, index) {

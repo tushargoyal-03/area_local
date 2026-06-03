@@ -2,6 +2,7 @@ import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 
 import 'package:area_connect/src/features/auth/domain/repositories/auth_repository.dart';
+import 'package:area_connect/src/features/auth/domain/entities/user.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository _repository;
@@ -33,8 +34,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (user) {
         emit(state.copyWith(isLoading: false));
-        if (event.context.mounted) {
-          event.context.go(AppRoutes.home);
+        if (event.onSuccess != null) {
+          event.onSuccess!();
         }
       },
     );
@@ -61,8 +62,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
       (user) {
         emit(state.copyWith(isLoading: false));
-        if (event.context.mounted) {
-          event.context.go(AppRoutes.verifyOtp, extra: user.email);
+        if (event.onSuccess != null) {
+          event.onSuccess!(user);
         }
       },
     );
@@ -85,8 +86,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(state.copyWith(isLoading: false));
         showGlobalToast(
             message: 'OTP sent to your email successfully', status: 'success');
-        if (event.context.mounted) {
-          event.context.go(AppRoutes.resetPassword, extra: event.email);
+        if (event.onSuccess != null) {
+          event.onSuccess!();
         }
       },
     );
@@ -114,8 +115,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         showGlobalToast(
             message: 'Password reset successful. Please login.',
             status: 'success');
-        if (event.context.mounted) {
-          event.context.go(AppRoutes.login);
+        if (event.onSuccess != null) {
+          event.onSuccess!();
         }
       },
     );
@@ -139,9 +140,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(state.copyWith(isLoading: false));
         showGlobalToast(
             message: 'OTP verified successfully', status: 'success');
-        if (event.context.mounted) {
-          event.context.read<SessionBloc>().add(SessionUserChanged(user));
-          event.context.go(AppRoutes.roleSelection);
+        if (event.onSuccess != null) {
+          event.onSuccess!(user);
         }
       },
     );
@@ -177,64 +177,63 @@ abstract class AuthEvent extends Equatable {
 }
 
 class LoginRequested extends AuthEvent {
-  final BuildContext context;
   final String email;
   final String password;
+  final VoidCallback? onSuccess;
   const LoginRequested(
-      {required this.context, required this.email, required this.password});
+      {required this.email, required this.password, this.onSuccess});
 }
 
 class SignUpRequested extends AuthEvent {
-  final BuildContext context;
   final String name;
   final String email;
   final String password;
   final String role;
   final List<double> coordinates;
+  final void Function(AppUser user)? onSuccess;
   const SignUpRequested({
-    required this.context,
     required this.name,
     required this.email,
     required this.password,
     required this.role,
     required this.coordinates,
+    this.onSuccess,
   });
 }
 
 class ForgotPasswordRequested extends AuthEvent {
-  final BuildContext context;
   final String email;
-  const ForgotPasswordRequested({required this.context, required this.email});
+  final VoidCallback? onSuccess;
+  const ForgotPasswordRequested({required this.email, this.onSuccess});
 }
 
 class VerifyOtpRequested extends AuthEvent {
-  final BuildContext context;
   final String otp;
   final String email;
+  final void Function(AppUser user)? onSuccess;
   const VerifyOtpRequested(
-      {required this.context, required this.otp, required this.email});
+      {required this.otp, required this.email, this.onSuccess});
 }
 
 class ResendOtpRequested extends AuthEvent {
-  final BuildContext context;
   final String email;
-  const ResendOtpRequested({required this.context, required this.email});
+  const ResendOtpRequested({required this.email});
 
   @override
   List<Object> get props => [email];
 }
 
 class ResetPasswordRequested extends AuthEvent {
-  final BuildContext context;
   final String email;
   final String otp;
   final String newPassword;
+  final VoidCallback? onSuccess;
 
   const ResetPasswordRequested({
-    required this.context,
     required this.email,
     required this.otp,
     required this.newPassword,
+    this.onSuccess,
   });
 
   @override

@@ -27,10 +27,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
     context.read<AuthBloc>().add(
           ResetPasswordRequested(
-            context: context,
             email: widget.email,
             otp: _otpController.text,
             newPassword: _passwordController.text,
+            onSuccess: () {
+              if (mounted) {
+                context.go(AppRoutes.login);
+              }
+            },
           ),
         );
   }

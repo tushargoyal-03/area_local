@@ -1,6 +1,7 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:area_connect/src/utils/email_validator.dart';
+import 'package:area_connect/src/features/auth/domain/entities/user.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -69,12 +70,16 @@ class _SignupScreenState extends State<SignupScreen> {
 
       context.read<AuthBloc>().add(
             SignUpRequested(
-              context: context,
               name: _nameController.text.trim(),
               email: email,
               password: _passwordController.text,
               role: _selectedRole,
               coordinates: coordinates,
+              onSuccess: (user) {
+                if (mounted) {
+                  context.go(AppRoutes.verifyOtp, extra: user.email);
+                }
+              },
             ),
           );
     }

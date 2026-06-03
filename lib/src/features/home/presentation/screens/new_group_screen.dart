@@ -75,13 +75,26 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
 
     context.read<ChatBloc>().add(
           CreateGroupRequested(
-            context: context,
             currentUserId: currentUserId,
             title: _titleController.text.trim().isEmpty
                 ? null
                 : _titleController.text.trim(),
             imageUrl: _groupImageUrl.isEmpty ? null : _groupImageUrl,
             participantIds: _selectedIds.toList(),
+            onSuccess: (chatId, groupTitle) {
+              if (mounted) {
+                Navigator.of(context).pop(); // close new group screen
+                context.push(
+                  '/chat-room',
+                  extra: {
+                    'chatId': chatId,
+                    'recipientName': groupTitle.isEmpty ? 'New Group' : groupTitle,
+                    'recipientId': '',
+                    'conversationType': 'group',
+                  },
+                );
+              }
+            },
           ),
         );
   }

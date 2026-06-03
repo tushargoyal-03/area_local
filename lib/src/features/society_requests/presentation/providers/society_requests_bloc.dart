@@ -1,6 +1,7 @@
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:area_connect/src/features/society_requests/domain/entities/society_join_request.dart';
+import 'package:area_connect/src/shared/helpers/show_toast.dart';
 
 // Events
 abstract class SocietyRequestsEvent extends Equatable {
@@ -21,27 +22,25 @@ class LoadSocietyRequests extends SocietyRequestsEvent {
 class ApproveSocietyRequest extends SocietyRequestsEvent {
   final String societyId;
   final String requestId;
-  final BuildContext context;
-  const ApproveSocietyRequest(
-      {required this.societyId,
-      required this.requestId,
-      required this.context});
+  const ApproveSocietyRequest({
+    required this.societyId,
+    required this.requestId,
+  });
 
   @override
-  List<Object?> get props => [societyId, requestId, context];
+  List<Object?> get props => [societyId, requestId];
 }
 
 class RejectSocietyRequest extends SocietyRequestsEvent {
   final String societyId;
   final String requestId;
-  final BuildContext context;
-  const RejectSocietyRequest(
-      {required this.societyId,
-      required this.requestId,
-      required this.context});
+  const RejectSocietyRequest({
+    required this.societyId,
+    required this.requestId,
+  });
 
   @override
-  List<Object?> get props => [societyId, requestId, context];
+  List<Object?> get props => [societyId, requestId];
 }
 
 // State
@@ -117,15 +116,16 @@ class SocietyRequestsBloc
 
     result.fold(
       (failure) {
-        if (event.context.mounted) {
-          showToast(event.context,
-              message: 'Failed to approve: ${failure.message}');
-        }
+        showGlobalToast(
+          message: 'Failed to approve: ${failure.message}',
+          status: 'error',
+        );
       },
       (data) {
-        if (event.context.mounted) {
-          showToast(event.context, message: 'Request approved');
-        }
+        showGlobalToast(
+          message: 'Request approved',
+          status: 'success',
+        );
         // Update local state
         final updatedRequests = state.requests.map((r) {
           if (r.id == event.requestId) {
@@ -157,15 +157,16 @@ class SocietyRequestsBloc
 
     result.fold(
       (failure) {
-        if (event.context.mounted) {
-          showToast(event.context,
-              message: 'Failed to reject: ${failure.message}');
-        }
+        showGlobalToast(
+          message: 'Failed to reject: ${failure.message}',
+          status: 'error',
+        );
       },
       (data) {
-        if (event.context.mounted) {
-          showToast(event.context, message: 'Request rejected');
-        }
+        showGlobalToast(
+          message: 'Request rejected',
+          status: 'success',
+        );
         // Update local state
         final updatedRequests = state.requests.map((r) {
           if (r.id == event.requestId) {

@@ -38,14 +38,6 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
   @override
   void initState() {
     super.initState();
-    final user = context.read<SessionBloc>().state.user;
-    if (user?.role == 'BusinessOwner') {
-      categories = ['Advertisement', ...categories];
-      selectedIndex = 0;
-      _titleController.text = user?.name ?? '';
-      _locationName =
-          user?.name != null ? "${user!.name}'s Shop" : 'Local Shop';
-    }
   }
 
   Future<void> _pickImageFromCamera() async {
@@ -59,7 +51,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         );
       },
       (image) {
-        if (image != null) {
+        if (image != null && mounted) {
           setState(() {
             _selectedImage = image;
           });
@@ -219,7 +211,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         );
       },
     );
-    if (result != null && result.isNotEmpty) {
+    if (result != null && result.isNotEmpty && mounted) {
       setState(() => _locationName = result);
     }
   }
@@ -287,7 +279,7 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
         );
       },
     );
-    if (result != null) {
+    if (result != null && mounted) {
       setState(() => _capacityCount = result);
     }
   }
@@ -317,14 +309,8 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
           '$_capacityCount ${_capacityCount == 1 ? 'person' : 'people'}',
     });
 
-    final locationRes = await LocationService.instance.getCurrentPosition();
-
-    final coordinates = locationRes.fold(
-      (failure) => const [77.5946, 12.9716],
-      (position) => [position.longitude, position.latitude],
-    );
-
-    // Combine the selected date with the start time into a single event timestamp
+    // Validate start time is in the future
+    final now = DateTime.now();
     final eventTime = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -333,10 +319,37 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
       _startTime.minute,
     );
 
+    if (eventTime.isBefore(now)) {
+      showGlobalToast(
+        message: 'Event start time must be in the future',
+        status: 'error',
+      );
+      return;
+    }
+
+    // Validate end time is after start time
+    if (_startTime.hour == _endTime.hour && _startTime.minute == _endTime.minute) {
+      showGlobalToast(
+        message: 'End time must be after start time',
+        status: 'error',
+      );
+      return;
+    }
+
+    final locationRes = await LocationService.instance.getCurrentPosition();
+
+    final user = context.read<SessionBloc>().state.user;
+    final fallbackCoordinates = user?.coordinates ?? const [77.5946, 12.9716];
+
+    final coordinates = locationRes.fold(
+      (failure) => fallbackCoordinates,
+      (position) => [position.longitude, position.latitude],
+    );
+
     if (mounted) {
       context.read<PostsBloc>().add(
             CreatePostRequested(
-              context: context,
+              currentUser: user,
               category: backendCategory,
               title: title,
               content: content,
@@ -344,6 +357,11 @@ class _CreateActivityScreenState extends State<CreateActivityScreen> {
               image: _selectedImage,
               maxParticipants: _capacityCount,
               eventTime: eventTime,
+              onSuccess: (newPost) {
+                if (mounted) {
+                  context.pop();
+                }
+              },
             ),
           );
     }

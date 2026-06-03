@@ -13,6 +13,12 @@ class _SessionListenerWrapperState extends State<SessionListenerWrapper> {
   bool _isFirstLoad = true;
 
   @override
+  void dispose() {
+    PresenceManager.instance.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocListener<SessionBloc, SessionState>(
       listenWhen: (prev, next) => prev.status != next.status,

@@ -115,10 +115,21 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                             if (currentUserId != null) {
                               context.read<ChatBloc>().add(
                                   StartDirectChatRequested(
-                                      context: context,
                                       recipientId: widget.userId,
                                       recipientName: name,
-                                      currentUserId: currentUserId));
+                                      currentUserId: currentUserId,
+                                      onSuccess: (chatId) {
+                                        if (mounted) {
+                                          context.push(
+                                            '/chat-room',
+                                            extra: {
+                                              'chatId': chatId,
+                                              'recipientName': name,
+                                              'recipientId': widget.userId,
+                                            },
+                                          );
+                                        }
+                                      }));
                             }
                           }),
                       _buildActionBtn(

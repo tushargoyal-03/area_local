@@ -108,6 +108,9 @@ final GoRouter appRouter = GoRouter(
       path: '/group-info',
       name: 'groupInfo',
       builder: (context, state) {
+        if (state.extra == null) {
+          return const HomeDashboardScreen();
+        }
         final params = state.extra as Map<String, dynamic>;
         return GroupInfoScreen(
           conversationId: params['conversationId'] as String,

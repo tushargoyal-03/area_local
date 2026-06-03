@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import '../../domain/repositories/posts_repository.dart';
+import 'package:area_connect/src/features/auth/domain/entities/user.dart';
 
 // --- Events ---
 abstract class PostsEvent extends Equatable {
@@ -15,7 +16,7 @@ class LoadNearbyPostsRequested extends PostsEvent {
 }
 
 class CreatePostRequested extends PostsEvent {
-  final BuildContext context;
+  final AppUser? currentUser;
   final String category;
   final String title;
   final String content;
@@ -23,9 +24,10 @@ class CreatePostRequested extends PostsEvent {
   final File? image;
   final int? maxParticipants;
   final DateTime? eventTime;
+  final void Function(AppPost newPost)? onSuccess;
 
   const CreatePostRequested({
-    required this.context,
+    this.currentUser,
     required this.category,
     required this.title,
     required this.content,
@@ -33,10 +35,12 @@ class CreatePostRequested extends PostsEvent {
     this.image,
     this.maxParticipants,
     this.eventTime,
+    this.onSuccess,
   });
 
   @override
   List<Object?> get props => [
+        currentUser,
         category,
         title,
         content,
@@ -63,10 +67,12 @@ class AddCommentRequested extends PostsEvent {
   final String postId;
   final String content;
   final VoidCallback? onSuccess;
+  final VoidCallback? onFailure;
   const AddCommentRequested({
     required this.postId,
     required this.content,
     this.onSuccess,
+    this.onFailure,
   });
 
   @override
@@ -267,7 +273,7 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
         showGlobalToast(message: failure.message, status: 'error');
       },
       (newPost) {
-        final currentUser = event.context.read<SessionBloc>().state.user;
+        final currentUser = event.currentUser;
         final finalPost = newPost.copyWith(
           authorName: currentUser?.name ?? 'You',
           authorAvatar: currentUser?.photoUrl,
@@ -285,8 +291,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
                 : 'Hyperlocal activity published successfully!',
             status: 'success');
 
-        if (event.context.mounted) {
-          Navigator.pop(event.context);
+        if (event.onSuccess != null) {
+          event.onSuccess!(finalPost);
         }
       },
     );
@@ -380,7 +386,12 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     );
 
     result.fold(
-      (failure) => showGlobalToast(message: failure.message, status: 'error'),
+      (failure) {
+        showGlobalToast(message: failure.message, status: 'error');
+        if (event.onFailure != null) {
+          event.onFailure!();
+        }
+      },
       (comment) {
         // Increment comment count locally for that post
         final updatedPosts = state.posts.map((post) {

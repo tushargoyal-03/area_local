@@ -148,7 +148,7 @@ class _SocietyDiscoverListState extends State<SocietyDiscoverList> {
                 style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
           ],
         ),
-      );
+      ).center;
     }
 
     return Column(

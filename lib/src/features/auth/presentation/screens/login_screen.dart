@@ -93,9 +93,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (context.mounted) {
         context.read<AuthBloc>().add(
               LoginRequested(
-                context: context,
                 email: email,
                 password: password,
+                onSuccess: () {
+                  if (mounted) {
+                    context.go(AppRoutes.home);
+                  }
+                },
               ),
             );
       }
