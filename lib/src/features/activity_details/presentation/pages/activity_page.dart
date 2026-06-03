@@ -3,13 +3,54 @@ import 'package:area_connect/src/imports/core_imports.dart';
 import 'package:area_connect/src/imports/packages_imports.dart';
 import 'package:area_connect/src/features/comment/presentation/pages/comment.dart';
 
-class ActivityDetailScreen extends StatelessWidget {
+class ActivityDetailScreen extends StatefulWidget {
   final AppPost post;
 
   const ActivityDetailScreen({
     super.key,
     required this.post,
   });
+
+  @override
+  State<ActivityDetailScreen> createState() => _ActivityDetailScreenState();
+}
+
+class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
+  final MapController _mapController = MapController();
+  LatLng? _userLocation;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserLocation();
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUserLocation() async {
+    final locationRes = await LocationService.instance.getCurrentPosition();
+    if (!mounted) return;
+    locationRes.fold(
+      (failure) => null,
+      (position) => setState(() {
+        _userLocation = LatLng(position.latitude, position.longitude);
+      }),
+    );
+  }
+
+  void _centerOnActivity(double lat, double lng) {
+    _mapController.move(LatLng(lat, lng), 14);
+  }
+
+  void _centerOnMe() {
+    if (_userLocation != null) {
+      _mapController.move(_userLocation!, 14);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +63,8 @@ class ActivityDetailScreen extends StatelessWidget {
     return BlocBuilder<PostsBloc, PostsState>(
       builder: (context, state) {
         final livePost = state.posts.firstWhere(
-          (p) => p.id == post.id,
-          orElse: () => post,
+          (p) => p.id == widget.post.id,
+          orElse: () => widget.post,
         );
 
         final isInterested = livePost.isInterested;
@@ -220,52 +261,200 @@ class ActivityDetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
 
-                  /// Map Placeholder Card
-                  GestureDetector(
-                    onTap: () => _openInMaps(livePost),
-                    child: Container(
+                  /// Live Map / Map Placeholder Card
+                  if (livePost.coordinates.length >= 2) ...[
+                    SizedBox(
                       height: 180,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(28),
-                        gradient: LinearGradient(
-                          colors: [
-                            theme.primaryColor.withValues(alpha: 0.25),
-                            AppPalettes.primary2Light.withValues(alpha: 0.15),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
                       child: Stack(
                         children: [
+                          AppMap(
+                            center: LatLng(livePost.coordinates[1],
+                                livePost.coordinates[0]),
+                            controller: _mapController,
+                            markers: [
+                              // Activity Marker
+                              Marker(
+                                point: LatLng(livePost.coordinates[1],
+                                    livePost.coordinates[0]),
+                                width: 46,
+                                height: 46,
+                                child: _ActivityMarker(
+                                  name: livePost.authorName,
+                                  imageUrl: livePost.authorAvatar,
+                                  color: theme.primaryColor,
+                                ),
+                              ),
+                              // Current user marker (if location is available)
+                              if (_userLocation != null)
+                                Marker(
+                                  point: _userLocation!,
+                                  width: 44,
+                                  height: 44,
+                                  child: _MeMarker(color: cs.primary),
+                                ),
+                            ],
+                            height: 180,
+                          ),
+
+                          /// Open in Map button (bottom left)
                           Positioned(
-                            left: 14,
-                            bottom: 14,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.92),
-                                borderRadius: BorderRadius.circular(30),
+                            left: 10,
+                            bottom: 10,
+                            child: GestureDetector(
+                              onTap: () => _openInMaps(livePost),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                  borderRadius: BorderRadius.circular(30),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
+                                ),
+                                child: const Row(
+                                  children: [
+                                    Icon(IconsaxPlusLinear.location,
+                                        size: 14, color: Colors.black87),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Open in map',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black87),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: const Row(
-                                children: [
-                                  Icon(IconsaxPlusLinear.location, size: 14),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Open in map',
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600),
+                            ),
+                          ),
+
+                          /// Recenter / Center buttons (bottom right)
+                          Positioned(
+                            right: 10,
+                            bottom: 10,
+                            child: Row(
+                              children: [
+                                if (_userLocation != null) ...[
+                                  GestureDetector(
+                                    onTap: _centerOnMe,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.92),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black
+                                                .withValues(alpha: 0.1),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(IconsaxPlusLinear.user,
+                                          size: 16, color: cs.primary),
+                                    ),
                                   ),
+                                  SizedBox(width: 6.w),
                                 ],
-                              ),
+                                GestureDetector(
+                                  onTap: () => _centerOnActivity(
+                                    livePost.coordinates[1],
+                                    livePost.coordinates[0],
+                                  ),
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 12.w,
+                                      vertical: 8.h,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: cs.primary,
+                                      borderRadius: BorderRadius.circular(20.r),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black
+                                              .withValues(alpha: 0.1),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(IconsaxPlusLinear.location,
+                                            size: 14, color: Colors.white),
+                                        SizedBox(width: 4.w),
+                                        const Text(
+                                          'Recenter',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                  ] else ...[
+                    GestureDetector(
+                      onTap: () => _openInMaps(livePost),
+                      child: Container(
+                        height: 180,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(28),
+                          gradient: LinearGradient(
+                            colors: [
+                              theme.primaryColor.withValues(alpha: 0.25),
+                              AppPalettes.primary2Light.withValues(alpha: 0.15),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              left: 14,
+                              bottom: 14,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.92),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: const Row(
+                                  children: [
+                                    Icon(IconsaxPlusLinear.location, size: 14),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      'Open in map',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 20),
 
@@ -609,6 +798,65 @@ class _StatusBadge extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+class _ActivityMarker extends StatelessWidget {
+  final String name;
+  final String? imageUrl;
+  final Color color;
+
+  const _ActivityMarker({
+    required this.name,
+    this.imageUrl,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Avatar(name: name, size: 42, imageUrl: imageUrl),
+    );
+  }
+}
+
+class _MeMarker extends StatelessWidget {
+  final Color color;
+
+  const _MeMarker({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.4),
+            blurRadius: 8,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: const Icon(
+        IconsaxPlusBold.user,
+        color: Colors.white,
+        size: 20,
       ),
     );
   }
