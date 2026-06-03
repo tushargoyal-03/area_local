@@ -323,7 +323,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
     try {
       final post = originalPosts.firstWhere((p) => p.id == event.postId);
       if (post.postType == 'promotion') {
-        final result = await BusinessService.instance.toggleSavePromotion(event.postId);
+        final result =
+            await BusinessService.instance.toggleSavePromotion(event.postId);
         result.fold(
           (failure) {
             emit(state.copyWith(posts: originalPosts));
@@ -354,7 +355,8 @@ class PostsBloc extends Bloc<PostsEvent, PostsState> {
           (updatedPostSkeleton) {
             final finalPosts = state.posts.map((p) {
               if (p.id == event.postId) {
-                return p.copyWith(isInterested: updatedPostSkeleton.isInterested);
+                return p.copyWith(
+                    isInterested: updatedPostSkeleton.isInterested);
               }
               return p;
             }).toList();

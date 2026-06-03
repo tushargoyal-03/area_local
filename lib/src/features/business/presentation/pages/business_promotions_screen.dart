@@ -213,19 +213,38 @@ class _MyPromotionsListState extends State<_MyPromotionsList> {
                         color: cs.primaryContainer.withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.bar_chart_rounded, size: 36, color: cs.primary),
+                      child: Icon(Icons.bar_chart_rounded,
+                          size: 36, color: cs.primary),
                     ),
                     SizedBox(height: 16.h),
-                    Text('Analytics Dashboard', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                    Text('Analytics Dashboard',
+                        style: tt.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     SizedBox(height: 8.h),
-                    Text('Live performance metrics for your offer', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant), textAlign: TextAlign.center),
+                    Text('Live performance metrics for your offer',
+                        style:
+                            tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                        textAlign: TextAlign.center),
                     SizedBox(height: 32.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _StatCard(icon: Icons.visibility_rounded, label: 'Views', value: analytics['impressionsCount']?.toString() ?? '0', color: Colors.blue),
-                        _StatCard(icon: Icons.touch_app_rounded, label: 'Clicks', value: analytics['clicksCount']?.toString() ?? '0', color: Colors.orange),
-                        _StatCard(icon: Icons.bookmark_rounded, label: 'Saves', value: analytics['savesCount']?.toString() ?? '0', color: Colors.green),
+                        _StatCard(
+                            icon: Icons.visibility_rounded,
+                            label: 'Views',
+                            value: analytics['impressionsCount']?.toString() ??
+                                '0',
+                            color: Colors.blue),
+                        _StatCard(
+                            icon: Icons.touch_app_rounded,
+                            label: 'Clicks',
+                            value: analytics['clicksCount']?.toString() ?? '0',
+                            color: Colors.orange),
+                        _StatCard(
+                            icon: Icons.bookmark_rounded,
+                            label: 'Saves',
+                            value: analytics['savesCount']?.toString() ?? '0',
+                            color: Colors.green),
                       ],
                     ),
                     SizedBox(height: 32.h),
@@ -235,7 +254,8 @@ class _MyPromotionsListState extends State<_MyPromotionsList> {
                         onPressed: () => Navigator.pop(ctx),
                         style: FilledButton.styleFrom(
                           padding: EdgeInsets.symmetric(vertical: 16.h),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16.r)),
                         ),
                         child: const Text('Close'),
                       ),
@@ -267,7 +287,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tt = context.theme.textTheme;
-    
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -280,10 +300,14 @@ class _StatCard extends StatelessWidget {
           child: Icon(icon, color: color, size: 28),
         ),
         SizedBox(height: 12.h),
-        Text(value, style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w900, color: context.theme.colorScheme.onSurface)),
-        Text(label, style: tt.bodySmall?.copyWith(color: context.theme.colorScheme.onSurfaceVariant)),
+        Text(value,
+            style: tt.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: context.theme.colorScheme.onSurface)),
+        Text(label,
+            style: tt.bodySmall
+                ?.copyWith(color: context.theme.colorScheme.onSurfaceVariant)),
       ],
     );
   }
 }
-

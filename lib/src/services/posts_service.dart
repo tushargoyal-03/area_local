@@ -47,8 +47,7 @@ class PostsService {
   /// Upload a file to the backend via POST /api/media/upload (multipart/form-data).
   /// Returns the response containing { mediaUrl, key }.
   FutureEither<Map<String, dynamic>> uploadImage(File file) async {
-    final mimeType =
-        lookupMimeType(file.path) ?? 'application/octet-stream';
+    final mimeType = lookupMimeType(file.path) ?? 'application/octet-stream';
     final mediaType = _resolveMediaType(mimeType);
     final fileName = file.path.split('/').last;
 

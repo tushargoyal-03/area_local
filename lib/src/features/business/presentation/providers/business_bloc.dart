@@ -159,8 +159,8 @@ class BusinessBloc extends Bloc<BusinessEvent, BusinessState> {
     result.fold(
       (failure) =>
           emit(state.copyWith(isLoadingSaved: false, error: failure.message)),
-      (promotions) =>
-          emit(state.copyWith(isLoadingSaved: false, savedPromotions: promotions)),
+      (promotions) => emit(
+          state.copyWith(isLoadingSaved: false, savedPromotions: promotions)),
     );
   }
 

@@ -45,8 +45,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
           position.longitude,
         );
         addressRes.fold(
-          (failure) =>
-              debugPrint('Reverse geocode failed: ${failure.message}'),
+          (failure) => debugPrint('Reverse geocode failed: ${failure.message}'),
           (address) {
             if (mounted) setState(() => _locationAddress = address);
           },
@@ -69,9 +68,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
   /// than 100 m so the backend always has a fresh location while the app is
   /// open.  Updates are silent (no toasts).
   void _startLocationStream() {
-    _locationSubscription = LocationService.instance
-        .getPositionStream(distanceFilter: 100)
-        .listen(
+    _locationSubscription =
+        LocationService.instance.getPositionStream(distanceFilter: 100).listen(
       (position) async {
         debugPrint(
             'Position stream update: [${position.longitude}, ${position.latitude}]');

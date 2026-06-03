@@ -65,7 +65,9 @@ class PostsRepositoryImpl implements PostsRepository {
           isInterested: isInterested,
           distanceInMeters: (post['distanceInMeters'] as num?)?.toDouble(),
           status: post['status']?.toString() ?? 'OPEN',
-          postType: post['type']?.toString() ?? post['postType']?.toString() ?? 'activity',
+          postType: post['type']?.toString() ??
+              post['postType']?.toString() ??
+              'activity',
           maxParticipants: post['maxParticipants'] as int?,
           acceptedParticipantsCount:
               post['acceptedParticipantsCount'] as int? ?? 0,

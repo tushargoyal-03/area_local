@@ -131,7 +131,8 @@ class BusinessService {
   }
 
   /// Toggle save status for a promotion.
-  FutureEither<Map<String, dynamic>> toggleSavePromotion(String promotionId) async {
+  FutureEither<Map<String, dynamic>> toggleSavePromotion(
+      String promotionId) async {
     final result = await DioService.instance.post(
       'business/promotions/$promotionId/save',
     );

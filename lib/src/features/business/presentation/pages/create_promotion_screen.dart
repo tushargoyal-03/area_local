@@ -121,8 +121,7 @@ class _CreatePromotionScreenState extends State<CreatePromotionScreen> {
         },
         (data) {
           // Backend returns { mediaUrl: '...', key: '...' }
-          final url = data['mediaUrl']?.toString() ??
-              data['url']?.toString();
+          final url = data['mediaUrl']?.toString() ?? data['url']?.toString();
           if (url != null && url.isNotEmpty) mediaUrls.add(url);
         },
       );
