@@ -1,5 +1,6 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../utils/utils.dart';
 
 /// A service to handle device location requests and status checks.
@@ -86,7 +87,7 @@ class LocationService {
       dio.options.headers['User-Agent'] = 'AreaConnect/1.0';
 
       final response = await dio.get<Map<String, dynamic>>(
-        'https://nominatim.openstreetmap.org/reverse',
+        dotenv.get('NOMINATIM_BASE_URL', fallback: 'https://nominatim.openstreetmap.org/reverse'),
         queryParameters: {
           'lat': lat,
           'lon': lng,
